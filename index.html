@@ -6,121 +6,138 @@
 <title>EQSANS Machine Physics Summary</title>
 <style>
   :root{
-    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303b;
-    --text:#e6e8ec; --muted:#9aa3b2; --accent:#4aa8ff; --accent2:#38d39f;
-    --warn:#f0b429; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --green:#00703c; --green-d:#00522b; --blue:#0067b9;
+    --bg:#ffffff; --bg2:#f4f6f7; --bg3:#eceef1; --line:#d3d7dc;
+    --text:#1f2328; --muted:#5b6570; --warn:#8a5a00;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--text);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    font-family:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif;
     font-size:15px;line-height:1.5}
-  a{color:var(--accent);text-decoration:none}
+  a{color:var(--blue);text-decoration:none}
   a:hover{text-decoration:underline}
-  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#12151b,#12151bee);
-    border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
-  .bar{max-width:1400px;margin:0 auto;padding:14px 20px;display:flex;
-    align-items:center;gap:16px;flex-wrap:wrap}
-  .bar h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.2px}
-  .bar h1 span{color:var(--accent)}
+  .bar{max-width:1400px;margin:0 auto;padding:0 22px;display:flex;
+    align-items:center;gap:18px;flex-wrap:wrap}
+  header{position:sticky;top:0;z-index:20}
+  .masthead{background:var(--green);color:#fff;border-bottom:3px solid var(--green-d)}
+  .masthead .bar{padding:12px 22px}
+  .brand .title{font-size:19px;font-weight:400;letter-spacing:.2px}
+  .brand .title b{font-weight:700}
+  .brand .tagline{font-size:12px;opacity:.85;margin-top:1px}
   .spacer{flex:1}
   .selwrap{display:flex;align-items:center;gap:8px}
-  .selwrap label{color:var(--muted);font-size:13px}
-  select{background:var(--panel2);color:var(--text);border:1px solid var(--line);
-    border-radius:8px;padding:8px 10px;font-size:14px;min-width:150px}
-  .tabs{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);
-    border-radius:9px;padding:3px}
-  .tabs button{background:transparent;color:var(--muted);border:0;padding:7px 14px;
-    border-radius:7px;cursor:pointer;font-size:14px;font-weight:550}
-  .tabs button.active{background:var(--accent);color:#06101c}
-  main{max-width:1400px;margin:0 auto;padding:22px 20px 80px}
-  .cyclehead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
-  .cyclehead h2{margin:0;font-size:26px}
-  .badge{font-size:12px;padding:3px 9px;border-radius:20px;border:1px solid var(--line);
-    color:var(--muted);background:var(--panel)}
-  .badge.latest{color:#06101c;background:var(--accent2);border-color:var(--accent2);font-weight:600}
-  .badge.warn{color:var(--warn);border-color:#4a3f1f;background:#231d10}
+  .selwrap label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;opacity:.9}
+  select{background:#fff;color:var(--text);border:1px solid var(--green-d);
+    border-radius:3px;padding:7px 10px;font-size:14px;min-width:150px}
+  .subnav{background:var(--bg2);border-bottom:1px solid var(--line)}
+  .subnav .bar{padding:0 22px}
+  .tabs{display:flex;gap:2px}
+  .tabs button{background:none;border:0;border-bottom:3px solid transparent;
+    padding:11px 18px;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer}
+  .tabs button:hover{color:var(--text)}
+  .tabs button.active{color:var(--green);border-bottom-color:var(--green)}
+  main{max-width:1400px;margin:0 auto;padding:22px 22px 70px}
+  .cyclehead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:3px}
+  .cyclehead h2{margin:0;font-size:24px;font-weight:600}
+  .badge{font-size:12px;padding:2px 9px;border-radius:3px;border:1px solid var(--line);
+    color:var(--muted);background:var(--bg2)}
+  .badge.latest{color:#fff;background:var(--green);border-color:var(--green);font-weight:600}
+  .badge.warn{color:var(--warn);border-color:#d8c48a;background:#fbf3dc}
   .sub{color:var(--muted);font-size:13px;margin:2px 0 22px}
   .grid{display:flex;flex-direction:column;gap:16px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  .card h3{margin:0;padding:13px 16px;font-size:14px;letter-spacing:.4px;
-    text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);
-    display:flex;align-items:center;gap:8px}
-  .card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
-  .card .body{padding:6px 0}
-  .filerow{padding:11px 16px;border-bottom:1px solid var(--panel2);display:flex;
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .card h3{margin:0;padding:11px 16px;font-size:13.5px;font-weight:700;letter-spacing:.3px;
+    color:var(--text);background:var(--bg2);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:9px}
+  .card h3 .dot{width:9px;height:9px;border-radius:2px;background:var(--green)}
+  .card .body{padding:2px 0}
+  .filerow{padding:11px 16px;border-bottom:1px solid var(--bg3);display:flex;
     flex-direction:column;gap:5px}
   .filerow:last-child{border-bottom:0}
   .fileline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .filetag{font-size:11px;padding:1px 7px;border-radius:5px;background:var(--panel2);
+  .filetag{font-size:11px;padding:1px 7px;border-radius:3px;background:var(--bg3);
     border:1px solid var(--line);color:var(--muted);white-space:nowrap}
   .filename{font-weight:600;font-size:14px;word-break:break-all}
   .filemeta{color:var(--muted);font-size:12px}
-  .pathrow{display:flex;align-items:stretch;gap:0;margin-top:2px}
-  .path{flex:1;font-family:var(--mono);font-size:11.5px;color:#b9c2d0;background:#0c0e13;
-    border:1px solid var(--line);border-right:0;border-radius:7px 0 0 7px;padding:6px 9px;
+  .pathrow{display:flex;align-items:stretch;margin-top:2px}
+  .path{flex:1;font-family:var(--mono);font-size:11.5px;color:#33383e;background:var(--bg2);
+    border:1px solid var(--line);border-right:0;border-radius:3px 0 0 3px;padding:6px 9px;
     overflow-x:auto;white-space:nowrap}
-  .copy{border:1px solid var(--line);background:var(--panel2);color:var(--muted);
-    border-radius:0 7px 7px 0;padding:0 11px;cursor:pointer;font-size:12px}
-  .copy:hover{color:var(--text);background:#2a3040}
-  .copy.ok{color:var(--accent2);border-color:var(--accent2)}
+  .copy{border:1px solid var(--line);background:#fff;color:var(--muted);
+    border-radius:0 3px 3px 0;padding:0 12px;cursor:pointer;font-size:12px}
+  .copy:hover{color:var(--text);background:var(--bg2)}
+  .copy.ok{color:var(--green);border-color:var(--green)}
   table.vars{width:100%;border-collapse:collapse}
-  table.vars td{padding:9px 16px;border-bottom:1px solid var(--panel2);font-size:14px}
+  table.vars td{padding:9px 16px;border-bottom:1px solid var(--bg3);font-size:14px}
+  table.vars tr:last-child td{border-bottom:0}
   table.vars td:first-child{color:var(--muted)}
   table.vars td:last-child{text-align:right;font-family:var(--mono);font-weight:600}
-  .scalecomp{font-family:var(--mono);color:var(--accent2)}
-  .empty{padding:16px;color:var(--muted);font-size:13px;font-style:italic}
+  .scalecomp{font-family:var(--mono);color:var(--green)}
+  .empty{padding:14px 16px;color:var(--muted);font-size:13px;font-style:italic}
   /* details */
   .plotgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-  .plotcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  .plotcard .cap{padding:9px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);
-    font-family:var(--mono);word-break:break-all}
+  .plotcard{background:var(--bg);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .plotcard .cap{padding:8px 12px;font-size:12px;color:var(--muted);background:var(--bg2);
+    border-bottom:1px solid var(--line);font-family:var(--mono);word-break:break-all}
   .plotcard img{display:block;width:100%;height:auto;background:#fff;cursor:zoom-in}
-  .sectitle{margin:26px 0 12px;font-size:15px;color:var(--muted);text-transform:uppercase;
-    letter-spacing:.5px;border-bottom:1px solid var(--line);padding-bottom:7px}
-  .fluxbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .sectitle{margin:28px 0 14px;font-size:15px;font-weight:700;color:var(--text);
+    letter-spacing:.2px;border-bottom:2px solid var(--green);padding-bottom:7px}
+  .fluxbox{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:14px}
   .fluxbox svg{width:100%;height:auto;display:block}
-  .readme{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 22px}
+  .readme{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 22px}
   .readme h1,.readme h2,.readme h3{border-bottom:1px solid var(--line);padding-bottom:6px}
-  .readme h1{font-size:22px}.readme h2{font-size:18px}.readme h3{font-size:15px}
-  .readme code{font-family:var(--mono);background:#0c0e13;padding:1px 5px;border-radius:4px;font-size:12.5px}
-  .readme pre{background:#0c0e13;border:1px solid var(--line);border-radius:8px;padding:12px;
-    overflow-x:auto}
+  .readme h1{font-size:21px}.readme h2{font-size:18px}.readme h3{font-size:15px}
+  .readme code{font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:12.5px}
+  .readme pre{background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:12px;overflow-x:auto}
   .readme pre code{background:none;padding:0}
   .readme table{border-collapse:collapse;margin:12px 0;display:block;overflow-x:auto}
   .readme th,.readme td{border:1px solid var(--line);padding:6px 10px;font-size:13px}
-  .readme th{background:var(--panel2)}
-  .readme blockquote{border-left:3px solid var(--accent);margin:0;padding-left:14px;color:var(--muted)}
-  .lightbox{position:fixed;inset:0;background:#000d;display:none;align-items:center;
+  .readme th{background:var(--bg2)}
+  .readme blockquote{border-left:3px solid var(--green);margin:0;padding-left:14px;color:var(--muted)}
+  .lightbox{position:fixed;inset:0;background:#000a;display:none;align-items:center;
     justify-content:center;z-index:50;padding:24px}
   .lightbox.on{display:flex}
-  .lightbox img{max-width:96vw;max-height:92vh;background:#fff;border-radius:6px}
-  footer{max-width:1400px;margin:0 auto;padding:20px;color:var(--muted);font-size:12px;
+  .lightbox img{max-width:96vw;max-height:92vh;background:#fff;border-radius:4px}
+  footer{max-width:1400px;margin:0 auto;padding:18px 22px;color:var(--muted);font-size:12px;
     border-top:1px solid var(--line)}
+  footer code{font-family:var(--mono)}
+  footer .org{color:var(--text);font-weight:600}
   .mutelink{color:var(--muted)}
 </style>
 </head>
 <body>
 <header>
-  <div class="bar">
-    <h1>EQSANS <span>Machine Physics</span></h1>
-    <div class="tabs" id="tabs">
-      <button data-view="summary" class="active">Summary</button>
-      <button data-view="details">Details</button>
-    </div>
-    <div class="spacer"></div>
-    <div class="selwrap">
-      <label for="cycle">Cycle</label>
-      <select id="cycle"></select>
+  <div class="masthead">
+    <div class="bar">
+      <div class="brand">
+        <div class="title">EQSANS <b>Machine Physics</b></div>
+        <div class="tagline">Spallation Neutron Source &middot; Beam Line 6 &middot; per-cycle calibration summary</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="selwrap">
+        <label for="cycle">Cycle</label>
+        <select id="cycle"></select>
+      </div>
     </div>
   </div>
+  <nav class="subnav">
+    <div class="bar">
+      <div class="tabs" id="tabs">
+        <button data-view="summary" class="active">Summary</button>
+        <button data-view="details">Details</button>
+      </div>
+    </div>
+  </nav>
 </header>
 
 <main id="main"></main>
 
 <footer>
+  <span class="org">Oak Ridge National Laboratory</span> &middot; Spallation Neutron Source, EQSANS<br>
   <span id="genstamp"></span> &nbsp;·&nbsp;
   Source folder <code id="rootpath"></code> &nbsp;·&nbsp;
-  Regenerate with <code>python3 doc/generate.py</code> (or run the
+  Regenerate with <code>python3 doc/generate.py</code> (or the
   <code>update-mp-page</code> skill).
 </footer>
 
@@ -248,10 +265,10 @@ function renderSummary(c){
 
   const grid = el("div","grid");
   grid.append(
-    card("Dark current", dc, "#e06c6c"),
-    card("Sensitivity (flood)", sn, "#4aa8ff"),
-    card("Flux spectrum", fx, "#38d39f"),
-    card("AgBe instrument variables", av, "#f0b429"),
+    card("Dark current", dc, "#b3453b"),
+    card("Sensitivity (flood)", sn, "#1f6fb2"),
+    card("Flux spectrum", fx, "#00703c"),
+    card("AgBe instrument variables", av, "#b26a00"),
   );
   wrap.append(grid);
   return wrap;
@@ -259,7 +276,7 @@ function renderSummary(c){
 
 /* ---------- details view ---------- */
 function fluxSVG(fc){
-  // log-log-ish line plot in inline SVG. Y is log10, X linear (wavelength).
+  // log-linear line plot in inline SVG. Y is log10(intensity), X linear (wavelength).
   const W=760, H=340, m={l:64,r:16,t:14,b:44};
   const xs=fc.x, ys=fc.y;
   const pos = ys.map(v=>v>0?v:NaN);
@@ -274,21 +291,21 @@ function fluxSVG(fc){
   let ticks="";
   for(let e=Math.ceil(ymin); e<=Math.floor(ymax); e++){
     const y=m.t+(1-(e-ymin)/(ymax-ymin))*(H-m.t-m.b);
-    ticks+=`<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="#2b303b"/>`;
-    ticks+=`<text x="${m.l-8}" y="${y+4}" fill="#9aa3b2" font-size="11" text-anchor="end">1e${e}</text>`;
+    ticks+=`<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="#e3e6e9"/>`;
+    ticks+=`<text x="${m.l-8}" y="${y+4}" fill="#5b6570" font-size="11" text-anchor="end">1e${e}</text>`;
   }
   const nx=6;
   for(let i=0;i<=nx;i++){
     const xv=xmin+(xmax-xmin)*i/nx, x=px(xv);
-    ticks+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H-m.b}" stroke="#20242e"/>`;
-    ticks+=`<text x="${x}" y="${H-m.b+18}" fill="#9aa3b2" font-size="11" text-anchor="middle">${xv.toFixed(1)}</text>`;
+    ticks+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H-m.b}" stroke="#eef0f2"/>`;
+    ticks+=`<text x="${x}" y="${H-m.b+18}" fill="#5b6570" font-size="11" text-anchor="middle">${xv.toFixed(1)}</text>`;
   }
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">
-    <rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="#0c0e13" stroke="#2b303b"/>
+    <rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="#fbfcfc" stroke="#d3d7dc"/>
     ${ticks}
-    <path d="${d}" fill="none" stroke="#38d39f" stroke-width="1.8"/>
-    <text x="${W/2}" y="${H-8}" fill="#9aa3b2" font-size="12" text-anchor="middle">wavelength (Å)</text>
-    <text x="16" y="${H/2}" fill="#9aa3b2" font-size="12" text-anchor="middle" transform="rotate(-90 16 ${H/2})">intensity (a.u.)</text>
+    <path d="${d}" fill="none" stroke="#00703c" stroke-width="1.8"/>
+    <text x="${W/2}" y="${H-8}" fill="#5b6570" font-size="12" text-anchor="middle">wavelength (Å)</text>
+    <text x="16" y="${H/2}" fill="#5b6570" font-size="12" text-anchor="middle" transform="rotate(-90 16 ${H/2})">intensity (a.u.)</text>
   </svg>`;
 }
 
