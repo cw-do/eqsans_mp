@@ -1,0 +1,514 @@
+#!/usr/bin/env python3
+"""
+EQSANS machine-physics summary site generator.
+
+Scans the EQSANS NeXusFiles machine-physics folders (one per cycle, named
+like ``2026B_mp``) and builds the data that drives the static summary page in
+this ``doc/`` folder.
+
+For every cycle it finds, it records:
+  * the dark-current raw NeXus file(s)
+  * the sensitivity (flood) files, one per detector distance
+  * the beam flux spectrum file (and its curve, embedded for plotting)
+  * the AgBe calibration results (scale_y, scale_all, detoffset, samoffset,
+    scalecomp) parsed from the calibration report / checkpoint
+  * a representative set of QC plots, copied into ``doc/assets/<cycle>/``
+  * the cycle README, embedded so the detail view can render it
+
+Output:
+  * ``doc/data.js``  -- ``window.EQSANS_DATA = {...}`` consumed by index.html
+  * ``doc/assets/<cycle>/*.png`` -- copied plots
+
+It has no third-party dependencies (standard library only) so it runs anywhere
+drtsans/python or a plain python3 is available.
+
+Usage:
+    python3 generate.py            # scan and write data.js + assets
+    python3 generate.py --check    # scan and print a summary, write nothing
+"""
+
+import argparse
+import json
+import os
+import re
+import shutil
+import sys
+from datetime import datetime, timezone
+
+# --- locations -------------------------------------------------------------
+
+DOC_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(DOC_DIR)                      # the machine-physics folder
+ASSETS_DIR = os.path.join(DOC_DIR, "assets")
+
+# Path shown to users on the page. The folder is mounted at both /SNS/... and
+# /gpfs/...; users refer to it by the /SNS path, so display that regardless of
+# which mount the generator happens to run from.
+DISPLAY_ROOT = "/SNS/EQSANS/shared/NeXusFiles/EQSANS"
+
+CYCLE_RE = re.compile(r"^(\d{4})([AB])_mp$")
+
+# distance tokens found in sensitivity / flux file names -> metres
+DIST_TOKENS = [
+    ("1o3m", 1.3), ("2o5m", 2.5), ("2o0m", 2.0),
+    ("4m", 4.0), ("5m", 5.0), ("8m", 8.0), ("2m", 2.0),
+]
+
+# Only copy plots below this size, and cap how many per category, so the git
+# repo stays small.
+MAX_PLOT_BYTES = 3 * 1024 * 1024
+MAX_PLOTS_PER_CATEGORY = 6
+MAX_FLUX_POINTS = 500
+
+
+# --- helpers ---------------------------------------------------------------
+
+def display_path(abspath):
+    """Absolute path, but rooted at DISPLAY_ROOT for what users see."""
+    rel = os.path.relpath(abspath, ROOT)
+    return os.path.normpath(os.path.join(DISPLAY_ROOT, rel))
+
+
+def human_size(n):
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if n < 1024 or unit == "TB":
+            return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+        n /= 1024.0
+
+
+def mtime_iso(path):
+    try:
+        return datetime.fromtimestamp(os.path.getmtime(path),
+                                      tz=timezone.utc).strftime("%Y-%m-%d")
+    except OSError:
+        return ""
+
+
+def distance_of(name):
+    low = name.lower()
+    for tok, metres in DIST_TOKENS:
+        if tok in low:
+            return metres
+    return None
+
+
+def run_number(name):
+    """Last run-length number in a file name (the run id, usually trailing)."""
+    nums = re.findall(r"(\d{4,7})", name)
+    return nums[-1] if nums else None
+
+
+def file_entry(abspath):
+    try:
+        size = os.path.getsize(abspath)
+    except OSError:
+        size = 0
+    return {
+        "name": os.path.basename(abspath),
+        "path": display_path(abspath),
+        "size": size,
+        "size_h": human_size(size),
+        "mtime": mtime_iso(abspath),
+    }
+
+
+# --- artifact detection ----------------------------------------------------
+
+def find_dark_current(cycle_dir):
+    """Raw dark-current NeXus files at the top level of the cycle folder."""
+    out = []
+    for f in sorted(os.listdir(cycle_dir)):
+        low = f.lower()
+        if not low.startswith("eqsans_"):
+            continue
+        if low.endswith(".nxs.h5") or low.endswith("_event.nxs") or \
+           (low.endswith(".nxs") and "sensitivity" not in low):
+            e = file_entry(os.path.join(cycle_dir, f))
+            e["run"] = run_number(f)
+            out.append(e)
+    # Prefer the largest as the primary (dark current is a long measurement).
+    out.sort(key=lambda e: e["size"], reverse=True)
+    return out
+
+
+def find_sensitivity(cycle_dir):
+    """Sensitivity (flood) files at the top level, one per distance."""
+    out = []
+    for f in sorted(os.listdir(cycle_dir)):
+        low = f.lower()
+        if low.startswith("sensitivity") and low.endswith(".nxs"):
+            e = file_entry(os.path.join(cycle_dir, f))
+            e["distance"] = distance_of(f)
+            e["run"] = run_number(f)
+            out.append(e)
+    out.sort(key=lambda e: (e["distance"] or 99, e["name"]))
+    return out
+
+
+def find_flux(cycle_dir):
+    """Beam flux spectrum text files. Prefer a top-level / 'final' one."""
+    candidates = []
+    # top level
+    for f in sorted(os.listdir(cycle_dir)):
+        if "flux" in f.lower() and f.lower().endswith(".txt"):
+            candidates.append(os.path.join(cycle_dir, f))
+    # one level down (e.g. final_flux/, flux_4m/) if nothing at top level
+    subdir_hits = []
+    for sub in sorted(os.listdir(cycle_dir)):
+        subpath = os.path.join(cycle_dir, sub)
+        if not os.path.isdir(subpath):
+            continue
+        for f in sorted(os.listdir(subpath)):
+            if "flux" in f.lower() and f.lower().endswith(".txt"):
+                subdir_hits.append((sub, os.path.join(subpath, f)))
+
+    entries = []
+    for p in candidates:
+        e = file_entry(p)
+        e["subdir"] = ""
+        entries.append(e)
+    for sub, p in subdir_hits:
+        e = file_entry(p)
+        e["subdir"] = sub
+        entries.append(e)
+
+    # Choose the primary: a 'final' one wins, else newest top-level, else newest.
+    def score(e):
+        s = 0
+        if "final" in e["subdir"].lower():
+            s += 100
+        if not e["subdir"]:
+            s += 10
+        return (s, e["mtime"])
+
+    entries.sort(key=score, reverse=True)
+    for i, e in enumerate(entries):
+        e["primary"] = (i == 0)
+    return entries
+
+
+def read_flux_curve(display_flux_path):
+    """Read a flux .txt (columns x, Y, Yerr) back from disk for plotting."""
+    # Map the display path back to a real path under ROOT.
+    rel = os.path.relpath(display_flux_path, DISPLAY_ROOT)
+    real = os.path.join(ROOT, rel)
+    xs, ys, es = [], [], []
+    try:
+        with open(real, "r", errors="replace") as fh:
+            for line in fh:
+                parts = line.split()
+                if len(parts) < 2:
+                    continue
+                try:
+                    x = float(parts[0]); y = float(parts[1])
+                except ValueError:
+                    continue          # header row
+                err = 0.0
+                if len(parts) >= 3:
+                    try:
+                        err = float(parts[2])
+                    except ValueError:
+                        err = 0.0
+                xs.append(x); ys.append(y); es.append(err)
+    except OSError:
+        return None
+    if not xs:
+        return None
+    # Downsample uniformly if very long.
+    if len(xs) > MAX_FLUX_POINTS:
+        step = len(xs) // MAX_FLUX_POINTS + 1
+        xs, ys, es = xs[::step], ys[::step], es[::step]
+    return {"x": xs, "y": ys, "yerr": es}
+
+
+AGBE_KEYS = {
+    "scale_y": re.compile(r"scale_y\s*:?\s*=?\s*([0-9.]+)", re.I),
+    "scale_all": re.compile(r"scale_all\s*:?\s*=?\s*([0-9.]+)", re.I),
+    "detoffset": re.compile(r"detoffset\s*:?\s*=?\s*([0-9.]+)", re.I),
+    "samoffset": re.compile(r"samoffset\s*:?\s*=?\s*([0-9.]+)", re.I),
+}
+
+
+def parse_calibration_report(path):
+    vals = {}
+    try:
+        with open(path, "r", errors="replace") as fh:
+            text = fh.read()
+    except OSError:
+        return None
+    for key, rx in AGBE_KEYS.items():
+        m = rx.search(text)
+        if m:
+            vals[key] = float(m.group(1))
+    m = re.search(r"scalecomp\s*=\s*\[([^\]]+)\]", text)
+    if m:
+        try:
+            vals["scalecomp"] = [float(x) for x in m.group(1).split(",")]
+        except ValueError:
+            pass
+    vals["source"] = os.path.basename(path)
+    return vals
+
+
+def parse_checkpoint(path):
+    try:
+        with open(path, "r", errors="replace") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    res = data.get("results", {})
+    if not res:
+        return None
+    vals = {}
+    for k in ("scale_y", "scale_all", "detoffset"):
+        if k in res and isinstance(res[k], (int, float)):
+            vals[k] = float(res[k])
+    if isinstance(res.get("scalecomp"), list):
+        vals["scalecomp"] = [float(x) for x in res["scalecomp"]]
+    vals["source"] = os.path.relpath(path, ROOT)
+    vals["partial"] = len(data.get("completed_steps", [])) < 4
+    return vals
+
+
+def find_agbe(cycle_dir):
+    """Instrument variables from AgBe calibration.
+
+    Preference: a full calibration_report.txt, else the most complete
+    checkpoint.json, else a result_scale_all_detoffset.txt note.
+    """
+    reports, checkpoints, notes = [], [], []
+    ipts = None
+    for dirpath, dirnames, filenames in os.walk(cycle_dir):
+        # do not descend into huge scan trees
+        dirnames[:] = [d for d in dirnames
+                       if not d.startswith("scaleall_")
+                       and not d.startswith("scale_detoffset")
+                       and d != "__pycache__" and d != ".git"]
+        m = re.search(r"agbe_(\d{4,7})", os.path.basename(dirpath))
+        if m and ipts is None:
+            ipts = m.group(1)
+        for f in filenames:
+            full = os.path.join(dirpath, f)
+            if f == "calibration_report.txt":
+                reports.append(full)
+            elif f == "checkpoint.json":
+                checkpoints.append(full)
+            elif f == "result_scale_all_detoffset.txt":
+                notes.append(full)
+
+    vals = None
+    if reports:
+        reports.sort(key=os.path.getmtime, reverse=True)
+        vals = parse_calibration_report(reports[0])
+    if vals is None and checkpoints:
+        parsed = [parse_checkpoint(c) for c in checkpoints]
+        parsed = [p for p in parsed if p]
+        if parsed:
+            # most complete first, then newest
+            parsed.sort(key=lambda p: (not p.get("partial", False),), reverse=True)
+            vals = parsed[0]
+    if vals is None and notes:
+        try:
+            with open(notes[0], errors="replace") as fh:
+                vals = {"note": fh.read().strip(),
+                        "source": os.path.relpath(notes[0], ROOT)}
+        except OSError:
+            pass
+    if vals is not None:
+        vals["ipts"] = ipts
+    return vals, ipts
+
+
+# --- plots -----------------------------------------------------------------
+
+def categorize_plot(name, relpath):
+    low = (name + " " + relpath).lower()
+    if "sensitivity" in low or "flood" in low:
+        return "sensitivity"
+    if "flux" in low or "ixiy" in low or "overlay_ix" in low:
+        return "flux"
+    if "agbe" in low or "q1_" in low or "offset" in low or "iq" in low:
+        return "agbe"
+    return "other"
+
+
+def collect_plots(cycle_dir, cycle_id):
+    """Find representative PNG plots and copy them into assets/<cycle>/."""
+    found = {"sensitivity": [], "flux": [], "agbe": [], "other": []}
+    for dirpath, dirnames, filenames in os.walk(cycle_dir):
+        dirnames[:] = [d for d in dirnames
+                       if not d.startswith("scaleall_")
+                       and d != "__pycache__" and d != ".git"]
+        for f in filenames:
+            if not f.lower().endswith(".png"):
+                continue
+            full = os.path.join(dirpath, f)
+            try:
+                if os.path.getsize(full) > MAX_PLOT_BYTES:
+                    continue
+            except OSError:
+                continue
+            rel = os.path.relpath(full, cycle_dir)
+            cat = categorize_plot(f, rel)
+            found[cat].append((full, rel))
+
+    # Names of the informative summary plots -- surface these first.
+    priority_rx = re.compile(
+        r"sensitivity_qc|overlay_sensitivity|overlay_ixiy|"
+        r"q1_vs_scale_y_plot|offset_mean_variance|"
+        r"agbe_10a\w*_iq\.png|flux", re.I)
+
+    def rank(item):
+        full, rel = item
+        pri = 0 if priority_rx.search(os.path.basename(rel)) else 1
+        return (pri, rel.count(os.sep), rel)
+
+    # Prefer summary plots, then shallower paths; de-duplicate similar ones.
+    plots = []
+    dest_dir = os.path.join(ASSETS_DIR, cycle_id)
+    for cat, items in found.items():
+        items.sort(key=rank)
+        picked = 0
+        seen_stems = set()
+        for full, rel in items:
+            if picked >= MAX_PLOTS_PER_CATEGORY:
+                break
+            # collapse near-identical scan plots (q1_vs_offset_..._x.xxx.png)
+            stem = re.sub(r"[0-9.]+", "#", os.path.basename(rel))
+            if stem in seen_stems and cat == "agbe":
+                continue
+            seen_stems.add(stem)
+            os.makedirs(dest_dir, exist_ok=True)
+            safe = rel.replace(os.sep, "__")
+            shutil.copy2(full, os.path.join(dest_dir, safe))
+            plots.append({
+                "category": cat,
+                "title": os.path.basename(rel),
+                "subpath": rel,
+                "src": f"assets/{cycle_id}/{safe}",
+            })
+            picked += 1
+    return plots
+
+
+# --- readme ----------------------------------------------------------------
+
+def read_readme(cycle_dir):
+    for name in ("README.md", "readme.md", "README.txt"):
+        p = os.path.join(cycle_dir, name)
+        if os.path.isfile(p):
+            try:
+                with open(p, errors="replace") as fh:
+                    return fh.read()
+            except OSError:
+                return None
+    return None
+
+
+# --- per-cycle scan --------------------------------------------------------
+
+def sort_key(year, half):
+    return year + (0.2 if half == "B" else 0.1)
+
+
+def scan_cycle(folder):
+    cycle_dir = os.path.join(ROOT, folder)
+    m = CYCLE_RE.match(folder)
+    year, half = int(m.group(1)), m.group(2)
+    cid = f"{year}{half}"
+
+    dark = find_dark_current(cycle_dir)
+    sens = find_sensitivity(cycle_dir)
+    flux = find_flux(cycle_dir)
+    agbe, ipts = find_agbe(cycle_dir)
+    plots = collect_plots(cycle_dir, cid)
+    readme = read_readme(cycle_dir)
+
+    flux_curve = None
+    primary_flux = next((f for f in flux if f.get("primary")), None)
+    if primary_flux:
+        flux_curve = read_flux_curve(primary_flux["path"])
+        if flux_curve:
+            flux_curve["label"] = primary_flux["name"]
+
+    if ipts is None and readme:
+        mm = re.search(r"IPTS[- ]?(\d{4,7})", readme)
+        if mm:
+            ipts = mm.group(1)
+
+    return {
+        "id": cid,
+        "folder": folder,
+        "path": display_path(cycle_dir),
+        "year": year,
+        "half": half,
+        "sort": sort_key(year, half),
+        "mtime": mtime_iso(cycle_dir),
+        "ipts": ipts,
+        "dark_current": dark,
+        "sensitivity": sens,
+        "flux": flux,
+        "flux_curve": flux_curve,
+        "agbe": agbe,
+        "plots": plots,
+        "readme": readme,
+    }
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--check", action="store_true",
+                    help="scan and print a summary; write nothing")
+    args = ap.parse_args()
+
+    folders = sorted(f for f in os.listdir(ROOT)
+                     if CYCLE_RE.match(f) and os.path.isdir(os.path.join(ROOT, f)))
+    if not folders:
+        print("No cycle folders (like 2026B_mp) found under", ROOT, file=sys.stderr)
+        return 1
+
+    if not args.check and os.path.isdir(ASSETS_DIR):
+        shutil.rmtree(ASSETS_DIR)   # rebuild assets cleanly each run
+
+    cycles = []
+    for folder in folders:
+        try:
+            c = scan_cycle(folder)
+            cycles.append(c)
+        except Exception as exc:               # noqa: BLE001 - keep going
+            print(f"  ! skipped {folder}: {exc}", file=sys.stderr)
+
+    cycles.sort(key=lambda c: c["sort"], reverse=True)
+
+    # Console summary.
+    print(f"Scanned {len(cycles)} cycles under {DISPLAY_ROOT}")
+    for c in cycles:
+        agbe = c["agbe"] or {}
+        av = ("scale_all=%s detoffset=%s" % (agbe.get("scale_all"),
+              agbe.get("detoffset"))) if agbe else "no agbe"
+        print(f"  {c['id']:6} dark:{len(c['dark_current'])} "
+              f"sens:{len(c['sensitivity'])} flux:{len(c['flux'])} "
+              f"plots:{len(c['plots'])}  {av}")
+
+    if args.check:
+        return 0
+
+    payload = {
+        "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "display_root": DISPLAY_ROOT,
+        "cycles": cycles,
+    }
+    out = os.path.join(DOC_DIR, "data.js")
+    with open(out, "w") as fh:
+        fh.write("// Auto-generated by generate.py -- do not edit by hand.\n")
+        fh.write("window.EQSANS_DATA = ")
+        json.dump(payload, fh, ensure_ascii=False, separators=(",", ":"))
+        fh.write(";\n")
+    print(f"\nWrote {os.path.relpath(out, ROOT)} "
+          f"({human_size(os.path.getsize(out))}) and assets/ "
+          f"for {len(cycles)} cycles.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

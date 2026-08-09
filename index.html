@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EQSANS Machine Physics Summary</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303b;
+    --text:#e6e8ec; --muted:#9aa3b2; --accent:#4aa8ff; --accent2:#38d39f;
+    --warn:#f0b429; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#12151b,#12151bee);
+    border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
+  .bar{max-width:1100px;margin:0 auto;padding:14px 20px;display:flex;
+    align-items:center;gap:16px;flex-wrap:wrap}
+  .bar h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.2px}
+  .bar h1 span{color:var(--accent)}
+  .spacer{flex:1}
+  .selwrap{display:flex;align-items:center;gap:8px}
+  .selwrap label{color:var(--muted);font-size:13px}
+  select{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;font-size:14px;min-width:150px}
+  .tabs{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:9px;padding:3px}
+  .tabs button{background:transparent;color:var(--muted);border:0;padding:7px 14px;
+    border-radius:7px;cursor:pointer;font-size:14px;font-weight:550}
+  .tabs button.active{background:var(--accent);color:#06101c}
+  main{max-width:1100px;margin:0 auto;padding:22px 20px 80px}
+  .cyclehead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .cyclehead h2{margin:0;font-size:26px}
+  .badge{font-size:12px;padding:3px 9px;border-radius:20px;border:1px solid var(--line);
+    color:var(--muted);background:var(--panel)}
+  .badge.latest{color:#06101c;background:var(--accent2);border-color:var(--accent2);font-weight:600}
+  .badge.warn{color:var(--warn);border-color:#4a3f1f;background:#231d10}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .card h3{margin:0;padding:13px 16px;font-size:14px;letter-spacing:.4px;
+    text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:8px}
+  .card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  .card .body{padding:6px 0}
+  .filerow{padding:11px 16px;border-bottom:1px solid var(--panel2);display:flex;
+    flex-direction:column;gap:5px}
+  .filerow:last-child{border-bottom:0}
+  .fileline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .filetag{font-size:11px;padding:1px 7px;border-radius:5px;background:var(--panel2);
+    border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .filename{font-weight:600;font-size:14px;word-break:break-all}
+  .filemeta{color:var(--muted);font-size:12px}
+  .pathrow{display:flex;align-items:stretch;gap:0;margin-top:2px}
+  .path{flex:1;font-family:var(--mono);font-size:11.5px;color:#b9c2d0;background:#0c0e13;
+    border:1px solid var(--line);border-right:0;border-radius:7px 0 0 7px;padding:6px 9px;
+    overflow-x:auto;white-space:nowrap}
+  .copy{border:1px solid var(--line);background:var(--panel2);color:var(--muted);
+    border-radius:0 7px 7px 0;padding:0 11px;cursor:pointer;font-size:12px}
+  .copy:hover{color:var(--text);background:#2a3040}
+  .copy.ok{color:var(--accent2);border-color:var(--accent2)}
+  table.vars{width:100%;border-collapse:collapse}
+  table.vars td{padding:9px 16px;border-bottom:1px solid var(--panel2);font-size:14px}
+  table.vars td:first-child{color:var(--muted)}
+  table.vars td:last-child{text-align:right;font-family:var(--mono);font-weight:600}
+  .scalecomp{font-family:var(--mono);color:var(--accent2)}
+  .empty{padding:16px;color:var(--muted);font-size:13px;font-style:italic}
+  /* details */
+  .plotgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .plotcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .plotcard .cap{padding:9px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);
+    font-family:var(--mono);word-break:break-all}
+  .plotcard img{display:block;width:100%;height:auto;background:#fff;cursor:zoom-in}
+  .sectitle{margin:26px 0 12px;font-size:15px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.5px;border-bottom:1px solid var(--line);padding-bottom:7px}
+  .fluxbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .fluxbox svg{width:100%;height:auto;display:block}
+  .readme{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 22px}
+  .readme h1,.readme h2,.readme h3{border-bottom:1px solid var(--line);padding-bottom:6px}
+  .readme h1{font-size:22px}.readme h2{font-size:18px}.readme h3{font-size:15px}
+  .readme code{font-family:var(--mono);background:#0c0e13;padding:1px 5px;border-radius:4px;font-size:12.5px}
+  .readme pre{background:#0c0e13;border:1px solid var(--line);border-radius:8px;padding:12px;
+    overflow-x:auto}
+  .readme pre code{background:none;padding:0}
+  .readme table{border-collapse:collapse;margin:12px 0;display:block;overflow-x:auto}
+  .readme th,.readme td{border:1px solid var(--line);padding:6px 10px;font-size:13px}
+  .readme th{background:var(--panel2)}
+  .readme blockquote{border-left:3px solid var(--accent);margin:0;padding-left:14px;color:var(--muted)}
+  .lightbox{position:fixed;inset:0;background:#000d;display:none;align-items:center;
+    justify-content:center;z-index:50;padding:24px}
+  .lightbox.on{display:flex}
+  .lightbox img{max-width:96vw;max-height:92vh;background:#fff;border-radius:6px}
+  footer{max-width:1100px;margin:0 auto;padding:20px;color:var(--muted);font-size:12px;
+    border-top:1px solid var(--line)}
+  .mutelink{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>EQSANS <span>Machine Physics</span></h1>
+    <div class="tabs" id="tabs">
+      <button data-view="summary" class="active">Summary</button>
+      <button data-view="details">Details</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="selwrap">
+      <label for="cycle">Cycle</label>
+      <select id="cycle"></select>
+    </div>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<footer>
+  <span id="genstamp"></span> &nbsp;·&nbsp;
+  Source folder <code id="rootpath"></code> &nbsp;·&nbsp;
+  Regenerate with <code>python3 doc/generate.py</code> (or run the
+  <code>update-mp-page</code> skill).
+</footer>
+
+<div class="lightbox" id="lightbox"><img id="lbimg" alt=""></div>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+const D = window.EQSANS_DATA || {cycles:[]};
+const byId = Object.fromEntries(D.cycles.map(c => [c.id, c]));
+let current = D.cycles[0] ? D.cycles[0].id : null;
+let view = "summary";
+
+/* ---------- small helpers ---------- */
+function el(tag, cls, html){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(html != null) e.innerHTML = html;
+  return e;
+}
+function esc(s){return String(s==null?"":s)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function num(x, dp){return (x==null||isNaN(x))?"—":Number(x).toFixed(dp);}
+
+function pathRow(p){
+  const wrap = el("div","pathrow");
+  const path = el("div","path", esc(p));
+  path.title = p;
+  const btn = el("button","copy","copy");
+  btn.onclick = () => {
+    navigator.clipboard.writeText(p).then(()=>{
+      btn.textContent="copied"; btn.classList.add("ok");
+      setTimeout(()=>{btn.textContent="copy";btn.classList.remove("ok");},1200);
+    });
+  };
+  wrap.append(path, btn);
+  return wrap;
+}
+
+function fileRow(f, tag){
+  const row = el("div","filerow");
+  const line = el("div","fileline");
+  if(tag) line.append(el("span","filetag", esc(tag)));
+  line.append(el("span","filename", esc(f.name)));
+  const meta = [];
+  if(f.run) meta.push("run "+f.run);
+  if(f.size_h) meta.push(f.size_h);
+  if(f.mtime) meta.push(f.mtime);
+  if(meta.length) line.append(el("span","filemeta", esc(meta.join("  ·  "))));
+  row.append(line, pathRow(f.path));
+  return row;
+}
+
+function card(title, node, dotColor){
+  const c = el("div","card");
+  const h = el("h3","", "<span class='dot'></span>"+esc(title));
+  if(dotColor) h.querySelector(".dot").style.background = dotColor;
+  c.append(h);
+  const body = el("div","body");
+  body.append(node);
+  c.append(body);
+  return c;
+}
+
+function distLabel(m){
+  if(m==null) return "";
+  return (m % 1 === 0 ? m.toFixed(0) : m.toString().replace(".","."))+" m";
+}
+
+/* ---------- summary view ---------- */
+function renderSummary(c){
+  const wrap = el("div");
+
+  // Dark current
+  const dc = el("div");
+  if(c.dark_current.length){
+    // primary + extras
+    c.dark_current.forEach((f,i)=> dc.append(fileRow(f, i===0?"primary":"alt")));
+  } else dc.append(el("div","empty","No dark-current file found."));
+
+  // Sensitivity
+  const sn = el("div");
+  if(c.sensitivity.length){
+    c.sensitivity.forEach(f => sn.append(fileRow(f, distLabel(f.distance))));
+  } else sn.append(el("div","empty","No sensitivity files found."));
+
+  // Flux
+  const fx = el("div");
+  if(c.flux.length){
+    c.flux.forEach(f => fx.append(fileRow(f, f.primary?"primary":(f.subdir||"alt"))));
+  } else fx.append(el("div","empty","No flux spectrum file found."));
+
+  // AgBe instrument variables
+  const av = el("div");
+  const a = c.agbe;
+  if(a && (a.scale_y!=null || a.detoffset!=null || a.scalecomp || a.note)){
+    const t = el("table","vars");
+    const rows = [
+      ["scale_y", num(a.scale_y,6)],
+      ["scale_all", num(a.scale_all,6)],
+      ["detoffset", num(a.detoffset,3)],
+      ["samoffset", a.samoffset!=null?num(a.samoffset,1):"—"],
+    ];
+    rows.forEach(([k,v])=>{
+      const tr = el("tr");
+      tr.append(el("td","",esc(k)), el("td","",esc(v)));
+      t.append(tr);
+    });
+    if(a.scalecomp){
+      const tr = el("tr");
+      tr.append(el("td","","scalecomp"),
+        el("td","","<span class='scalecomp'>["+a.scalecomp.map(x=>num(x,6)).join(", ")+"]</span>"));
+      t.append(tr);
+    }
+    av.append(t);
+    const src = [];
+    if(a.ipts) src.push("IPTS-"+a.ipts);
+    if(a.source) src.push(a.source);
+    if(a.partial) src.push("calibration in progress");
+    if(a.note) av.append(el("div","empty",esc(a.note)));
+    if(src.length) av.append(el("div","empty",esc(src.join("  ·  "))));
+  } else {
+    av.append(el("div","empty","No AgBe calibration results for this cycle."));
+  }
+
+  const grid = el("div","grid");
+  grid.append(
+    card("Dark current", dc, "#e06c6c"),
+    card("Sensitivity (flood)", sn, "#4aa8ff"),
+    card("Flux spectrum", fx, "#38d39f"),
+    card("AgBe instrument variables", av, "#f0b429"),
+  );
+  wrap.append(grid);
+  return wrap;
+}
+
+/* ---------- details view ---------- */
+function fluxSVG(fc){
+  // log-log-ish line plot in inline SVG. Y is log10, X linear (wavelength).
+  const W=760, H=340, m={l:64,r:16,t:14,b:44};
+  const xs=fc.x, ys=fc.y;
+  const pos = ys.map(v=>v>0?v:NaN);
+  const xmin=Math.min(...xs), xmax=Math.max(...xs);
+  const ln = pos.filter(v=>!isNaN(v)).map(v=>Math.log10(v));
+  const ymin=Math.min(...ln), ymax=Math.max(...ln);
+  const px = x => m.l + (x-xmin)/(xmax-xmin)*(W-m.l-m.r);
+  const py = v => m.t + (1-(Math.log10(v)-ymin)/(ymax-ymin))*(H-m.t-m.b);
+  let d="";
+  xs.forEach((x,i)=>{ if(pos[i]>0){ d += (d?"L":"M")+px(x).toFixed(1)+" "+py(pos[i]).toFixed(1)+" "; }});
+  // axes ticks
+  let ticks="";
+  for(let e=Math.ceil(ymin); e<=Math.floor(ymax); e++){
+    const y=m.t+(1-(e-ymin)/(ymax-ymin))*(H-m.t-m.b);
+    ticks+=`<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="#2b303b"/>`;
+    ticks+=`<text x="${m.l-8}" y="${y+4}" fill="#9aa3b2" font-size="11" text-anchor="end">1e${e}</text>`;
+  }
+  const nx=6;
+  for(let i=0;i<=nx;i++){
+    const xv=xmin+(xmax-xmin)*i/nx, x=px(xv);
+    ticks+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H-m.b}" stroke="#20242e"/>`;
+    ticks+=`<text x="${x}" y="${H-m.b+18}" fill="#9aa3b2" font-size="11" text-anchor="middle">${xv.toFixed(1)}</text>`;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">
+    <rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="#0c0e13" stroke="#2b303b"/>
+    ${ticks}
+    <path d="${d}" fill="none" stroke="#38d39f" stroke-width="1.8"/>
+    <text x="${W/2}" y="${H-8}" fill="#9aa3b2" font-size="12" text-anchor="middle">wavelength (Å)</text>
+    <text x="16" y="${H/2}" fill="#9aa3b2" font-size="12" text-anchor="middle" transform="rotate(-90 16 ${H/2})">intensity (a.u.)</text>
+  </svg>`;
+}
+
+function renderDetails(c){
+  const wrap = el("div");
+
+  if(c.flux_curve && c.flux_curve.x && c.flux_curve.x.length){
+    wrap.append(el("div","sectitle","Flux spectrum"));
+    const box = el("div","fluxbox");
+    box.innerHTML = fluxSVG(c.flux_curve);
+    box.append(el("div","filemeta","&nbsp;"+esc(c.flux_curve.label||"")));
+    wrap.append(box);
+  }
+
+  // plots grouped by category
+  const groups = [
+    ["sensitivity","Sensitivity / flood"],
+    ["agbe","AgBe calibration"],
+    ["flux","Flux / overlays"],
+    ["other","Other"],
+  ];
+  let anyPlot = false;
+  groups.forEach(([cat,label])=>{
+    const items = c.plots.filter(p=>p.category===cat);
+    if(!items.length) return;
+    anyPlot = true;
+    wrap.append(el("div","sectitle",esc(label)));
+    const g = el("div","plotgrid");
+    items.forEach(p=>{
+      const pc = el("div","plotcard");
+      pc.append(el("div","cap",esc(p.subpath)));
+      const img = el("img");
+      img.loading="lazy"; img.src=p.src; img.alt=p.subpath;
+      img.onclick=()=>openLightbox(p.src);
+      pc.append(img);
+      g.append(pc);
+    });
+    wrap.append(g);
+  });
+  if(!anyPlot && !(c.flux_curve&&c.flux_curve.x&&c.flux_curve.x.length)){
+    wrap.append(el("div","empty","No plots available for this cycle. "+
+      "Modern cycles (2025B onward) include QC and AgBe plots."));
+  }
+
+  if(c.readme){
+    wrap.append(el("div","sectitle","Cycle README"));
+    const r = el("div","readme");
+    r.innerHTML = mdToHtml(c.readme);
+    wrap.append(r);
+  }
+  return wrap;
+}
+
+/* ---------- tiny markdown renderer (headings, tables, code, lists) ---------- */
+function mdInline(s){
+  s = esc(s);
+  s = s.replace(/`([^`]+)`/g,"<code>$1</code>");
+  s = s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  s = s.replace(/(^|[^*])\*([^*]+)\*/g,"$1<em>$2</em>");
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return s;
+}
+function mdToHtml(md){
+  const lines = md.replace(/\r/g,"").split("\n");
+  let out=[], i=0, inCode=false, code=[];
+  function flushTable(rows){
+    if(rows.length<2) return rows.map(r=>"<p>"+mdInline(r)+"</p>").join("");
+    const cells = r => r.replace(/^\||\|$/g,"").split("|").map(x=>x.trim());
+    let h="<table><thead><tr>"+cells(rows[0]).map(c=>"<th>"+mdInline(c)+"</th>").join("")+"</tr></thead><tbody>";
+    for(let k=2;k<rows.length;k++){
+      h+="<tr>"+cells(rows[k]).map(c=>"<td>"+mdInline(c)+"</td>").join("")+"</tr>";
+    }
+    return h+"</tbody></table>";
+  }
+  while(i<lines.length){
+    let ln = lines[i];
+    if(/^```/.test(ln)){
+      if(inCode){ out.push("<pre><code>"+esc(code.join("\n"))+"</code></pre>"); code=[]; inCode=false; }
+      else inCode=true;
+      i++; continue;
+    }
+    if(inCode){ code.push(ln); i++; continue; }
+    // table block
+    if(/\|/.test(ln) && i+1<lines.length && /^\s*\|?[\s:|-]+\|[\s:|-]+/.test(lines[i+1])){
+      let rows=[]; while(i<lines.length && /\|/.test(lines[i])){ rows.push(lines[i]); i++; }
+      out.push(flushTable(rows)); continue;
+    }
+    let m;
+    if((m=ln.match(/^(#{1,4})\s+(.*)/))){ out.push("<h"+m[1].length+">"+mdInline(m[2])+"</h"+m[1].length+">"); i++; continue; }
+    if(/^\s*(---|\*\*\*|___)\s*$/.test(ln)){ out.push("<hr>"); i++; continue; }
+    if(/^\s*>/.test(ln)){ out.push("<blockquote>"+mdInline(ln.replace(/^\s*>\s?/,""))+"</blockquote>"); i++; continue; }
+    if(/^\s*[-*+]\s+/.test(ln)){
+      let items=[]; while(i<lines.length && /^\s*[-*+]\s+/.test(lines[i])){ items.push("<li>"+mdInline(lines[i].replace(/^\s*[-*+]\s+/,""))+"</li>"); i++; }
+      out.push("<ul>"+items.join("")+"</ul>"); continue;
+    }
+    if(/^\s*\d+\.\s+/.test(ln)){
+      let items=[]; while(i<lines.length && /^\s*\d+\.\s+/.test(lines[i])){ items.push("<li>"+mdInline(lines[i].replace(/^\s*\d+\.\s+/,""))+"</li>"); i++; }
+      out.push("<ol>"+items.join("")+"</ol>"); continue;
+    }
+    if(ln.trim()===""){ i++; continue; }
+    out.push("<p>"+mdInline(ln)+"</p>"); i++;
+  }
+  if(inCode) out.push("<pre><code>"+esc(code.join("\n"))+"</code></pre>");
+  return out.join("\n");
+}
+
+/* ---------- lightbox ---------- */
+function openLightbox(src){
+  document.getElementById("lbimg").src = src;
+  document.getElementById("lightbox").classList.add("on");
+}
+document.getElementById("lightbox").onclick = () =>
+  document.getElementById("lightbox").classList.remove("on");
+
+/* ---------- shell ---------- */
+function render(){
+  const c = byId[current];
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+  if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }
+
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Cycle "+esc(c.id)));
+  if(D.cycles[0] && D.cycles[0].id===c.id) head.append(el("span","badge latest","most recent"));
+  if(c.ipts) head.append(el("span","badge","IPTS-"+esc(c.ipts)));
+  if(c.agbe && c.agbe.partial) head.append(el("span","badge warn","AgBe in progress"));
+  main.append(head);
+
+  const sub = el("div","sub");
+  sub.append(document.createTextNode(c.folder+" · updated "+(c.mtime||"?")+" · "));
+  const pth = el("span","", esc(c.path)); pth.style.fontFamily="var(--mono)";
+  sub.append(pth);
+  main.append(sub);
+
+  main.append(view==="summary" ? renderSummary(c) : renderDetails(c));
+}
+
+function buildSelect(){
+  const sel = document.getElementById("cycle");
+  D.cycles.forEach(c=>{
+    const o = el("option"); o.value=c.id;
+    o.textContent = c.id + (D.cycles[0].id===c.id ? "  (latest)" : "");
+    sel.append(o);
+  });
+  sel.value = current;
+  sel.onchange = () => { current = sel.value; render(); };
+}
+document.getElementById("tabs").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  view = b.dataset.view;
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));
+  render();
+});
+
+document.getElementById("genstamp").textContent = "Generated "+(D.generated||"—");
+document.getElementById("rootpath").textContent = D.display_root||"";
+buildSelect();
+render();
+</script>
+</body>
+</html>

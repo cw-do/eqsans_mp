@@ -1,0 +1,5 @@
+# Only the doc site belongs in this repo. Never track the machine-physics
+# data files (multi-GB NeXus, scan trees) that live one level up.
+__pycache__/
+*.pyc
+.DS_Store
