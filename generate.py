@@ -57,7 +57,7 @@ DIST_TOKENS = [
 # Only copy plots below this size, and cap how many per category, so the git
 # repo stays small.
 MAX_PLOT_BYTES = 3 * 1024 * 1024
-MAX_PLOTS_PER_CATEGORY = 6
+MAX_PLOTS_PER_CATEGORY = 8
 MAX_FLUX_POINTS = 500
 
 
@@ -247,6 +247,7 @@ def parse_calibration_report(path):
         except ValueError:
             pass
     vals["source"] = os.path.basename(path)
+    vals["report_text"] = text            # shown verbatim on the details page
     return vals
 
 
@@ -338,6 +339,7 @@ def collect_plots(cycle_dir, cycle_id):
     for dirpath, dirnames, filenames in os.walk(cycle_dir):
         dirnames[:] = [d for d in dirnames
                        if not d.startswith("scaleall_")
+                       and "gridsnap" not in d.lower()
                        and d != "__pycache__" and d != ".git"]
         for f in filenames:
             if not f.lower().endswith(".png"):
@@ -363,7 +365,12 @@ def collect_plots(cycle_dir, cycle_id):
         pri = 0 if priority_rx.search(os.path.basename(rel)) else 1
         return (pri, rel.count(os.sep), rel)
 
-    # Prefer summary plots, then shallower paths; de-duplicate similar ones.
+    # A per-step scan series (one plot per scaleall_/sy/offset value) should
+    # collapse to a single representative; distinct verification figures
+    # (per-wavelength Iq/Iqxqy, fit peaks) must all be kept.
+    scan_rx = re.compile(r"scaleall_|_sy\d|detoffset|q1_vs_offset", re.I)
+
+    # Prefer summary plots, then shallower paths; de-duplicate scan series.
     plots = []
     dest_dir = os.path.join(ASSETS_DIR, cycle_id)
     for cat, items in found.items():
@@ -373,11 +380,12 @@ def collect_plots(cycle_dir, cycle_id):
         for full, rel in items:
             if picked >= MAX_PLOTS_PER_CATEGORY:
                 break
-            # collapse near-identical scan plots (q1_vs_offset_..._x.xxx.png)
-            stem = re.sub(r"[0-9.]+", "#", os.path.basename(rel))
-            if stem in seen_stems and cat == "agbe":
-                continue
-            seen_stems.add(stem)
+            base = os.path.basename(rel)
+            if scan_rx.search(base):
+                stem = re.sub(r"[0-9.]+", "#", base)
+                if stem in seen_stems:
+                    continue
+                seen_stems.add(stem)
             os.makedirs(dest_dir, exist_ok=True)
             safe = rel.replace(os.sep, "__")
             shutil.copy2(full, os.path.join(dest_dir, safe))

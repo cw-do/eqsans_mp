@@ -75,6 +75,16 @@
   table.vars td:last-child{text-align:right;font-family:var(--mono);font-weight:600}
   .scalecomp{font-family:var(--mono);color:var(--green)}
   .empty{padding:14px 16px;color:var(--muted);font-size:13px;font-style:italic}
+  /* reduction-config code block */
+  .codecard{margin-top:18px}
+  .codehead{display:flex;align-items:center;gap:9px}
+  .codehead .grow{flex:1}
+  .copyall{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:3px;
+    padding:4px 13px;cursor:pointer;font-size:12px;font-weight:600}
+  .copyall:hover{color:var(--text);background:var(--bg)}
+  .copyall.ok{color:var(--green);border-color:var(--green)}
+  pre.code{margin:0;padding:14px 16px;background:#fbfcfc;font-family:var(--mono);
+    font-size:12.5px;line-height:1.6;color:var(--text);overflow-x:auto;white-space:pre}
   /* details */
   .plotgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
   .plotcard{background:var(--bg);border:1px solid var(--line);border-radius:4px;overflow:hidden}
@@ -207,6 +217,77 @@ function distLabel(m){
   return (m % 1 === 0 ? m.toFixed(0) : m.toString().replace(".","."))+" m";
 }
 
+/* ---------- reduction-config code block ---------- */
+// Distance token as it appears in the file name (4m, 2o5m, 1o3m ...).
+function distToken(f){
+  const m = f.name.match(/_(\d+(?:o\d+)?m)_/i);
+  if(m) return m[1];
+  if(f.distance!=null){
+    const d=f.distance;
+    return (Number.isInteger(d) ? d : String(d).replace(".","o"))+"m";
+  }
+  return "x";
+}
+function floodVar(f, dup){
+  const t = distToken(f);
+  const mat = (f.name.match(/(thinPMMA|5mmPMMA|1mmH2O|PMMA|H2O)/i)||[])[1];
+  // Only qualify with the flood material when a distance is ambiguous.
+  return (dup.has(t) && mat) ? ("FLOOD_"+mat+"_"+t) : ("FLOOD_"+t);
+}
+// Build a python-style config block that can be pasted into a reduction script.
+function reductionConfig(c){
+  const q = s => '"'+s+'"';
+  const out = ["# "+c.id+" configuration"];
+
+  const pairs = [];
+  if(c.dark_current.length) pairs.push(["DARK_CURRENT", c.dark_current[0].path]);
+  const toks = c.sensitivity.map(distToken);
+  const dup = new Set(toks.filter((t,i)=>toks.indexOf(t)!==i));
+  c.sensitivity.forEach(f => pairs.push([floodVar(f,dup), f.path]));
+  const pf = c.flux.find(f=>f.primary) || c.flux[0];
+  if(pf) pairs.push(["FLUX_FILE", pf.path]);
+  if(pairs.length){
+    const w = Math.max(...pairs.map(p=>p[0].length));
+    pairs.forEach(([k,v]) => out.push(k.padEnd(w)+" = "+q(v)));
+  }
+
+  out.push("");
+  const a = c.agbe || {};
+  const hasAgbe = a && (a.scale_y!=null || a.scale_all!=null || a.detoffset!=null || a.scalecomp);
+  if(hasAgbe){
+    const val = (x, todo) => x!=null ? String(x)
+                 : ("None"+(todo ? "   # TODO: "+todo : ""));
+    const inprog = a.partial ? "AgBe calibration in progress" : null;
+    const rows = [
+      ["scale_y",   val(a.scale_y, inprog)],
+      ["scale_all", val(a.scale_all, inprog)],
+      ["scalecomp", "[scale_all, scale_all * scale_y, 1]"],
+      ["samoffset", val(a.samoffset, a.samoffset==null ? "measured at beamline" : null)],
+      ["detoffset", val(a.detoffset, inprog)],
+    ];
+    const w = Math.max(...rows.map(r=>r[0].length));
+    rows.forEach(([k,v]) => out.push(k.padEnd(w)+" = "+v));
+  } else {
+    out.push("# (no AgBe calibration on record for this cycle)");
+  }
+  return out.join("\n");
+}
+function codeCard(title, code){
+  const c = el("div","card codecard");
+  const h = el("h3","codehead");
+  h.append(el("span","dot"));
+  const t = el("span","grow"); t.textContent = title; h.append(t);
+  const btn = el("button","copyall","copy");
+  btn.onclick = () => navigator.clipboard.writeText(code).then(()=>{
+    btn.textContent="copied"; btn.classList.add("ok");
+    setTimeout(()=>{btn.textContent="copy";btn.classList.remove("ok");},1200);
+  });
+  h.append(btn);
+  c.append(h);
+  const pre = el("pre","code"); pre.textContent = code; c.append(pre);
+  return c;
+}
+
 /* ---------- summary view ---------- */
 function renderSummary(c){
   const wrap = el("div");
@@ -271,6 +352,7 @@ function renderSummary(c){
     card("AgBe instrument variables", av, "#b26a00"),
   );
   wrap.append(grid);
+  wrap.append(codeCard(c.id+" — reduction config (copy-paste)", reductionConfig(c)));
   return wrap;
 }
 
@@ -318,6 +400,12 @@ function renderDetails(c){
     box.innerHTML = fluxSVG(c.flux_curve);
     box.append(el("div","filemeta","&nbsp;"+esc(c.flux_curve.label||"")));
     wrap.append(box);
+  }
+
+  // AgBe calibration report, verbatim
+  if(c.agbe && c.agbe.report_text){
+    wrap.append(el("div","sectitle","AgBe calibration report"));
+    wrap.append(codeCard(c.agbe.source || "calibration_report.txt", c.agbe.report_text));
   }
 
   // plots grouped by category
