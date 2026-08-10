@@ -447,6 +447,44 @@ def collect_standards(cycle_dir, cycle_id):
     return out
 
 
+# --- monochromatic vary-spread series --------------------------------------
+
+def collect_varyspread(cycle_dir, cycle_id):
+    """Monochromatic vary-spread results from reduction/reduced_varyspread/varyspread.json.
+
+    Written by tools/reduce/report_varyspread.py. Copies any plot PNGs into
+    assets/<cycle>/varyspread/ and returns the datasets (with error reasons and
+    embedded I(Q) curves for the spreads that reduced).
+    """
+    reduced = os.path.join(cycle_dir, "reduction", "reduced_varyspread")
+    vjson = os.path.join(reduced, "varyspread.json")
+    if not os.path.isfile(vjson):
+        return []
+    try:
+        with open(vjson, errors="replace") as fh:
+            payload = json.load(fh)
+    except (OSError, ValueError):
+        return []
+    dest_dir = os.path.join(ASSETS_DIR, cycle_id, "varyspread")
+    out = []
+    for d in payload.get("datasets", []):
+        rec = {"sample": d.get("sample"), "spread": d.get("spread"),
+               "run": d.get("run"), "total_counts": d.get("total_counts"),
+               "duration": d.get("duration"), "iq": d.get("iq"),
+               "error": d.get("error"), "iqxqy_src": None, "iq_png_src": None}
+        for key, dstkey in (("iqxqy_png", "iqxqy_src"), ("iq_png", "iq_png_src")):
+            name = d.get(key)
+            if not name:
+                continue
+            src = os.path.join(reduced, name)
+            if os.path.exists(src) and os.path.getsize(src) <= MAX_PLOT_BYTES:
+                os.makedirs(dest_dir, exist_ok=True)
+                shutil.copy2(src, os.path.join(dest_dir, name))
+                rec[dstkey] = f"assets/{cycle_id}/varyspread/{name}"
+        out.append(rec)
+    return out
+
+
 # --- masks -----------------------------------------------------------------
 
 def collect_masks(cycle_dir, cycle_id):
@@ -513,6 +551,7 @@ def scan_cycle(folder):
     agbe, ipts = find_agbe(cycle_dir)
     plots = collect_plots(cycle_dir, cid)
     standards = collect_standards(cycle_dir, cid)
+    varyspread = collect_varyspread(cycle_dir, cid)
     masks = collect_masks(cycle_dir, cid)
     readme = read_readme(cycle_dir)
 
@@ -544,6 +583,7 @@ def scan_cycle(folder):
         "agbe": agbe,
         "plots": plots,
         "standards": standards,
+        "varyspread": varyspread,
         "masks": masks,
         "readme": readme,
     }
