@@ -22,6 +22,11 @@ enabled for this repo — Settings → Pages → deploy from `main` / root).
 | `data.js` | generated: `window.EQSANS_DATA` with every cycle's summary + flux curves |
 | `assets/<cycle>/` | generated: copied QC/AgBe/flood plots for each cycle |
 | `generate.py` | scans the cycle folders and rebuilds `data.js` + `assets/` |
+| `chopper.md` | instrument-level chopper docs (6-chopper upgrade), rendered on the **Choppers** tab |
+
+The **Choppers** tab shows instrument-level chopper configuration (locations,
+apertures, phase offsets) from `chopper.md`; it is independent of the selected
+cycle. Edit `chopper.md` and regenerate to update it.
 
 `data.js` and `assets/` are **generated** — do not edit them by hand. Edit
 `index.html` (layout) or `generate.py` (what gets collected) instead.

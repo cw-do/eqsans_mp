@@ -501,10 +501,21 @@ def main():
     if args.check:
         return 0
 
+    # Instrument-level chopper documentation (rendered on the Choppers tab).
+    chopper_md = None
+    cp = os.path.join(DOC_DIR, "chopper.md")
+    if os.path.isfile(cp):
+        try:
+            with open(cp, errors="replace") as fh:
+                chopper_md = fh.read()
+        except OSError:
+            chopper_md = None
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
         "cycles": cycles,
+        "chopper_md": chopper_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
     with open(out, "w") as fh:

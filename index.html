@@ -136,6 +136,7 @@
       <div class="tabs" id="tabs">
         <button data-view="summary" class="active">Summary</button>
         <button data-view="details">Details</button>
+        <button data-view="choppers">Choppers</button>
       </div>
     </div>
   </nav>
@@ -508,11 +509,31 @@ function openLightbox(src){
 document.getElementById("lightbox").onclick = () =>
   document.getElementById("lightbox").classList.remove("on");
 
+/* ---------- choppers view (instrument-level) ---------- */
+function renderChoppers(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Chopper system"));
+  head.append(el("span","badge latest","6-chopper · since 2026B"));
+  wrap.append(head);
+  wrap.append(el("div","sub","Instrument-level configuration — applies from the 2026B cycle onward, independent of the selected cycle."));
+  if(D.chopper_md){
+    const r = el("div","readme");
+    r.innerHTML = mdToHtml(D.chopper_md);
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No chopper documentation found. Add doc/chopper.md and regenerate."));
+  }
+  return wrap;
+}
+
 /* ---------- shell ---------- */
 function render(){
-  const c = byId[current];
   const main = document.getElementById("main");
   main.innerHTML = "";
+  if(view==="choppers"){ main.append(renderChoppers()); return; }
+
+  const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }
 
   const head = el("div","cyclehead");
