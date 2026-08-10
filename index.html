@@ -112,6 +112,8 @@
   .stdpair svg{width:100%;height:auto;display:block;padding:4px 8px 8px}
   .stdpair img{width:100%;height:auto;display:block;background:#fff;cursor:zoom-in}
   .stdpair .div2d{border-left:1px solid var(--bg3)}
+  .ovbox{padding:6px 10px 12px}
+  .ovbox svg{width:100%;height:auto;display:block}
   .readme{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 22px}
   .readme h1,.readme h2,.readme h3{border-bottom:1px solid var(--line);padding-bottom:6px}
   .readme h1{font-size:21px}.readme h2{font-size:18px}.readme h3{font-size:15px}
@@ -564,6 +566,33 @@ function iqSVG(iq){
   for(let e=Math.ceil(xmin);e<=Math.floor(xmax);e++){const x=px(e);t+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H-m.b}" stroke="#eef0f2"/><text x="${x}" y="${H-m.b+16}" fill="#5b6570" font-size="10" text-anchor="middle">1e${e}</text>`;}
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"><rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="#fbfcfc" stroke="#d3d7dc"/>${t}<path d="${d}" fill="none" stroke="#0067b9" stroke-width="1.6"/><text x="${W/2}" y="${H-6}" fill="#5b6570" font-size="11" text-anchor="middle">Q (1/Å)</text><text x="12" y="${H/2}" fill="#5b6570" font-size="11" text-anchor="middle" transform="rotate(-90 12 ${H/2})">I(Q) (1/cm)</text></svg>`;
 }
+const SAMPLE_COLOR={porsil:"#0067b9",agbe:"#00703c",peltierwindow:"#b26a00",blockedbeam:"#c0392b"};
+const SAMPLE_ORDER=["porsil","agbe","peltierwindow","blockedbeam"];
+function overlaySVG(items){
+  // overlay every sample's I(Q) for one configuration, log-log, with a legend
+  const W=520,H=360,m={l:56,r:14,t:12,b:40};
+  const series=[];
+  items.slice().sort((a,b)=>(SAMPLE_ORDER.indexOf(a.sample)+1||99)-(SAMPLE_ORDER.indexOf(b.sample)+1||99))
+    .forEach(it=>{
+      if(!it.iq||!it.iq.q) return;
+      const pts=[];
+      for(let i=0;i<it.iq.q.length;i++){ if(it.iq.q[i]>0 && it.iq.I[i]>0) pts.push([Math.log10(it.iq.q[i]),Math.log10(it.iq.I[i])]); }
+      if(pts.length>=2) series.push({sample:it.sample,pts,color:SAMPLE_COLOR[it.sample]||"#888"});
+    });
+  if(!series.length) return "<div class='empty'>no positive I(Q) to overlay</div>";
+  let xmin=Infinity,xmax=-Infinity,ymin=Infinity,ymax=-Infinity;
+  series.forEach(s=>s.pts.forEach(p=>{xmin=Math.min(xmin,p[0]);xmax=Math.max(xmax,p[0]);ymin=Math.min(ymin,p[1]);ymax=Math.max(ymax,p[1]);}));
+  const px=x=>m.l+(x-xmin)/((xmax-xmin)||1)*(W-m.l-m.r);
+  const py=y=>m.t+(1-(y-ymin)/((ymax-ymin)||1))*(H-m.t-m.b);
+  let g="";
+  for(let e=Math.ceil(ymin);e<=Math.floor(ymax);e++){const y=py(e);g+=`<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="#e3e6e9"/><text x="${m.l-6}" y="${y+4}" fill="#5b6570" font-size="10" text-anchor="end">1e${e}</text>`;}
+  for(let e=Math.ceil(xmin);e<=Math.floor(xmax);e++){const x=px(e);g+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H-m.b}" stroke="#eef0f2"/><text x="${x}" y="${H-m.b+16}" fill="#5b6570" font-size="10" text-anchor="middle">1e${e}</text>`;}
+  let paths="";
+  series.forEach(s=>{ let d=""; s.pts.forEach((p,i)=> d+=(i?"L":"M")+px(p[0]).toFixed(1)+" "+py(p[1]).toFixed(1)+" "); paths+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="1.6"/>`; });
+  let leg=`<rect x="${W-m.r-108}" y="${m.t+4}" width="106" height="${series.length*15+6}" fill="#ffffffdd" stroke="#d3d7dc"/>`;
+  series.forEach((s,i)=>{ const ly=m.t+15+i*15; leg+=`<line x1="${W-m.r-100}" y1="${ly}" x2="${W-m.r-84}" y2="${ly}" stroke="${s.color}" stroke-width="2.6"/><text x="${W-m.r-80}" y="${ly+3.5}" fill="#1f2328" font-size="10.5">${esc(s.sample)}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"><rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="#fbfcfc" stroke="#d3d7dc"/>${g}${paths}${leg}<text x="${W/2}" y="${H-6}" fill="#5b6570" font-size="11" text-anchor="middle">Q (1/Å)</text><text x="12" y="${H/2}" fill="#5b6570" font-size="11" text-anchor="middle" transform="rotate(-90 12 ${H/2})">I(Q) (1/cm)</text></svg>`;
+}
 function stdCard(d){
   const card=el("div","stdcard");
   const cap=el("div","cap");
@@ -602,6 +631,31 @@ function renderStandards(c){
     return wrap;
   }
   wrap.append(el("div","sub",std.length+" reduced datasets · porsil & agbe are banjo-subtracted; blockedbeam & peltierwindow have no background."));
+
+  // --- overlay per configuration: all samples in one plot ---
+  const distOrder={"4m":0,"2o5m":1,"1o3m":2};
+  const byConfig={};
+  std.forEach(d=>{ (byConfig[d.config]=byConfig[d.config]||[]).push(d); });
+  const configs=Object.keys(byConfig).sort((a,b)=>{
+    const da=byConfig[a][0], db=byConfig[b][0];
+    return ((distOrder[da.dist]??9)-(distOrder[db.dist]??9)) || ((da.wl||0)-(db.wl||0));
+  });
+  wrap.append(el("div","sectitle","By configuration — all samples overlaid"));
+  const ogrid=el("div","stdgrid");
+  configs.forEach(cf=>{
+    const d0=byConfig[cf][0];
+    const card=el("div","stdcard");
+    const cap=el("div","cap");
+    const cfgSpan=el("span","cfg");
+    cfgSpan.textContent=distKeyLabel(d0.dist)+" · "+(d0.wl!=null?d0.wl+" Å":"");
+    cap.append(el("b","",esc(cf)), cfgSpan);
+    card.append(cap);
+    const box=el("div","ovbox"); box.innerHTML=overlaySVG(byConfig[cf]);
+    card.append(box);
+    ogrid.append(card);
+  });
+  wrap.append(ogrid);
+
   const order=["porsil","agbe","blockedbeam","peltierwindow"];
   const bySample={};
   std.forEach(d=>{ (bySample[d.sample]=bySample[d.sample]||[]).push(d); });
