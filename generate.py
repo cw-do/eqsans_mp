@@ -430,6 +430,7 @@ def collect_standards(cycle_dir, cycle_id):
             "total_counts": d.get("total_counts"),
             "duration": d.get("duration"),
             "iq": d.get("iq"),
+            "error": d.get("error"),
             "iqxqy_src": None,
             "iq_png_src": None,
         }
@@ -443,6 +444,40 @@ def collect_standards(cycle_dir, cycle_id):
                 shutil.copy2(src, os.path.join(dest_dir, name))
                 rec[dstkey] = f"assets/{cycle_id}/standards/{name}"
         out.append(rec)
+    return out
+
+
+# --- masks -----------------------------------------------------------------
+
+def collect_masks(cycle_dir, cycle_id):
+    """Detector masks from masks/*_mask.params.json (written by make_mask.py).
+
+    Copies each raw-vs-mask comparison PNG into assets/<cycle>/masks/ and
+    returns the preparation record (run, config, beam, bands, tubes, command).
+    """
+    mdir = os.path.join(cycle_dir, "masks")
+    if not os.path.isdir(mdir):
+        return []
+    dest = os.path.join(ASSETS_DIR, cycle_id, "masks")
+    out = []
+    for name in sorted(os.listdir(mdir)):
+        if not name.endswith("_mask.params.json"):
+            continue
+        try:
+            with open(os.path.join(mdir, name), errors="replace") as fh:
+                p = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        png = p.get("compare_png")
+        if png:
+            src = os.path.join(mdir, png)
+            if os.path.exists(src) and os.path.getsize(src) <= MAX_PLOT_BYTES:
+                os.makedirs(dest, exist_ok=True)
+                shutil.copy2(src, os.path.join(dest, png))
+                p["compare_src"] = f"assets/{cycle_id}/masks/{png}"
+        if p.get("mask_nxs"):
+            p["mask_path"] = display_path(os.path.join(mdir, p["mask_nxs"]))
+        out.append(p)
     return out
 
 
@@ -478,6 +513,7 @@ def scan_cycle(folder):
     agbe, ipts = find_agbe(cycle_dir)
     plots = collect_plots(cycle_dir, cid)
     standards = collect_standards(cycle_dir, cid)
+    masks = collect_masks(cycle_dir, cid)
     readme = read_readme(cycle_dir)
 
     flux_curve = None
@@ -508,6 +544,7 @@ def scan_cycle(folder):
         "agbe": agbe,
         "plots": plots,
         "standards": standards,
+        "masks": masks,
         "readme": readme,
     }
 

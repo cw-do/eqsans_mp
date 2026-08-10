@@ -114,6 +114,17 @@
   .stdpair .div2d{border-left:1px solid var(--bg3)}
   .ovbox{padding:6px 10px 12px}
   .ovbox svg{width:100%;height:auto;display:block}
+  .stderr{margin:6px 10px 10px;padding:7px 10px;font-size:12px;color:var(--warn);
+    background:#fbf3dc;border:1px solid #e6d09a;border-radius:4px}
+  /* masks */
+  .maskinfo{padding:4px 14px}
+  .mrow{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--bg3);font-size:13px}
+  .mrow:last-child{border-bottom:0}
+  .mk{color:var(--muted);flex:0 0 140px}
+  .mv{font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--text)}
+  .maskimg{padding:10px 12px 14px}
+  .maskimg img{max-width:100%;height:auto;display:block;background:#fff;cursor:zoom-in;
+    border:1px solid var(--line);border-radius:4px}
   .readme{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 22px}
   .readme h1,.readme h2,.readme h3{border-bottom:1px solid var(--line);padding-bottom:6px}
   .readme h1{font-size:21px}.readme h2{font-size:18px}.readme h3{font-size:15px}
@@ -157,6 +168,7 @@
         <button data-view="summary" class="active">Summary</button>
         <button data-view="details">Details</button>
         <button data-view="standards">Standards</button>
+        <button data-view="masks">Masks</button>
         <button data-view="choppers">Choppers</button>
       </div>
     </div>
@@ -608,9 +620,11 @@ function stdCard(d){
   card.append(info);
   const pair=el("div","stdpair");
   const d1=el("div"); d1.append(el("div","lbl","1D  I(Q)"));
-  if(d.iq && d.iq.q && d.iq.q.length){ const sv=el("div"); sv.innerHTML=iqSVG(d.iq); d1.append(sv); }
+  const hasPos = d.iq && d.iq.q && d.iq.I && d.iq.I.some((v,i)=>v>0 && d.iq.q[i]>0);
+  if(hasPos){ const sv=el("div"); sv.innerHTML=iqSVG(d.iq); d1.append(sv); }
+  else if(d.error){ d1.append(el("div","stderr","⚠ no I(Q) plot — "+esc(d.error))); }
   else if(d.iq_png_src){ const im=el("img"); im.src=d.iq_png_src; im.onclick=()=>openLightbox(d.iq_png_src); d1.append(im); }
-  else d1.append(el("div","empty","no 1D data"));
+  else d1.append(el("div","empty","no positive I(Q) to plot"));
   const d2=el("div","div2d"); d2.append(el("div","lbl","2D  I(Qx,Qy)"));
   if(d.iqxqy_src){ const im=el("img"); im.loading="lazy"; im.src=d.iqxqy_src; im.onclick=()=>openLightbox(d.iqxqy_src); d2.append(im); }
   else d2.append(el("div","empty","no 2D image"));
@@ -672,6 +686,54 @@ function renderStandards(c){
   return wrap;
 }
 
+/* ---------- masks view (per cycle) ---------- */
+function renderMasks(c){
+  const wrap=el("div");
+  const head=el("div","cyclehead");
+  head.append(el("h2","","Detector masks"), el("span","badge","Cycle "+esc(c.id)));
+  wrap.append(head);
+  const masks=c.masks||[];
+  if(!masks.length){
+    wrap.append(el("div","sub","Detector masks for this cycle."));
+    wrap.append(el("div","empty","No masks published for this cycle. Make one with "+
+      "tools/mask/make_mask.py (skill /eqsans-mask)."));
+    return wrap;
+  }
+  wrap.append(el("div","sub",masks.length+" mask(s) — left: raw counts; right: mask overlay (red)."));
+  masks.forEach(m=>{
+    wrap.append(el("div","sectitle","run "+esc(m.run||"?")+(m.config?" · "+esc(m.config):"")));
+    const card=el("div","card");
+    const info=el("div","maskinfo");
+    const beam = m.beam ? ("rx="+m.beam.rx+" tubes, ry="+m.beam.ry+" px  (scale "+
+                 m.beam_scale+", pad "+m.beam_pad+" px)") : "—";
+    const bands = (m.top!=null?m.top:"—")+" / "+(m.bottom!=null?m.bottom:"—")+" pixels";
+    const tubes = (m.tubes&&m.tubes.length) ? m.tubes.join(", ")+" ("+(m.tube_source||"")+")" : "none";
+    [["run", m.run],
+     ["config", m.config],
+     ["mask file", m.mask_path],
+     ["prepared by", m.script],
+     ["beam circle", beam],
+     ["top / bottom band", bands],
+     ["tubes masked", tubes],
+     ["pixels masked", m.n_masked],
+     ["command", m.command]
+    ].forEach(([k,v])=>{
+      const r=el("div","mrow");
+      r.append(el("span","mk",esc(k)), el("span","mv",esc(v==null?"—":String(v))));
+      info.append(r);
+    });
+    card.append(info);
+    if(m.compare_src){
+      const box=el("div","maskimg");
+      const im=el("img"); im.loading="lazy"; im.src=m.compare_src; im.alt="mask "+(m.run||"");
+      im.onclick=()=>openLightbox(m.compare_src);
+      box.append(im); card.append(box);
+    }
+    wrap.append(card);
+  });
+  return wrap;
+}
+
 /* ---------- choppers view (instrument-level) ---------- */
 function renderChoppers(){
   const wrap = el("div");
@@ -713,6 +775,7 @@ function render(){
   main.append(sub);
 
   main.append(view === "standards" ? renderStandards(c)
+            : view === "masks" ? renderMasks(c)
             : view === "details" ? renderDetails(c)
             : renderSummary(c));
 }
