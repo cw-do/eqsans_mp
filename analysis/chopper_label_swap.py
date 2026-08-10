@@ -60,7 +60,7 @@ def recover(centers, swap_dist=False, swap_offset=False):
 
 def main():
     s_in = 0.05
-    lam = np.linspace(1.0, 10.0, 181)
+    lam = np.arange(1.0, 10.5, 1.0)          # 1,2,...,10 A  -> 10 points
     scen = {"correct":       dict(swap_dist=False, swap_offset=False),
             "swap_dist":     dict(swap_dist=True,  swap_offset=False),
             "swap_dist_off": dict(swap_dist=True,  swap_offset=True)}
@@ -77,47 +77,45 @@ def main():
     assert np.allclose(res["correct"]["s"], s_in, atol=1e-6)
 
     GREEN, BLUE, RED, GREY = "#00703c", "#0067b9", "#c0392b", "#5b6570"
-    fig, (a1, a2) = plt.subplots(2, 1, figsize=(8.2, 8.0), sharex=True)
-    fig.suptitle("Effect of the 1A↔ 1B / 2A↔ 2B label swap on reduction\n"
-                 "(EPICS sets phases for 1–10 Å at 5% spread; reduction uses the swapped labels)",
+    # marker at the estimated (recovered) wavelength; error bar = +/- spread/2
+    series = [
+        ("correct",       "correct labels",                 GREEN, "o", -0.17),
+        ("swap_dist",     "swapped (distance)",             RED,   "s",  0.00),
+        ("swap_dist_off", "swapped (distance + offsets)",   BLUE,  "^",  0.17),
+    ]
+    fig, ax = plt.subplots(figsize=(9.0, 6.6))
+    ax.set_title("Estimated wavelength ± spread that reduction recovers\n"
+                 "under the 1A↔ 1B / 2A↔ 2B label swap  "
+                 "(EPICS set: λ₀ = 1–10 Å, 5% spread, 60 Hz mono)",
                  fontsize=12.5, fontweight="bold")
-
-    a1.axhline(0, color=GREY, lw=1, ls=":")
-    a1.plot(lam, (res["correct"]["c"] - lam) / lam * 100, color=GREEN, lw=2.4, label="correct labels")
-    a1.plot(lam, (res["swap_dist"]["c"] - lam) / lam * 100, color=RED, lw=2.0, label="swapped labels (distance only)")
-    a1.plot(lam, (res["swap_dist_off"]["c"] - lam) / lam * 100, color=BLUE, lw=2.0, ls="--", label="swapped labels (distance + calib. offsets)")
-    a1.set_ylabel("recovered mean\nwavelength error (%)")
-    a1.set_ylim(-0.03, 0.03); a1.grid(alpha=0.25)
-    a1.legend(loc="upper right", fontsize=9, framealpha=0.95)
-    a1.text(0.015, 0.06, "center essentially unchanged:\nmax |error| < 0.01% across 1–10 Å",
-            transform=a1.transAxes, fontsize=9, va="bottom", color=GREY,
+    ax.plot([0, 11], [0, 11], color=GREY, ls=":", lw=1.2, zorder=0,
+            label="ideal (recovered = set)")
+    for key, lab, col, mk, dx in series:
+        c, s = res[key]["c"], res[key]["s"]
+        ax.errorbar(lam + dx, c, yerr=c * s / 2.0, fmt=mk, color=col, ms=6.5,
+                    capsize=4, elinewidth=1.7, capthick=1.7, lw=0, label=lab, zorder=3)
+    ax.set_xlabel("nominal wavelength set at EPICS,  λ₀ (Å)")
+    ax.set_ylabel("estimated wavelength (Å)   —   error bar = ± spread/2")
+    ax.set_xticks(range(1, 11))
+    ax.set_xlim(0.3, 10.9); ax.set_ylim(0, 11)
+    ax.grid(alpha=0.25)
+    ax.legend(loc="upper left", fontsize=9.5, framealpha=0.96)
+    ax.text(0.985, 0.03,
+            "error-bar length = recovered spread:\n"
+            "  correct                 5.00%\n"
+            "  swapped (distance)      4.45%\n"
+            "  swapped (dist+offsets)  ~5.0%\n"
+            "mean wavelength shift < 0.01% (markers on the line)",
+            transform=ax.transAxes, ha="right", va="bottom", fontsize=9,
+            family="monospace", color="#333",
             bbox=dict(boxstyle="round", fc="#f4f6f7", ec="#d3d7dc"))
-
-    a2.axhline(s_in * 100, color=GREEN, lw=2.4, label=f"correct labels = input ({s_in*100:.1f}%)")
-    a2.plot(lam, res["swap_dist"]["s"] * 100, color=RED, lw=2.0, label="swapped labels (distance only)")
-    a2.plot(lam, res["swap_dist_off"]["s"] * 100, color=BLUE, lw=2.0, ls="--", label="swapped labels (distance + calib. offsets)")
-    a2.set_xlabel("nominal wavelength set at EPICS,  λ₀ (Å)")
-    a2.set_ylabel("recovered spread (%)")
-    a2.set_ylim(4.2, 5.15); a2.grid(alpha=0.25)
-    a2.legend(loc="lower left", fontsize=9, framealpha=0.95)
-    a2.annotate("distance-only swap under-reports spread\nby ~0.55 pts (5.0% → 4.45%), flat in λ",
-                xy=(6, 4.448), xytext=(4.3, 4.62), fontsize=9, color=RED,
-                arrowprops=dict(arrowstyle="->", color=RED, lw=1.2))
-    a2.annotate("offsets swapped too: the un-swapped\nstation-3 disks pin the band → ~5%",
-                xy=(3.0, 5.0), xytext=(4.7, 4.85), fontsize=9, color=BLUE,
-                arrowprops=dict(arrowstyle="->", color=BLUE, lw=1.2))
-
-    fig.text(0.5, 0.005, "A disks (1A,2A,3A) open at λ₀(1−s/2); B disks (1B,2B,3B) close at "
-             "λ₀(1+s/2). Station 3 is not swapped, so it bounds the recovered band.",
-             ha="center", fontsize=8, color=GREY)
-    fig.tight_layout(rect=[0, 0.02, 1, 0.95])
+    fig.tight_layout()
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chopper_label_swap.png")
     fig.savefig(out, dpi=130)
     print("wrote", out)
     print(f"\n{'lam0':>5} {'center err% (dist)':>18} {'spread% dist':>13} {'spread% dist+off':>17}")
-    for L in [1, 2, 2.5, 4, 6, 8, 10]:
-        i = int(np.argmin(np.abs(lam - L)))
-        print(f"{lam[i]:5.1f} {(res['swap_dist']['c'][i]-lam[i])/lam[i]*100:18.4f}"
+    for i, L in enumerate(lam):
+        print(f"{L:5.1f} {(res['swap_dist']['c'][i]-L)/L*100:18.4f}"
               f"{res['swap_dist']['s'][i]*100:13.3f}{res['swap_dist_off']['s'][i]*100:17.3f}")
 
 
