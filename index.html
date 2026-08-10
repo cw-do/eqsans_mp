@@ -116,6 +116,11 @@
   .ovbox svg{width:100%;height:auto;display:block}
   .stderr{margin:6px 10px 10px;padding:7px 10px;font-size:12px;color:var(--warn);
     background:#fbf3dc;border:1px solid #e6d09a;border-radius:4px}
+  .absscale{padding:9px 14px 12px;border-top:1px solid var(--bg3)}
+  .abshdr{font-size:13px;margin-bottom:7px}
+  .abshdr .dim{color:var(--muted);font-weight:400;font-size:12px}
+  .absscale img{max-width:100%;height:auto;display:block;background:#fff;cursor:zoom-in;
+    border:1px solid var(--line);border-radius:4px}
   /* masks */
   .maskinfo{padding:4px 14px}
   .mrow{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--bg3);font-size:13px}
@@ -635,6 +640,20 @@ function stdCard(d){
   else d2.append(el("div","empty","no 2D image"));
   pair.append(d1,d2);
   card.append(pair);
+  if(d.abs_scale!=null || d.abs_scale_note){
+    const box=el("div","absscale");
+    if(d.abs_scale!=null){
+      const r=d.abs_scale_range||[];
+      box.append(el("div","abshdr","<b>absolute scale (B1) = "+Number(d.abs_scale).toPrecision(5)+
+        "</b> <span class='dim'>q "+r[0]+"–"+r[1]+" · "+d.abs_scale_npts+" pts"+
+        (d.abs_scale_spread!=null?" · "+Math.round(d.abs_scale_spread*100)+"% spread":"")+"</span>"));
+      if(d.abs_scale_src){ const im=el("img"); im.loading="lazy"; im.src=d.abs_scale_src;
+        im.alt="B1 fit"; im.onclick=()=>openLightbox(d.abs_scale_src); box.append(im); }
+    } else {
+      box.append(el("div","stderr","absolute scale (B1): "+esc(d.abs_scale_note||"not computed")));
+    }
+    card.append(box);
+  }
   return card;
 }
 function varyspreadSection(c, wrap){

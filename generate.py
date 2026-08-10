@@ -431,10 +431,17 @@ def collect_standards(cycle_dir, cycle_id):
             "duration": d.get("duration"),
             "iq": d.get("iq"),
             "error": d.get("error"),
+            "abs_scale": d.get("abs_scale"),
+            "abs_scale_npts": d.get("abs_scale_npts"),
+            "abs_scale_spread": d.get("abs_scale_spread"),
+            "abs_scale_note": d.get("abs_scale_note"),
+            "abs_scale_range": d.get("abs_scale_range"),
             "iqxqy_src": None,
             "iq_png_src": None,
+            "abs_scale_src": None,
         }
-        for key, dstkey in (("iqxqy_png", "iqxqy_src"), ("iq_png", "iq_png_src")):
+        for key, dstkey in (("iqxqy_png", "iqxqy_src"), ("iq_png", "iq_png_src"),
+                            ("abs_scale_png", "abs_scale_src")):
             name = d.get(key)
             if not name:
                 continue
