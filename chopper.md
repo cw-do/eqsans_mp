@@ -40,6 +40,40 @@ the ones used throughout the IOC code (`hexaSub.c`) and reduction — index 0 is
   frame-skip. These are the values compiled into the IOC and match the
   `daystamp 20260101` entry of `EQSANS_chopper_configurations.json`.
 
+### Label discrepancy: 1A↔1B and 2A↔2B (open item)
+
+The station-1 and station-2 disks are named with the **opposite A/B sense** in
+the two places they appear. Station 3 agrees. **The distances per array index
+are the same physical positions in both** — only the name differs:
+
+| Distance to source (m) | Position | EPICS code / config / reduction | Engineer (McHargue) |
+|-----------------------:|:---------|:-------------------------------:|:-------------------:|
+| 5.6601247 | station 1, upstream (new disk) | **1B** | **1A** |
+| 5.6757668 | station 1, downstream          | **1A** | **1B** |
+| 7.7601247 | station 2, upstream (new disk) | **2B** | **2A** |
+| 7.7757668 | station 2, downstream          | **2A** | **2B** |
+| 9.4978    | station 3                      | 3A | 3A |
+| 9.5078    | station 3                      | 3B | 3B |
+
+The physical anchor is McHargue's 2026-03-10 statement that **"1A is 15.6421 mm
+upstream of 1B"** and that **1A is the newly added disk**. Upstream = smaller
+distance-to-source, so the new/upstream disk is at 5.6601247 m — which the
+engineer calls **1A** but `hexaSub.c`, the config file and reduction call
+**1B** (`5.6757668 − 5.6601247 = 0.0156421 m = 15.6421 mm`, the exact spacing he
+quotes). The same swap applies at station 2.
+
+What this affects:
+
+- **Distances and phases per array index are unaffected** — index 0 is the
+  5.6757668 m disk in every source, so the numbers reduction uses are the same
+  physical positions regardless of the name.
+- **Only the A/B name is reversed.** The hazard is cross-referencing: "1A" in a
+  hardware/engineering document is a *different physical disk* than "1A" in the
+  config/reduction. Worth **confirming the EPICS PV → physical-disk wiring**
+  (so a disk is not phased for its 15.6 mm-away partner), and always stating
+  which convention you mean. Still open — flagged in the naming-confusion
+  thread.
+
 ## Physical geometry (B. McHargue, 2026-03-10)
 
 Convention-independent facts about the disks:
@@ -52,11 +86,7 @@ Convention-independent facts about the disks:
 - One disk at station 1 and one at station 3 are monitored by **infrared
   thermocouples (IR TC)**.
 
-Naming note: the 2026-03-10 email labeled the station-1/2 disks with the
-**opposite A/B sense** to the control-software convention used in the table
-above (it called index 0 "1B" and index 4 "1A"). This page follows the
-control-software / reduction convention (index 0 = 1A). The spacings above are
-independent of that choice.
+See *Label discrepancy* above for the A/B naming caveat at stations 1 and 2.
 
 ## Operation algorithm
 
