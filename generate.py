@@ -399,6 +399,53 @@ def collect_plots(cycle_dir, cycle_id):
     return plots
 
 
+# --- standard samples ------------------------------------------------------
+
+def collect_standards(cycle_dir, cycle_id):
+    """Reduced standard-sample results from reduction/reduced/standards.json.
+
+    Written by tools/reduce/report_standards.py. Copies the 2D (and 1D) plot
+    PNGs into assets/<cycle>/standards/ and returns the datasets with embedded
+    I(q) curves for client-side plotting.
+    """
+    reduced = os.path.join(cycle_dir, "reduction", "reduced")
+    sjson = os.path.join(reduced, "standards.json")
+    if not os.path.isfile(sjson):
+        return []
+    try:
+        with open(sjson, errors="replace") as fh:
+            payload = json.load(fh)
+    except (OSError, ValueError):
+        return []
+
+    dest_dir = os.path.join(ASSETS_DIR, cycle_id, "standards")
+    out = []
+    for d in payload.get("datasets", []):
+        rec = {
+            "sample": d.get("sample"),
+            "config": d.get("config"),
+            "dist": d.get("dist"),
+            "wl": d.get("wl"),
+            "run": d.get("run"),
+            "total_counts": d.get("total_counts"),
+            "duration": d.get("duration"),
+            "iq": d.get("iq"),
+            "iqxqy_src": None,
+            "iq_png_src": None,
+        }
+        for key, dstkey in (("iqxqy_png", "iqxqy_src"), ("iq_png", "iq_png_src")):
+            name = d.get(key)
+            if not name:
+                continue
+            src = os.path.join(reduced, name)
+            if os.path.exists(src) and os.path.getsize(src) <= MAX_PLOT_BYTES:
+                os.makedirs(dest_dir, exist_ok=True)
+                shutil.copy2(src, os.path.join(dest_dir, name))
+                rec[dstkey] = f"assets/{cycle_id}/standards/{name}"
+        out.append(rec)
+    return out
+
+
 # --- readme ----------------------------------------------------------------
 
 def read_readme(cycle_dir):
@@ -430,6 +477,7 @@ def scan_cycle(folder):
     flux = find_flux(cycle_dir)
     agbe, ipts = find_agbe(cycle_dir)
     plots = collect_plots(cycle_dir, cid)
+    standards = collect_standards(cycle_dir, cid)
     readme = read_readme(cycle_dir)
 
     flux_curve = None
@@ -459,6 +507,7 @@ def scan_cycle(folder):
         "flux_curve": flux_curve,
         "agbe": agbe,
         "plots": plots,
+        "standards": standards,
         "readme": readme,
     }
 
