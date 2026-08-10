@@ -105,6 +105,7 @@
   .readme th,.readme td{border:1px solid var(--line);padding:6px 10px;font-size:13px}
   .readme th{background:var(--bg2)}
   .readme blockquote{border-left:3px solid var(--green);margin:0;padding-left:14px;color:var(--muted)}
+  .readme img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:4px;background:#fff;display:block;margin:12px 0}
   .lightbox{position:fixed;inset:0;background:#000a;display:none;align-items:center;
     justify-content:center;z-index:50;padding:24px}
   .lightbox.on{display:flex}
@@ -454,6 +455,8 @@ function mdInline(s){
   s = s.replace(/`([^`]+)`/g,"<code>$1</code>");
   s = s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
   s = s.replace(/(^|[^*])\*([^*]+)\*/g,"$1<em>$2</em>");
+  // images before links (![alt](src) contains the []() link pattern)
+  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img alt="$1" src="$2" loading="lazy">');
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
   return s;
 }

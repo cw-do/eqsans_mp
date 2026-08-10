@@ -74,6 +74,37 @@ What this affects:
   which convention you mean. Still open — flagged in the naming-confusion
   thread.
 
+### Estimated impact on reduction (simulation)
+
+If EPICS sets the phases correctly (using the true distance of each physical
+disk) but reduction inverts them with the **swapped** station-1/2 labels, how
+far off are the recovered wavelength and spread? Simulated over λ₀ = 1–10 Å at
+a 5 % set spread, in the monochromatic 60 Hz mode of `hexaSub.c`:
+
+![Effect of the label swap on recovered wavelength and spread](analysis/chopper_label_swap.png)
+
+| λ₀ set (Å) | center error (distance swap) | recovered spread, distance swap | recovered spread, distance + offsets swap |
+|-----------:|:----------------------------:|:-------------------------------:|:-----------------------------------------:|
+| 1 – 10 | −0.007 % (flat) | **4.45 %** (from 5 %) | 5.0 % → 4.9 % |
+
+Takeaways:
+
+- **The mean wavelength is essentially unaffected** — the recovered center is
+  within 0.01 % of λ₀ across the whole range, because the swapped disks are only
+  15.6 mm apart out of ~5.7 m.
+- **The recovered spread is at most slightly under-reported** — 5 % reads as
+  ~4.45 % if only the distances are swapped, and stays ~5 % if the per-disk
+  calibration offsets are swapped along with the labels (because the **un-swapped
+  station-3 disks bound the band**, so the recovered band is always a subset of
+  the true `[wl1, wl2]` — the swap can narrow it a little but cannot shift or
+  widen it).
+- **So the label swap is *not* the cause of the large monochromatic reduction
+  failures** — those come from the separate `20260304`-vs-`20260101` phase-offset
+  mismatch (below), whose ~100 µs differences move edges by ~0.08 Å.
+
+Reproduce with `analysis/chopper_label_swap.py` (numpy + matplotlib). This is an
+estimate of the label-swap effect in isolation, not a full drtsans run.
+
 ## Physical geometry (B. McHargue, 2026-03-10)
 
 Convention-independent facts about the disks:
