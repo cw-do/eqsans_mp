@@ -34,9 +34,10 @@ JSON and by the reduction code (array indices 0–5); the *EPICS index* is the
 - The phase offsets are the per-disk calibration constants added to the
   computed phase (the JSON `offsets`). The 30 Hz frame-skip offsets are twice
   these (the JSON `skip` values).
-- **Choppers 1a (EPICS index 5) and 2a (index 6) are not currently running**
-  because of the heat load they create. With the two upstream "a" disks off,
-  full monochromatic operation is limited.
+- **All six choppers are running** (as of August 2026), so full monochromatic
+  operation is available. Earlier (March 2026) the two upstream "a" disks, 1a
+  and 2a (EPICS index 5, 6), were kept off because of heat load; they are now in
+  operation.
 
 ### Naming — this table is authoritative
 
