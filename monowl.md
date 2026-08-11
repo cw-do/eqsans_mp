@@ -204,17 +204,21 @@ true monochromatic result.
 ## Result — AgBe across the four spreads
 
 AgBe (silver behenate) is the sharpest test of a monochromatic reduction: it has
-evenly spaced diffraction rings (Q = 0.1076, 0.2153, 0.3229 Å⁻¹), so a correct
-reduction must place peaks *exactly* there. Reducing all four spreads with the
-recipe above — correct chopper phase, single-value transmission, and a single
-band-spanning bin (drtsans monochromatic mode engaged) — gives:
+evenly spaced diffraction rings at the AgBe calibration target Q = 0.1069, 0.2138,
+0.3207 Å⁻¹ (2×, 3× the first order), so a correct reduction must place peaks there.
+Reducing all four spreads with the recipe above — correct chopper phase,
+single-value transmission, and a single band-spanning bin (drtsans monochromatic
+mode engaged) — gives:
 
 ![AgBe I(Q) across the four spreads](assets/monowl/monowl_agbe.png)
 *Figure: reduced by `reduce_agbe_mono.py` — the single-bin recipe (correct phase + single-value transmission + drtsans monochromatic mode), NOT the 0.1 Å-step reduction. Single-bin verified: each `_trans.txt` holds one wavelength value and drtsans logged "Monochromatic mode detected … single bin spanning [w_min, w_max]" for every run. Curves read from the reduced `_Iq.dat` by `make_monowl_plots.py`.*
 
-- **dl/l = 0.10 and 0.15 are textbook AgBe** — three orders landing right on the
-  reference positions (0.108 / 0.216 / 0.323 Å⁻¹, dotted lines). Peaks at the
-  correct Q means the wavelength is correct: the chopper-phase fix worked.
+- **dl/l = 0.10 and 0.15 are textbook AgBe** — three orders near the target
+  positions (measured ≈0.108 / 0.216 / 0.322 Å⁻¹, dotted lines), confirming the
+  wavelength is right and the chopper-phase fix worked. (The measured first order
+  sits ~1% above the 0.1069 target; that small single-bin bias is analysed on the
+  **monoWL2** tab — for accurate peak position, reduce wavelength-resolved, not
+  single-bin.)
 - **Intensity scales with the band width.** A wider band passes more neutrons, so
   the pattern is stronger and cleaner — peak I(Q) ≈ 1.0, 0.52, 0.05 for
   dl/l = 0.15, 0.10, 0.05. This is the resolution-vs-flux trade the spread setting

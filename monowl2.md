@@ -3,8 +3,9 @@
 A follow-up to the **monoWL** tab. Once the monochromatic AgBe runs reduced, the
 diffraction **peak position appeared to shift with the spread setting** — dl/l=0.05
 gave Q≈0.104, dl/l=0.15 gave Q≈0.108. That should be impossible: AgBe has a fixed
-d-spacing, so its ring must sit at the same Q (Q1 = 0.1076 Å⁻¹) at every spread —
-only the *resolution* (peak width) should change.
+d-spacing, so its ring must sit at the same Q at every spread — the EQSANS AgBe
+calibration target **Q1 = 0.1069 Å⁻¹** (d(001) ≈ 58.8 Å; `TARGET_Q1` in the AgBe
+calibration) — only the *resolution* (peak width) should change.
 
 This page tracks that down. The short version: **nothing is wrong with the
 wavelength conversion or the calibration.** The shift is entirely an artifact of
@@ -13,20 +14,23 @@ is reduced wavelength-resolved (as broadband always is).
 
 ## The symptom
 
-Gaussian fits of the AgBe (001) peak, single-bin "monochromatic mode" vs the
-standard broadband calibration:
+Gaussian fits of the AgBe (001) peak from the single-bin "monochromatic mode",
+against the calibration target:
 
 | reduction | dl/l=0.05 | dl/l=0.10 | dl/l=0.15 |
 |---|---|---|---|
 | single-bin (monochromatic mode) | 0.1039 | 0.1070 | 0.1079 |
-| **broadband calibration (any config)** | **0.1068** | **0.1068** | **0.1068** |
+| **AgBe calibration target (all spreads)** | **0.1069** | **0.1069** | **0.1069** |
 
-The broadband AgBe fits to 0.1068 for *every* configuration (4m/2.5Å, 2.5m/2.5Å,
-2.5m/6Å, 4m/6Å, 2.5m/10Å) — the calibration is rock-solid and spread-independent.
-And the transmitted **band centre is 2.475 Å for all four spreads** — the spread
-setting widens the band but does not move its centre. So neither the detector
-geometry nor the centre wavelength is shifting. The problem is downstream, in how
-I(Q) is built.
+The reference is the calibration target **Q1 = 0.1069 Å⁻¹**. The AgBe calibration's
+own verification (Details tab) reaches it — q1 = 0.1069 at both 2.5 Å and 6 Å, and
+0.1074 at 10 Å (so even the calibration scatters ~0.5% across configurations, from
+the coarse log-Q grid, not from the physics). A Gaussian fit of the standard
+broadband reductions lands at ≈0.1068 for every configuration — essentially the
+target. And the transmitted **band centre is 2.475 Å for all four spreads** — the
+spread setting widens the band but does not move its centre. So neither the
+detector geometry nor the centre wavelength is shifting; the problem is downstream,
+in how I(Q) is built.
 
 ## The mechanism — drtsans computes Q from the wavelength *bin centre*
 
@@ -114,13 +118,13 @@ monochromatic 0.1 Å band reduced in a 0.1 Å bin behaves exactly like a broadba
 0.1 Å slice. The shift came only from collapsing a *wide* band into *one* bin —
 something broadband never does. Split the band into several bins and the peak
 converges to Q1 (right panel of the first figure: 1 bin → 0.1039, 2 → 0.1063,
-8 → 0.1066, broadband → 0.1068).
+8 → 0.1066, approaching the 0.1069 target).
 
 ## Recommendation
 
 - **Use the same calibration for every spread.** You never need a different
-  geometry for dl/l=0.05 vs 0.15 — the calibration is spread-independent (broadband
-  and every per-slice above sit at 0.1068).
+  geometry for dl/l=0.05 vs 0.15 — the calibration is spread-independent (target
+  0.1069; broadband and every per-slice above sit at ≈0.1068–0.1069).
 - **Reduce wavelength-resolved — multiple bins across the band, not one.** A
   wavelength step that puts several bins across the transmitted band (roughly
   step ≤ band/5), or simply the standard broadband-style reduction. Every spread

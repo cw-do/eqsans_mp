@@ -22,8 +22,10 @@ AGBE = os.path.join(MONO, "reduced_agbe_mono")
 PERSLICE = os.path.join(MONO, "perslice", "info", "inelastic_incoh",
                         "agbe_dl0.15_perslice", "slice_0", "frame_0")
 
-# AgBe silver-behenate diffraction orders (d = 58.38 A -> Q = 2*pi*n/d)
-AGBE_Q = [0.10763, 0.21526, 0.32289]
+# AgBe diffraction orders at the EQSANS calibration target Q1 = 0.1069 1/A
+# (TARGET_Q1 in tools/agbe/agbe_reducenfit.py; d(001) = 2*pi/0.1069 ~ 58.8 A).
+AGBE_Q1 = 0.1069
+AGBE_Q = [AGBE_Q1, 2 * AGBE_Q1, 3 * AGBE_Q1]
 # spread colours match the site (SPREAD_COLOR in index.html)
 SPREAD_COLOR = {"0.03": "#0067b9", "0.05": "#00703c",
                 "0.10": "#b26a00", "0.15": "#c0392b"}
@@ -205,7 +207,7 @@ def fig_agbe():
         axR.plot([x for x, _ in pk], [y / ymax for _, y in pk], "-o", ms=3.2,
                  lw=1.2, color=col, label="dl/l = " + sp)
     axR.axvline(AGBE_Q[0], color=GREY, ls=":", lw=1)
-    axR.text(AGBE_Q[0], 1.02, " AgBe(001) 0.1076", color=GREY, fontsize=8, va="bottom")
+    axR.text(AGBE_Q[0], 1.02, " AgBe(001) target 0.1069", color=GREY, fontsize=8, va="bottom")
     axR.set_xlabel("Q (1/A)"); axR.set_ylabel("I(Q) / peak")
     axR.set_title("First AgBe peak, peak-normalised", fontsize=10.5)
     axR.set_xlim(0.07, 0.15)
@@ -221,7 +223,7 @@ def fig_perslice():
     Every slice's peak sits at Q1 -> the peaks overlap; there is no wavelength
     trend."""
     import glob
-    Q1 = 0.10763
+    Q1 = AGBE_Q1
     fs = sorted(glob.glob(os.path.join(PERSLICE, "IQ_*_before_b_correction.dat")),
                 key=lambda f: float(f.split("IQ_")[1].split("_")[0]))
     if not fs:
@@ -254,7 +256,7 @@ def fig_perslice():
     a2.set_xlim(0.085, 0.135)
     a2.set_xlabel("Q (1/A)"); a2.set_ylabel("I(Q) / peak")
     a2.set_title("Peak region, each normalised to its own max", fontsize=10.5)
-    a2.text(Q1, 1.03, "AgBe Q1 = 0.1076", color=RED, fontsize=8, ha="center")
+    a2.text(Q1, 1.03, "calibration target 0.1069", color=RED, fontsize=8, ha="center")
     a2.legend(fontsize=7, ncol=2)
     a2.grid(color="#eceef1")
     fig.tight_layout()
@@ -266,14 +268,14 @@ def fig_peakpos():
     """Two panels: (a) fitted AgBe peak position vs spread for single-bin vs
     multi-bin vs the broadband calibration; (b) convergence to Q1 as dl/l=0.05 is
     sliced into more wavelength bins."""
-    Q1 = 0.1068
+    Q1 = AGBE_Q1   # calibration target 0.1069
     # spread, band width, single-bin q0, multi-bin(0.1 A) q0   (Gaussian fits)
     rows = [("0.05", 0.176, 0.1039, 0.1058),
             ("0.10", 0.301, 0.1070, 0.1065),
             ("0.15", 0.426, 0.1079, 0.1067)]
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(11.4, 4.5))
     x = list(range(len(rows)))
-    a1.axhline(Q1, color=GREY, ls="--", lw=1.3, label="broadband calibration (0.1068)")
+    a1.axhline(Q1, color=GREY, ls="--", lw=1.3, label="AgBe calibration target (0.1069)")
     a1.plot(x, [r[2] for r in rows], "o-", color=RED, ms=7, label="single-bin (monochromatic mode)")
     a1.plot(x, [r[3] for r in rows], "s-", color=GREEN, ms=7, label="multi-bin (0.1 A step)")
     a1.set_xticks(x); a1.set_xticklabels(["dl/l=%s\n(band %.2f A)" % (r[0], r[1]) for r in rows])
@@ -284,7 +286,7 @@ def fig_peakpos():
 
     # convergence for dl/l=0.05
     nb = [1, 2, 8]; q0 = [0.1039, 0.1063, 0.1066]
-    a2.axhline(Q1, color=GREY, ls="--", lw=1.3, label="broadband / calibration (0.1068)")
+    a2.axhline(Q1, color=GREY, ls="--", lw=1.3, label="calibration target (0.1069)")
     a2.plot(nb, q0, "o-", color=BLUE, ms=7)
     a2.set_xscale("log")
     a2.set_xticks(nb); a2.set_xticklabels([str(n) for n in nb])
