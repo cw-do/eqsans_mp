@@ -498,20 +498,27 @@ def fig_emission_model():
     a.annotate("all three pass the SAME\nopen chopper window", xy=(3690, 5.75),
                xytext=(400, 3.0), fontsize=8.5, color="k",
                arrowprops=dict(arrowstyle="->", color="k", lw=0.9))
-    # inset: zoom of the birth region with the emission pulse
-    ain = a.inset_axes([0.615, 0.02, 0.37, 0.235])
-    tprof = np.arange(0.0, 900.0, 4.0)
+    # inset: zoom of the birth region with the fitted emission pulse, annotated
+    # with the shape numbers (rise ~ t=0 = mean-170; tail to ~ mean+550 = 673 us)
+    ain = a.inset_axes([0.60, 0.02, 0.385, 0.26])
+    tprof = np.arange(0.0, 1000.0, 4.0)
     prof = emis_pdf(tprof)
     ain.fill_between(tprof, 0, prof / prof.max(), color="0.6", alpha=0.6)
     ain.axvline(TBAR, color="0.4", lw=0.9, ls="--")
-    ain.text(TBAR + 25, 0.86, "mean (assumed)", fontsize=6.5, color="0.3")
+    ain.text(TBAR + 20, 0.84, "mean 123 μs\n(= assumed birth)", fontsize=6, color="0.3")
+    ain.annotate("rise ≈ t=0\n(170 μs before mean)", xy=(15, 0.75), xytext=(240, 0.52),
+                 fontsize=6, color="0.3",
+                 arrowprops=dict(arrowstyle="->", color="0.4", lw=0.7))
+    ain.annotate("tail → ~+550 μs past mean", xy=(673, 0.06), xytext=(430, 0.28),
+                 fontsize=6, color="0.3",
+                 arrowprops=dict(arrowstyle="->", color="0.4", lw=0.7))
     for tb, lm, col in cases:
         ain.plot(tb, 0.02, "o", color=col, ms=6, clip_on=False, zorder=5)
-    ain.set_xlim(0, 900); ain.set_ylim(0, 1.05)
+    ain.set_xlim(0, 1000); ain.set_ylim(0, 1.05)
     ain.set_yticks([])
     ain.tick_params(labelsize=6.5)
-    ain.set_xlabel("birth time (μs)", fontsize=7)
-    ain.set_title("moderator emission pulse (zoom)", fontsize=7.5)
+    ain.set_xlabel("birth time after proton pulse (μs)", fontsize=6.5)
+    ain.set_title("fitted emission pulse (zoom)", fontsize=7.5)
     a.set_xlim(0, 13500); a.set_ylim(-0.4, 19.6)
     a.set_xlabel("time after proton pulse (μs)")
     a.set_ylabel("distance from moderator (m)")

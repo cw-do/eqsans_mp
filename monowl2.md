@@ -282,6 +282,31 @@ and the clip-size consistency. A truly independent emission shape must come from
 the SNS moderator emission tables (or a monitor-spectrum measurement) — the
 outstanding refinement.
 
+**Where the −170 / +550 μs numbers live (vs panel C's −100…+300 μs).** The
+−170/+550 μs describe the **extent of the emission pulse itself** — the birth-time
+distribution of *individual* neutrons, drawn (annotated) in the panel-A inset: the
+pulse rises essentially at t = 0 (the proton pulse, ≈170 μs *before* the 123 μs
+mean) and its tail stretches to ≈550 μs *past* the mean. Panel C's y-axis is a
+different quantity: the **per-bin average** birth-time offset of the surviving
+sub-population. Averages are always interior to the extremes — the worst bin mixes
+tail neutrons of +200…+550 μs with milder ones and averages to +296 μs, and the
+closing edge averages the rise side to −95 μs. So panel C spanning −100…+300 μs
+while the pulse spans −170…+550 μs is exactly consistent.
+
+**During which step does green become red — and which parameter is "wrong"?** The
+mislabelling happens at **event loading**, in the per-event TOF→wavelength
+conversion (`load_events` → `correct_emission_time` → `convert_to_wavelength`):
+each event's wavelength is computed as λ = 3956·(t_arrival − t̄_emission(λ))/L,
+where `ModeratorTzero` subtracts the **mean** emission delay. It happens before any
+binning, any Q conversion, and any chopper-phase use. And strictly, **no drtsans
+parameter is wrong**: the geometry is right, the mean delay is the correct *mean*,
+and the phases never enter. The error is structural — the formula needs each
+neutron's *actual* birth time, which is not measured, and substitutes the
+*population mean*. That substitution is exact only for a neutron born exactly
+on-mean; for everyone else the residual (t_birth − t̄) leaks into the wavelength.
+Broadband hides this (the residuals average to zero in every bin); a narrow gate
+selects one-sided residuals and exposes it.
+
 **Why broadband's short edge is nearly immune while the mono band is hit at both
 edges** — an asymmetry the mechanism predicts, for three stacked reasons: (1) the
 short edge's in-band bias truncates only the **sharp early rise** (~100–170 μs →
