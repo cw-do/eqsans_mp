@@ -230,6 +230,22 @@ Three wavelengths must be kept distinct (each neutron has all three):
 - **design band** — the range the chopper phases are *designed* to pass if every
   neutron were born exactly at the mean emission time.
 
+The mislabel per neutron is simply
+
+```
+Δλ = λ_assigned − λ_true = (t_birth − t̄_assumed) · 3956 / L_total
+```
+
+— a pure function of the birth-time offset. **No chopper phase enters the
+assignment** (verified: swapping the chopper config in the reduction leaves
+λ_assigned unchanged at matched wavelengths). The phases only *select* which
+(λ_true, birth-time) combinations reach the detector: a wide gate passes all birth
+times for each wavelength, so the mislabels average to zero (symmetric resolution
+broadening — why broadband is clean); a narrow gate keeps only one side of the
+birth-time distribution near each edge, so the mislabels stop cancelling and become
+a systematic shift. The narrow gate does not cause the mislabeling — it
+**un-cancels** it. Even perfectly refined phases would show the same effect.
+
 ![Emission-time model: distance–time view, spectrum reshaping, model vs measurement](assets/monowl/monowl2_model.png)
 *Figure: (A) distance–time view — neutrons are straight lines from their birth point on the time axis to the detector, slope = speed. Three example neutrons all pass through the SAME open chopper window (blue strip at 5.7 m): the on-time 2.50 Å neutron (green), a truly-2.20 Å neutron born 380 μs late on the emission tail (red), and a truly-2.75 Å neutron born ~100 μs early on the rise (blue). The reduction assigns wavelength by drawing a line back to the ASSUMED birth time (dashed): the late-born fast neutron gets labelled 2.28 Å, the early-born slow one 2.73 Å — only the on-time neutron is labelled correctly. Inset: the moderator emission pulse with the three birth times marked. (B) the SAME chopper timings, two separate effects: dotted vs green = the gate ADMITS more than designed (green is the transmitted neutrons plotted at λ_true — extra truly-faster neutrons enter via the late tail, outside the design band); green vs red = those admitted neutrons are then MISLABELLED (red is the identical neutrons re-plotted at λ_assigned, pulled toward the band). Both green and red are model curves using the measured-tail emission distribution with its mean pinned to drtsans' 123 μs (drtsans' own tail-less width model appears only in panel C). (C) the mislabel predicted by two emission models overlaid on the eight AgBe-measured points: green = exponentially-modified Gaussian with the drtsans mean of 123 μs and a measured tail (rise ≈ −170 μs, tail ≈ +550 μs); blue dashed = drtsans' own moderator width model. Model in make_monowl_plots.py (fig_emission_model).*
 
