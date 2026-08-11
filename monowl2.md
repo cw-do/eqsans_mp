@@ -7,10 +7,10 @@ d-spacing, so its ring must sit at the same Q at every spread — the EQSANS AgB
 calibration target **Q1 = 0.1069 Å⁻¹** (d(001) ≈ 58.8 Å; `TARGET_Q1` in the AgBe
 calibration) — only the *resolution* (peak width) should change.
 
-This page tracks that down. The short version: **nothing is wrong with the
-wavelength conversion or the calibration.** The shift is entirely an artifact of
-collapsing the band into a single wavelength bin, and it disappears when the band
-is reduced wavelength-resolved (as broadband always is).
+This page tracks that down. It uncovered **two** separate effects — a single-bin
+weighting shift, and a wavelength-axis distortion — and the root cause of the
+second is a **chopper-config mismatch between calibration and reduction**. The
+bottom line is in *Final verdict* at the end; the reasoning is below.
 
 ## The symptom
 
@@ -189,10 +189,74 @@ This reverses the provisional recommendation on the monoWL tab (which framed
 single-bin as *the* fix): the correct approach is a wavelength-resolved reduction
 with the standard calibration.
 
+## Final verdict — a calibration ↔ reduction chopper-config mismatch
+
+Pulling the whole investigation together, there are **two distinct effects**, and
+the more subtle one comes down to a config mismatch we introduced:
+
+**1. Single-bin weighting shift (a reduction-choice effect).** Collapsing the whole
+band into one wavelength bin forces a single λ into Q = 4π·sinθ/λ; the merged peak
+lands at the intensity-weighted mean wavelength, so it shifts with spread. Fixed by
+reducing wavelength-resolved (above).
+
+**2. Per-slice wavelength distortion (a chopper-config mismatch).** This is the real
+root cause, and it is not the monochromatic *data* — it is a config difference we
+introduced for the monochromatic reduction:
+
+- **How the config enters the wavelength.** drtsans selects a chopper config by
+  daystamp; for these Aug-2026 runs the default is the **20260304** ("March")
+  entry. The config drives the wavelength assignment through the frame correction:
+  `transmitted_bands` (built from the chopper **distances, phases and offsets**) →
+  `limiting_tofs` → `tof_min` → `EQSANSCorrectFrame(MinTOF=tof_min)` reassigns each
+  event's TOF → and wavelength = TOF · (h/mₙ) / distance. So the chopper geometry
+  feeds the TOF→wavelength conversion — **confirmed in the drtsans source, and
+  confirmed empirically** (swapping the config moves the fitted peaks).
+
+- **The calibration used the default config.** All 2026B machine-physics
+  calibration — dark current, sensitivity, flux, and the AgBe geometry
+  (`scale_all`, `detoffset`, `samoffset`) — was done **without forcing the config**,
+  i.e. under **20260304**. The geometry was therefore tuned so AgBe lands at
+  Q1 = 0.1069 *given the 20260304 wavelength assignment*.
+
+- **The monochromatic reduction used a different config.** We monkeypatched the
+  monochromatic runs to the **20260101** config (the default gives empty bands for
+  narrow spreads). That changes the wavelength assignment relative to what the
+  calibration assumed → **mismatch** → the AgBe peak and the per-slice wavelength
+  axis shift.
+
+- **The evidence.** Re-reducing the *same* dl/l=0.15 AgBe with the **default**
+  config collapses the per-slice drift from 7.2σ to ~2σ (reliable slices flat);
+  broadband, reduced under the default config that matches the calibration, is dead
+  flat at 0.1067; and the single-bin peaks scatter. The distortion tracks the
+  config, not the data.
+
+- **Neither 6-chopper config is fully right for these runs.** The default
+  (20260304) mis-centres the narrow bands (empty → IndexError for dl/l ≤ 0.05, and
+  off-centre at ~2.57 Å for the rest); the forced (20260101) centres the band at
+  2.5 Å but skews the wavelength axis *inside* it. Both are symptoms of the same
+  thing: the **6-chopper phase/geometry is not yet correctly implemented in
+  drtsans** (the config problem first flagged on the **monoWL** tab).
+
+## Path forward — recalibrate all machine physics under the correct config
+
+Because the chopper config sets the wavelength assignment, **the calibration and the
+reduction must use the same config**, and both must use the *correct* one. Until the
+correct 6-chopper phase/geometry is implemented in drtsans, every result here is
+provisional.
+
+> **Action item:** once the correct chopper phase configuration is in place,
+> **redo all 2026B machine-physics calibration under it** — dark current,
+> sensitivity, flux, and especially the AgBe geometry (`scale_all`, `detoffset`,
+> `samoffset`) — and then reduce all standard and monochromatic data with that same
+> config. The current 2026B calibration and the monochromatic reductions on these
+> tabs should be treated as provisional and re-derived at that point.
+
 ## Scripts & data
 
 All under `2026B_mp/reduction/mono_diagnosis/`:
 `reduce_agbe_mono.py` (single-bin), `reduce_agbe_multibin.py` (0.1 Å),
-`reduce_agbe_dl05_fine.py` (convergence), `reduce_agbe_perslice.py` (per-slice
-profiles). Figures drawn by `doc/monowl_assets/make_monowl_plots.py`; peak fits
-by scipy Gaussian + linear background over Q ∈ [0.085, 0.130].
+`reduce_agbe_dl05_fine.py` (convergence), `reduce_agbe_perslice.py` (mono per-slice
+profiles), `reduce_agbe_bb_perslice.py` / `reduce_agbe_bb05_perslice.py` (broadband
+per-slice controls), `reduce_agbe_dl15_default.py` (default-config isolation test).
+Figures drawn by `doc/monowl_assets/make_monowl_plots.py`; peak fits by scipy
+Gaussian + linear background over Q ∈ [0.085, 0.130].
