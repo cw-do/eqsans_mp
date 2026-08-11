@@ -178,6 +178,7 @@
         <button data-view="masks">Masks</button>
         <button data-view="choppers">Choppers</button>
         <button data-view="monowl">monoWL</button>
+        <button data-view="monowl2">monoWL2</button>
       </div>
     </div>
   </nav>
@@ -863,12 +864,31 @@ function renderMonowl(){
   return wrap;
 }
 
+function renderMonowl2(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Monochromatic reduction II"));
+  head.append(el("span","badge latest","peak position & wavelength binning"));
+  wrap.append(head);
+  wrap.append(el("div","sub","Why the AgBe peak position appeared to shift with spread — and why it is a single-wavelength-bin artifact, not the calibration or the wavelength conversion."));
+  if(D.monowl2_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.monowl2_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No monoWL2 documentation found. Add doc/monowl2.md and regenerate."));
+  }
+  return wrap;
+}
+
 /* ---------- shell ---------- */
 function render(){
   const main = document.getElementById("main");
   main.innerHTML = "";
   if(view==="choppers"){ main.append(renderChoppers()); return; }
   if(view==="monowl"){ main.append(renderMonowl()); return; }
+  if(view==="monowl2"){ main.append(renderMonowl2()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }

@@ -655,8 +655,20 @@ def main():
                 monowl_md = fh.read()
         except OSError:
             monowl_md = None
+    # Second monochromatic page (peak position / wavelength binning study).
+    monowl2_md = None
+    mp2 = os.path.join(DOC_DIR, "monowl2.md")
+    if os.path.isfile(mp2):
+        try:
+            with open(mp2, errors="replace") as fh:
+                monowl2_md = fh.read()
+        except OSError:
+            monowl2_md = None
+
+    # monoWL plots live in doc/monowl_assets/ (committed) -> assets/monowl/ each
+    # run; both monowl.md and monowl2.md reference assets/monowl/*.png.
     src = os.path.join(DOC_DIR, "monowl_assets")
-    if monowl_md and os.path.isdir(src):
+    if (monowl_md or monowl2_md) and os.path.isdir(src):
         dest = os.path.join(ASSETS_DIR, "monowl")
         os.makedirs(dest, exist_ok=True)
         for f in os.listdir(src):
@@ -669,6 +681,7 @@ def main():
         "cycles": cycles,
         "chopper_md": chopper_md,
         "monowl_md": monowl_md,
+        "monowl2_md": monowl2_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
     with open(out, "w") as fh:

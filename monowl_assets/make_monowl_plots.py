@@ -19,6 +19,8 @@ MONO = os.path.normpath(os.path.join(
     HERE, "..", "..", "2026B_mp", "reduction", "mono_diagnosis"))
 RECIPE = os.path.join(MONO, "reduced_recipe")
 AGBE = os.path.join(MONO, "reduced_agbe_mono")
+PERSLICE = os.path.join(MONO, "perslice", "info", "inelastic_incoh",
+                        "agbe_dl0.15_perslice", "slice_0", "frame_0")
 
 # AgBe silver-behenate diffraction orders (d = 58.38 A -> Q = 2*pi*n/d)
 AGBE_Q = [0.10763, 0.21526, 0.32289]
@@ -214,9 +216,95 @@ def fig_agbe():
     plt.close(fig)
 
 
+def fig_perslice():
+    """monoWL2 centrepiece: AgBe I(Q) per wavelength slice of the dl/l=0.15 band.
+    Every slice's peak sits at Q1 -> the peaks overlap; there is no wavelength
+    trend."""
+    import glob
+    Q1 = 0.10763
+    fs = sorted(glob.glob(os.path.join(PERSLICE, "IQ_*_before_b_correction.dat")),
+                key=lambda f: float(f.split("IQ_")[1].split("_")[0]))
+    if not fs:
+        return
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11.4, 4.7))
+    try:
+        cmap = plt.cm.viridis
+    except Exception:
+        cmap = None
+    n = len(fs)
+    for i, f in enumerate(fs):
+        wl = float(f.split("IQ_")[1].split("_")[0])
+        q, iq, _ = read_iq(f)
+        if not q:
+            continue
+        col = cmap(i / max(1, n - 1)) if cmap else BLUE
+        a1.plot(q, iq, "-o", ms=2.4, lw=0.9, color=col, label="%.3f A" % wl)
+        pk = [(x, y) for x, y in zip(q, iq) if 0.085 < x < 0.135]
+        if pk:
+            ym = max(y for _, y in pk)
+            a2.plot([x for x, _ in pk], [y / ym for _, y in pk], "-o", ms=3,
+                    lw=1.1, color=col, label="%.3f A" % wl)
+    for a in (a1, a2):
+        a.axvline(Q1, color=RED, ls="--", lw=1.2)
+    a1.set_xscale("log"); a1.set_yscale("log")
+    a1.set_xlabel("Q (1/A)"); a1.set_ylabel("I(Q)")
+    a1.set_title("AgBe I(Q) per wavelength slice (dl/l=0.15 band)", fontsize=10.5)
+    a1.legend(fontsize=7, title="slice lambda", ncol=2)
+    a1.grid(which="both", color="#eceef1")
+    a2.set_xlim(0.085, 0.135)
+    a2.set_xlabel("Q (1/A)"); a2.set_ylabel("I(Q) / peak")
+    a2.set_title("Peak region, each normalised to its own max", fontsize=10.5)
+    a2.text(Q1, 1.03, "AgBe Q1 = 0.1076", color=RED, fontsize=8, ha="center")
+    a2.legend(fontsize=7, ncol=2)
+    a2.grid(color="#eceef1")
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl2_perslice.png"), dpi=130)
+    plt.close(fig)
+
+
+def fig_peakpos():
+    """Two panels: (a) fitted AgBe peak position vs spread for single-bin vs
+    multi-bin vs the broadband calibration; (b) convergence to Q1 as dl/l=0.05 is
+    sliced into more wavelength bins."""
+    Q1 = 0.1068
+    # spread, band width, single-bin q0, multi-bin(0.1 A) q0   (Gaussian fits)
+    rows = [("0.05", 0.176, 0.1039, 0.1058),
+            ("0.10", 0.301, 0.1070, 0.1065),
+            ("0.15", 0.426, 0.1079, 0.1067)]
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11.4, 4.5))
+    x = list(range(len(rows)))
+    a1.axhline(Q1, color=GREY, ls="--", lw=1.3, label="broadband calibration (0.1068)")
+    a1.plot(x, [r[2] for r in rows], "o-", color=RED, ms=7, label="single-bin (monochromatic mode)")
+    a1.plot(x, [r[3] for r in rows], "s-", color=GREEN, ms=7, label="multi-bin (0.1 A step)")
+    a1.set_xticks(x); a1.set_xticklabels(["dl/l=%s\n(band %.2f A)" % (r[0], r[1]) for r in rows])
+    a1.set_ylabel("fitted AgBe peak Q (1/A)")
+    a1.set_title("Peak position vs spread", fontsize=10.5)
+    a1.legend(fontsize=8); a1.grid(color="#eceef1")
+    a1.set_ylim(0.100, 0.110)
+
+    # convergence for dl/l=0.05
+    nb = [1, 2, 8]; q0 = [0.1039, 0.1063, 0.1066]
+    a2.axhline(Q1, color=GREY, ls="--", lw=1.3, label="broadband / calibration (0.1068)")
+    a2.plot(nb, q0, "o-", color=BLUE, ms=7)
+    a2.set_xscale("log")
+    a2.set_xticks(nb); a2.set_xticklabels([str(n) for n in nb])
+    a2.set_xlabel("number of wavelength bins across the band")
+    a2.set_ylabel("fitted AgBe peak Q (1/A)")
+    a2.set_title("dl/l=0.05: finer binning -> converges to Q1", fontsize=10.5)
+    a2.legend(fontsize=8); a2.grid(which="both", color="#eceef1")
+    a2.set_ylim(0.103, 0.108)
+    a2.annotate("1 bin =\nsingle-lambda", xy=(1, 0.1039), xytext=(1.4, 0.1045),
+                fontsize=8, color=BLUE)
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl2_peakpos.png"), dpi=130)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_bands()
     fig_intersection()
     fig_iq()
     fig_agbe()
-    print("wrote monowl_bands/intersection/iq/agbe .png in", HERE)
+    fig_perslice()
+    fig_peakpos()
+    print("wrote monowl_* and monowl2_* .png in", HERE)
