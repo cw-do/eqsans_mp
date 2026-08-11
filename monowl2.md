@@ -217,8 +217,21 @@ contamination reaches everywhere. This also explains why fine binning converged 
 
 ### Picturing the mechanism — and a quantitative check
 
+Three wavelengths must be kept distinct (each neutron has all three):
+
+- **λ_true** — the wavelength the neutron actually has; sets its speed and its
+  Bragg angle. Never directly measured.
+- **λ_assigned** — the wavelength **drtsans computes from arrival time**,
+  λ = 3956·(t_arrival − t̄_emission)/L_total, using the assumed *mean* emission
+  time. Pure per-event TOF bookkeeping during reduction — nothing to do with any
+  peak position. It is the x-axis of every reduced spectrum and the λ used in
+  Q = 4π·sinθ/λ. (The AgBe peak was only our diagnostic to measure, after the
+  fact, how far λ_assigned deviates from λ_true.)
+- **design band** — the range the chopper phases are *designed* to pass if every
+  neutron were born exactly at the mean emission time.
+
 ![Emission-time model: distance–time view, spectrum reshaping, model vs measurement](assets/monowl/monowl2_model.png)
-*Figure: (A) distance–time view — neutrons are straight lines from their birth point on the time axis to the detector, slope = speed. Three example neutrons all pass through the SAME open chopper window (blue strip at 5.7 m): the on-time 2.50 Å neutron (green), a truly-2.20 Å neutron born 380 μs late on the emission tail (red), and a truly-2.75 Å neutron born ~100 μs early on the rise (blue). The reduction assigns wavelength by drawing a line back to the ASSUMED birth time (dashed): the late-born fast neutron gets labelled 2.28 Å, the early-born slow one 2.73 Å — only the on-time neutron is labelled correctly. Inset: the moderator emission pulse with the three birth times marked. (B) the transmitted spectrum for the SAME chopper timings: the ideal no-spread gate would pass the dotted rectangle; the emission spread lets genuinely faster neutrons in via the late tail (green curve extends well below the nominal edge) and mildly slower ones via the early rise — the true band is wider and asymmetric, and the apparent (assigned-label) spectrum differs from both. (C) the mislabel predicted by two emission models overlaid on the eight AgBe-measured points: green = exponentially-modified Gaussian with the drtsans mean of 123 μs and a measured tail (rise ≈ −170 μs, tail ≈ +550 μs); blue dashed = drtsans' own moderator width model. Model in make_monowl_plots.py (fig_emission_model).*
+*Figure: (A) distance–time view — neutrons are straight lines from their birth point on the time axis to the detector, slope = speed. Three example neutrons all pass through the SAME open chopper window (blue strip at 5.7 m): the on-time 2.50 Å neutron (green), a truly-2.20 Å neutron born 380 μs late on the emission tail (red), and a truly-2.75 Å neutron born ~100 μs early on the rise (blue). The reduction assigns wavelength by drawing a line back to the ASSUMED birth time (dashed): the late-born fast neutron gets labelled 2.28 Å, the early-born slow one 2.73 Å — only the on-time neutron is labelled correctly. Inset: the moderator emission pulse with the three birth times marked. (B) the SAME chopper timings, two separate effects: dotted vs green = the gate ADMITS more than designed (green is the transmitted neutrons plotted at λ_true — extra truly-faster neutrons enter via the late tail, outside the design band); green vs red = those admitted neutrons are then MISLABELLED (red is the identical neutrons re-plotted at λ_assigned, pulled toward the band). Both green and red are model curves using the measured-tail emission distribution with its mean pinned to drtsans' 123 μs (drtsans' own tail-less width model appears only in panel C). (C) the mislabel predicted by two emission models overlaid on the eight AgBe-measured points: green = exponentially-modified Gaussian with the drtsans mean of 123 μs and a measured tail (rise ≈ −170 μs, tail ≈ +550 μs); blue dashed = drtsans' own moderator width model. Model in make_monowl_plots.py (fig_emission_model).*
 
 In panel B the green and red curves describe the **same transmitted neutrons on two
 different wavelength axes**: green plots each neutron at the wavelength it *actually

@@ -525,16 +525,22 @@ def fig_emission_model():
                                weights=(P[:, None] * np.ones_like(LAM))[GATE])
     def norm(y): return y / y.max() if y.max() > 0 else y
     b.plot(lam, norm(ideal), color="0.5", lw=1.4, ls=":",
-           label="ideal gate (no emission spread)")
+           label="design band (if all born at mean time)")
     b.plot(lam, norm(true_spec), color=GREEN, lw=1.8,
-           label="TRUE wavelength content")
+           label="transmitted, plotted at TRUE λ")
     b.plot(0.5 * (bins[1:] + bins[:-1]), norm(app_spec), color=RED, lw=1.8,
-           label="APPARENT (assigned) spectrum")
+           label="same neutrons, at λ ASSIGNED by TOF")
+    b.annotate("truly-faster neutrons admitted\nvia the late tail (outside the\ndesign band)",
+               xy=(2.13, 0.10), xytext=(2.02, 0.42), fontsize=7.5, color=GREEN,
+               arrowprops=dict(arrowstyle="->", color=GREEN, lw=0.9))
+    b.annotate("the same neutrons, relabelled\ntoward the band by the TOF\nassignment",
+               xy=(2.24, 0.30), xytext=(2.42, 0.16), fontsize=7.5, color=RED,
+               arrowprops=dict(arrowstyle="->", color=RED, lw=0.9))
     b.set_xlabel("wavelength (A)"); b.set_ylabel("relative flux")
     b.set_xlim(2.0, 3.0)
-    b.set_title("(B) same chopper timings, three spectra:\n"
-                "emission spread widens the TRUE band asymmetrically", fontsize=9.6)
-    b.legend(fontsize=7.5); b.grid(color="#eceef1")
+    b.set_title("(B) same chopper timings: what the gate passes (green)\n"
+                "vs what the reduced data claims (red)", fontsize=9.6)
+    b.legend(fontsize=7.5, loc="upper right"); b.grid(color="#eceef1")
     # ---- (C) predicted mislabel vs the AgBe measurement -----------------
     def mislabel_curve(weight_t):
         """Mean mislabel (as implied emission-time offset, us) vs assigned
