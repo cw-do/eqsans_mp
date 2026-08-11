@@ -136,6 +136,8 @@
   .readme code{font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:12.5px}
   .readme pre{background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:12px;overflow-x:auto}
   .readme pre code{background:none;padding:0}
+  .readme img{display:block;max-width:760px;width:100%;height:auto;margin:14px auto;
+    background:#fff;border:1px solid var(--line);border-radius:4px;cursor:zoom-in}
   .readme table{border-collapse:collapse;margin:12px 0;display:block;overflow-x:auto}
   .readme th,.readme td{border:1px solid var(--line);padding:6px 10px;font-size:13px}
   .readme th{background:var(--bg2)}
@@ -175,6 +177,7 @@
         <button data-view="standards">Standards</button>
         <button data-view="masks">Masks</button>
         <button data-view="choppers">Choppers</button>
+        <button data-view="monowl">monoWL</button>
       </div>
     </div>
   </nav>
@@ -813,11 +816,30 @@ function renderChoppers(){
   return wrap;
 }
 
+function renderMonowl(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Monochromatic-beam reduction"));
+  head.append(el("span","badge latest","6-chopper · 2026B"));
+  wrap.append(head);
+  wrap.append(el("div","sub","Diagnosis of the monochromatic vary-spread reduction (runs 186204–186248) — what failed, the temporary test fix, and the suggested drtsans fix."));
+  if(D.monowl_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.monowl_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No monoWL documentation found. Add doc/monowl.md and regenerate."));
+  }
+  return wrap;
+}
+
 /* ---------- shell ---------- */
 function render(){
   const main = document.getElementById("main");
   main.innerHTML = "";
   if(view==="choppers"){ main.append(renderChoppers()); return; }
+  if(view==="monowl"){ main.append(renderMonowl()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }

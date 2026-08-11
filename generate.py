@@ -644,11 +644,31 @@ def main():
         except OSError:
             chopper_md = None
 
+    # Monochromatic reduction diagnosis (rendered on the monoWL tab). Its plots
+    # live in doc/monowl_assets/ (committed) and are copied into assets/monowl/
+    # each run, since assets/ is wiped and rebuilt above.
+    monowl_md = None
+    mp = os.path.join(DOC_DIR, "monowl.md")
+    if os.path.isfile(mp):
+        try:
+            with open(mp, errors="replace") as fh:
+                monowl_md = fh.read()
+        except OSError:
+            monowl_md = None
+    src = os.path.join(DOC_DIR, "monowl_assets")
+    if monowl_md and os.path.isdir(src):
+        dest = os.path.join(ASSETS_DIR, "monowl")
+        os.makedirs(dest, exist_ok=True)
+        for f in os.listdir(src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(src, f), os.path.join(dest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
         "cycles": cycles,
         "chopper_md": chopper_md,
+        "monowl_md": monowl_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
     with open(out, "w") as fh:
