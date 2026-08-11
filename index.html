@@ -399,18 +399,19 @@ function renderSummary(c){
 }
 
 /* ---------- details view ---------- */
-function fluxSVG(fc){
-  // log-linear line plot in inline SVG. Y is log10(intensity), X linear (wavelength).
+function fluxSVG(series){
+  // Multi-cycle overlay. series: [{x:[], y:[], color, label}] with the current
+  // cycle first. Y is log10(intensity), X linear (wavelength).
+  if(series && !Array.isArray(series)) series=[Object.assign({color:"#00703c",label:""},series)];
   const W=760, H=340, m={l:64,r:16,t:14,b:44};
-  const xs=fc.x, ys=fc.y;
-  const pos = ys.map(v=>v>0?v:NaN);
-  const xmin=Math.min(...xs), xmax=Math.max(...xs);
-  const ln = pos.filter(v=>!isNaN(v)).map(v=>Math.log10(v));
-  const ymin=Math.min(...ln), ymax=Math.max(...ln);
+  let xmin=Infinity,xmax=-Infinity,ymin=Infinity,ymax=-Infinity;
+  series.forEach(s=>s.x.forEach((x,i)=>{
+    const v=s.y[i];
+    if(x<xmin)xmin=x; if(x>xmax)xmax=x;
+    if(v>0){ const l=Math.log10(v); if(l<ymin)ymin=l; if(l>ymax)ymax=l; }
+  }));
   const px = x => m.l + (x-xmin)/(xmax-xmin)*(W-m.l-m.r);
   const py = v => m.t + (1-(Math.log10(v)-ymin)/(ymax-ymin))*(H-m.t-m.b);
-  let d="";
-  xs.forEach((x,i)=>{ if(pos[i]>0){ d += (d?"L":"M")+px(x).toFixed(1)+" "+py(pos[i]).toFixed(1)+" "; }});
   // axes ticks
   let ticks="";
   for(let e=Math.ceil(ymin); e<=Math.floor(ymax); e++){
@@ -424,10 +425,25 @@ function fluxSVG(fc){
     ticks+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H-m.b}" stroke="#eef0f2"/>`;
     ticks+=`<text x="${x}" y="${H-m.b+18}" fill="#5b6570" font-size="11" text-anchor="middle">${xv.toFixed(1)}</text>`;
   }
+  // paths: draw older cycles first, current cycle last (on top)
+  let paths="";
+  for(let k=series.length-1;k>=0;k--){
+    const s=series[k]; let d="";
+    s.x.forEach((x,i)=>{ const v=s.y[i]; if(v>0){ d += (d?"L":"M")+px(x).toFixed(1)+" "+py(v).toFixed(1)+" "; }});
+    paths+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${k===0?1.9:1.2}"${k===0?"":' opacity="0.85"'}/>`;
+  }
+  // legend (top-right)
+  const lx=W-m.r-150, ly=m.t+8; let leg="";
+  series.forEach((s,k)=>{ const y=ly+k*16;
+    leg+=`<line x1="${lx}" y1="${y}" x2="${lx+18}" y2="${y}" stroke="${s.color}" stroke-width="2.6"/>`;
+    leg+=`<text x="${lx+24}" y="${y+4}" fill="#3a434d" font-size="11">${esc(s.label)}</text>`;
+  });
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">
     <rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" fill="#fbfcfc" stroke="#d3d7dc"/>
     ${ticks}
-    <path d="${d}" fill="none" stroke="#00703c" stroke-width="1.8"/>
+    ${paths}
+    <rect x="${lx-8}" y="${ly-12}" width="152" height="${series.length*16+6}" fill="#ffffffd9" stroke="#e3e6e9"/>
+    ${leg}
     <text x="${W/2}" y="${H-8}" fill="#5b6570" font-size="12" text-anchor="middle">wavelength (Å)</text>
     <text x="16" y="${H/2}" fill="#5b6570" font-size="12" text-anchor="middle" transform="rotate(-90 16 ${H/2})">intensity (a.u.)</text>
   </svg>`;
@@ -439,8 +455,21 @@ function renderDetails(c){
   if(c.flux_curve && c.flux_curve.x && c.flux_curve.x.length){
     wrap.append(el("div","sectitle","Flux spectrum"));
     const box = el("div","fluxbox");
-    box.innerHTML = fluxSVG(c.flux_curve);
-    box.append(el("div","filemeta","&nbsp;"+esc(c.flux_curve.label||"")));
+    // overlay this cycle with the previous two cycles that have a flux curve
+    const series=[{x:c.flux_curve.x, y:c.flux_curve.y, color:"#00703c", label:c.id+" (this cycle)"}];
+    const prevColors=["#0067b9","#b26a00"];
+    const idx=D.cycles.findIndex(x=>x.id===c.id);
+    let found=0;
+    for(let j=idx+1;j<D.cycles.length && found<2;j++){
+      const pc=D.cycles[j];
+      if(pc.flux_curve && pc.flux_curve.x && pc.flux_curve.x.length){
+        series.push({x:pc.flux_curve.x, y:pc.flux_curve.y, color:prevColors[found], label:pc.id});
+        found++;
+      }
+    }
+    box.innerHTML = fluxSVG(series);
+    const ov = found ? "  ·  overlay vs "+series.slice(1).map(s=>s.label).join(", ") : "";
+    box.append(el("div","filemeta","&nbsp;"+esc(c.flux_curve.label||"")+esc(ov)));
     wrap.append(box);
   }
 
