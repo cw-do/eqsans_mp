@@ -128,16 +128,104 @@ config-independent. The apparent 7.2σ-vs-2σ difference between configs was onl
 the forced config's *wider* band reaches down to ~2.29 Å, where q0 droops; the
 default band starts at ~2.44 Å and never samples it.
 
-**What is left is a real, unexplained run-level offset.** Comparing the reduced
-*runs* rather than the configs: where the monochromatic run (186246) and the
-broadband run (186106) overlap in wavelength (~2.6 Å), the mono AgBe peak sits at
+**What is left is a run-level effect — explained in the next section.** Comparing
+the reduced *runs* rather than the configs: where the monochromatic run (186246) and
+the broadband run (186106) overlap in wavelength (~2.6 Å), the mono AgBe peak sits at
 ≈0.1074 while broadband sits at ≈0.1067 — a **~0.5 % offset** — and the mono run
-droops further at short λ. Broadband is flat (0.1067–0.1068) wherever it is measured.
-This is a difference between the two **physical measurements** (different chopper
-*hardware* settings/timing for monochromatic vs broadband), present under either
-reduction config — most likely an **instrument-level chopper-phasing / TOF-timing**
-effect in the monochromatic setup, not a reduction artifact. It is not yet
-explained, and is flagged as an open item.
+droops further at short λ. Broadband is flat wherever its band interior is measured.
+This pattern is a property of the physical measurements, present under either
+reduction config — and it is explained by the **moderator emission-time selection**
+mechanism below.
+
+## The mechanism — chopper gating × moderator emission time
+
+TOF wavelength assignment λ = (h/mₙ)·(t_arrival − t_emission)/L uses a measured
+t_arrival but an **assumed** t_emission: every neutron of a given wavelength is
+assumed to leave the moderator at one fixed mean time after the proton pulse
+(drtsans corrects for that mean: 123 μs at 2.5 Å). In reality the coupled cold
+moderator emits each wavelength over a **broad time distribution** — a sharp rise
+~100 μs before the mean and a long tail ~300 μs after it.
+
+A chopper gates in **time**, and at chopper 1 (5.7 m) 100 μs of emission spread is
+equivalent to **0.07 Å** of wavelength. So near a gate edge the gate slices the
+emission-time distribution:
+
+- **Opening (short-λ) edge:** neutrons *faster* than the nominal cutoff still pass
+  **if emitted late** (the long tail). Their arrival time is late for their speed →
+  they are labelled with a **longer** wavelength than they truly have → Q too small.
+- **Closing (long-λ) edge:** for wavelengths near the cutoff the gate **truncates
+  the late-emission tail**; the surviving neutrons are early-emitted → labelled
+  **shorter** than truth → Q too large.
+
+The gate never changes any neutron's wavelength — it *selects correlated
+(λ, t_emission) pairs*, and the one-emission-time assumption mislabels exactly those.
+In a **wide broadband band** the interior wavelengths pass with their entire emission
+distribution (no selection → clean); only the outer ~0.1–0.4 Å of the band edges are
+affected. In a **narrow monochromatic band the whole band is edge** — every slice is
+emission-selected, which is why the same 0.1 Å step is clean in broadband and skewed
+in mono.
+
+**Out-of-sample confirmation.** The mechanism predicts the *broadband* band edges
+must show the same deviations once the standard TOF clips are turned off — and they
+do:
+
+![Broadband edge deviations and mono implied emission offsets](assets/monowl/monowl2_emission.png)
+*Figure left: broadband run 186106 per-slice with TOF clips OFF — interior flat at 0.1067, but the closing-edge slices rise over the last ~0.4 Å (0.10679→0.10733), exactly inside the region the standard `cutTOFmax = 2000 μs` clip (red shading) is sized to remove; the opening edge is nearly clean, as predicted from the sharp emission rise plus the fact that tail-passed fast neutrons are labelled below the band minimum and fall out of the histogram. Figure right: the mono dl/l=0.15 per-slice mislabel expressed as the implied emission-time offset — +296 μs (late tail) at the opening edge through ≈0 mid-band to −95 μs (early rise) at the closing edge — the moderator pulse shape read through the gate. Scripts: reduce_agbe_bbnoclip.py, reduce_agbe_perslice.py.*
+
+Five independent features line up: the deviation direction at each edge, the
+magnitude (30–300 μs vs the 123 μs mean delay of a coupled moderator), the
+**asymmetry** (short edge worse — long late tail; long edge milder — sharp rise),
+the config-independence (the selection happened in hardware at measurement time),
+and the sizes of the **standard TOF clips (500 μs low / 2000 μs high)** — which turn
+out to be sized precisely to discard the two contaminated edge regions (≈0.11 Å and
+≈0.44 Å). The clips exist *because of this physics*; we had to disable them for the
+monochromatic band, thereby keeping only contaminated territory.
+
+**A clip cannot cure a narrow band.** Re-reducing mono dl/l=0.15 with modest 300 μs
+edge clips removes the worst extremes (0.1039 and 0.1077 disappear) but the
+remaining core still drifts (0.1055→0.1073): clipping discards contaminated labels
+but cannot re-label physically mislabeled events, and in a narrow band the
+contamination reaches everywhere. This also explains why fine binning converged to
+0.1066 rather than exactly 0.1069.
+
+## Practical guidance — a reliable dl/l floor vs wavelength
+
+The contaminated band-edge width is set by the *moderator*, not by the requested
+spread: Δλ_contam ≈ (3956/L_chopper)·(rise+tail) ≈ **0.4 Å, nearly independent of
+wavelength** (the drtsans mean-delay curve is almost flat from 2–13 Å). So the
+*fractional* penalty falls as 1/λ, and monochromatic mode becomes progressively more
+trustworthy at long wavelength:
+
+| λ (Å) | contaminated Δλ | dl/l floor (no clean core below) | reliable dl/l (≥50 % clean core) |
+|---|---|---|---|
+| 1.0 | 0.21 Å | 21 % | 43 % |
+| 2.0 | 0.38 Å | 19 % | 38 % |
+| 2.5 | 0.38 Å | 15 % | 31 % |
+| 4.0 | 0.39 Å | 10 % | 20 % |
+| 6.0 | 0.40 Å | 6.6 % | 13 % |
+| 10.0 | 0.40 Å | 4.0 % | 8 % |
+| 13.0 | 0.41 Å | 3.1 % | 6 % |
+
+Assumptions: rise ≈ 200 μs and tail ≈ 350 μs (measured here at 2.5 Å from the AgBe
+mislabels), scaled with the drtsans mean-delay curve; blur evaluated at chopper 1
+(5.7 m). *Floor* = spread at which the emission blur spans the whole band (no
+wavelength in the band escapes selection). *Reliable* = spread with at least half
+the band clean after clipping the fixed edges. These are estimates to be refined
+with the actual SNS moderator emission tables — but the 2.5 Å row is anchored in
+this measurement, and it explains the whole campaign: **at 2.5 Å every spread we
+measured (dl/l ≤ 0.15) is below the floor**, so all of it was emission-dominated.
+The same series at 10 Å (floor 4 %) would have been mostly clean.
+
+Two corollaries worth noting:
+
+- There is a **monochromaticity floor**: below dl/l ≈ Δλ_contam/λ, tightening the
+  chopper phases no longer narrows the *true* wavelength content — it only trades
+  flux for a larger fraction of emission-selected, mislabeled neutrons. (This is
+  also why dl/l = 0.03 at 2.5 Å was so unrewarding.)
+- For quantitative monochromatic work at short wavelength, the honest options are:
+  go to **longer wavelength**, use a **wider spread** (≥ the reliable column), or
+  reduce **wavelength-resolved with edge clips** and accept the flux loss — a
+  single-bin treatment is never safe at 2.5 Å.
 
 **Practical impact is small:** the *combined* (multi-bin) mono peak still lands near
 Q1 (0.1065–0.1067). The recommendation (wavelength-resolved reduction, standard
@@ -218,14 +306,18 @@ chopper phase sets *which* wavelengths pass (the band), not each event's wavelen
 *(An earlier version of this page claimed a config-driven "wavelength distortion /
 calibration mismatch" — that was wrong and has been retracted.)*
 
-**3. Open item — a ~0.5 % monochromatic-vs-broadband peak offset.** Where the
-monochromatic run and a broadband run overlap in wavelength (~2.6 Å), the AgBe peak
-differs by ~0.5 % (mono ≈0.1074 vs broadband ≈0.1067), with a further droop at short
-λ in the mono run. This is a difference between the two **physical measurements**
-(different chopper hardware settings/timing), present under either reduction config —
-most plausibly an **instrument-level chopper-phasing / TOF-timing** effect in
-monochromatic mode. It is small (combined peak still ≈Q1) and **not yet explained**;
-it needs an instrument-level TOF/chopper-timing check, not a reduction change.
+**3. The per-slice drift and the mono-vs-broadband offset are moderator
+emission-time selection** (section above). The chopper gates in time while the
+moderator emits each wavelength over a ~100–300 μs distribution; near gate edges the
+transmitted neutrons are emission-time-selected and the one-emission-time TOF→λ
+assignment mislabels them. Confirmed out-of-sample: the broadband band edges show
+the same deviations once the standard TOF clips are off, and those clips
+(500/2000 μs) turn out to be sized exactly to remove the contaminated regions. A
+narrow monochromatic band is *all* edge — hence the drift across the whole band, the
+~0.5 % offset at 2.6 Å (mono near its closing edge vs broadband plateau), and the
+failure of fine binning to fully converge. Practical consequence: monochromatic
+mode at 2.5 Å has a **dl/l floor of ~15 %** below which no wavelength in the band
+escapes selection; the floor falls as 1/λ (≈4 % at 10 Å) — see the guidance table.
 
 ## Note on calibration
 
@@ -248,6 +340,8 @@ All under `2026B_mp/reduction/mono_diagnosis/`:
 `reduce_agbe_mono.py` (single-bin), `reduce_agbe_multibin.py` (0.1 Å),
 `reduce_agbe_dl05_fine.py` (convergence), `reduce_agbe_perslice.py` (mono per-slice
 profiles), `reduce_agbe_bb_perslice.py` / `reduce_agbe_bb05_perslice.py` (broadband
-per-slice controls), `reduce_agbe_dl15_default.py` (default-config isolation test).
+per-slice controls), `reduce_agbe_dl15_default.py` (default-config isolation test),
+`reduce_agbe_bbnoclip.py` (broadband with TOF clips off — the edge-prediction test),
+`reduce_agbe_perslice_clip.py` (mono with 300 μs edge clips).
 Figures drawn by `doc/monowl_assets/make_monowl_plots.py`; peak fits by scipy
 Gaussian + linear background over Q ∈ [0.085, 0.130].

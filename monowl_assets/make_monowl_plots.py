@@ -22,6 +22,7 @@ AGBE = os.path.join(MONO, "reduced_agbe_mono")
 PERSLICE = os.path.join(MONO, "perslice", "info", "inelastic_incoh",
                         "agbe_dl0.15_perslice", "slice_0", "frame_0")
 PERSLICE_BB = os.path.join(MONO, "perslice_bb")   # broadband 186106 per-slice tree
+PERSLICE_BB_NOCLIP = os.path.join(MONO, "perslice_bb_noclip")  # broadband, TOF clips off
 
 # AgBe diffraction orders at the EQSANS calibration target Q1 = 0.1069 1/A
 # (TARGET_Q1 in tools/agbe/agbe_reducenfit.py; d(001) = 2*pi/0.1069 ~ 58.8 A).
@@ -369,6 +370,53 @@ def fig_perslice_trend():
     plt.close(fig)
 
 
+def fig_emission():
+    """The emission-time-selection mechanism, two panels:
+    (left) broadband with TOF clips OFF: interior flat, closing-edge slices rise
+    over the last ~0.4 A -- and the STANDARD clips (500/2000 us, shaded) remove
+    exactly those regions.
+    (right) mono dl0.15 per-slice mislabel converted to the implied moderator
+    emission-time offset: late tail at the opening edge, early rise at closing."""
+    bw, bq, be = _fit_perslice_q0(PERSLICE_BB_NOCLIP)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11.6, 4.6))
+    # left: broadband no-clip
+    if bw:
+        a1.errorbar(bw, bq, yerr=be, fmt="s", ms=4.5, color=GREEN, capsize=2)
+    a1.axhline(AGBE_Q1, color="0.55", ls="--", lw=1.2, label="calibration target 0.1069")
+    band_min, band_max = 2.574, 6.074            # histogram band, clips off
+    lo_clip = 500e-6 * 3956 / 18.15             # 0.109 A
+    hi_clip = 2000e-6 * 3956 / 18.15            # 0.436 A
+    a1.axvspan(band_min, band_min + lo_clip, color=BLUE, alpha=0.18,
+               label="standard cutTOFmin (500 μs)")
+    a1.axvspan(band_max - hi_clip, band_max, color=RED, alpha=0.18,
+               label="standard cutTOFmax (2000 μs)")
+    a1.set_xlabel("slice wavelength (A)")
+    a1.set_ylabel("fitted AgBe(001) peak Q (1/A)")
+    a1.set_xlim(2.45, 6.2)
+    a1.set_ylim(0.1055, 0.1080)
+    a1.set_title("Broadband, TOF clips OFF: closing-edge slices deviate —\n"
+                 "the standard clips remove exactly those regions", fontsize=9.6)
+    a1.legend(fontsize=7.5, loc="upper left")
+    a1.grid(color="#eceef1")
+    # right: mono implied emission-time offsets
+    lab = [2.287, 2.337, 2.387, 2.437, 2.487, 2.537, 2.587, 2.637]
+    off = [296, 114, 68, -5, -27, -28, -57, -95]      # microseconds (late > 0)
+    a2.axhline(0, color="0.55", lw=1)
+    a2.plot(lab, off, "o-", color=RED, ms=6)
+    a2.annotate("late-emission tail passes\nfast neutrons at the\nopening edge",
+                xy=(2.30, 280), fontsize=8, color=RED, ha="left", va="top")
+    a2.annotate("early (sharp-rise) emission\npasses slow neutrons\nat the closing edge",
+                xy=(2.52, -80), fontsize=8, color=RED, ha="left", va="bottom")
+    a2.set_xlabel("mono slice label wavelength (A)")
+    a2.set_ylabel("implied emission-time offset (μs)")
+    a2.set_title("Mono dl/l=0.15: per-slice mislabel as emission-time offset\n"
+                 "(drtsans mean delay at 2.5 A is 123 μs)", fontsize=9.6)
+    a2.grid(color="#eceef1")
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl2_emission.png"), dpi=130)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_bands()
     fig_intersection()
@@ -377,4 +425,5 @@ if __name__ == "__main__":
     fig_perslice()
     fig_peakpos()
     fig_perslice_trend()
+    fig_emission()
     print("wrote monowl_* and monowl2_* .png in", HERE)
