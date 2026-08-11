@@ -90,34 +90,50 @@ to the same Q. Different wavelengths cannot reveal different structure. The deci
 test is to write out I(Q) for each wavelength slice separately and fit its peak.
 
 ![Per-slice AgBe peak vs wavelength: broadband flat, mono drift is a fine-slice artifact](assets/monowl/monowl2_trend.png)
-*Figure: fitted AgBe(001) peak Q per wavelength slice. Broadband (green, run 186106, 2.7–5.6 Å) is dead flat on the calibration target — slope 0.4σ = zero — so every wavelength gives the same Q, exactly as required. The monochromatic dl/l=0.15 band (red, 2.3–2.6 Å) appears to drift (0.104→0.108, 7.2σ) — but see below. Gaussian fits by scipy; per-slice profiles from reduce_agbe_perslice.py / reduce_agbe_bb_perslice.py.*
+*Figure: fitted AgBe(001) peak Q per wavelength slice. Broadband (green, run 186106, 2.7–5.6 Å) is dead flat on the calibration target — slope 0.4σ = zero — so every wavelength gives the same Q, as required (and it stays flat at a 0.05 Å step too). The monochromatic dl/l=0.15 band (red, 2.3–2.6 Å) drifts 7.2σ (0.104→0.108) — a real, mono-specific wavelength-axis distortion (see below), not flux and not slicing. Gaussian fits by scipy; per-slice profiles from reduce_agbe_perslice.py / reduce_agbe_bb_perslice.py / reduce_agbe_bb05_perslice.py.*
 
-**Broadband is the clean answer:** across 2.7–5.6 Å every 0.1 Å slice fits to
-0.1067 ± 0.0001 — flat, on target. Different wavelengths give the same Q, and a
-monochromatic beam at any one of those wavelengths sits there too.
+**Broadband is the clean answer:** across 2.7–5.6 Å every slice fits to
+0.1067 ± 0.0001 — flat, on target (slope 0.4σ = zero). Different wavelengths give
+the same Q, and a monochromatic beam at any one of those wavelengths sits there too.
+This holds at 0.1 Å **and** at a fine 0.05 Å step (61 slices, slope 0.000016/Å,
+negligible) — so fine slicing itself does *not* cause a drift.
 
-**The monochromatic per-slice "drift" is an artifact, not physics.** When the
-*narrow* dl/l=0.15 band is sliced at 0.05 Å, the fitted peaks drift with wavelength
-— but that is a **fine-slicing artifact**, not a real Q shift:
+**The monochromatic per-slice drift is a wavelength-axis distortion, not flux and
+not slicing.** When the *narrow* dl/l=0.15 band is sliced at 0.05 Å, the fitted
+peaks drift 7.2σ (0.104→0.108) — ~275× steeper than the broadband slope at the same
+step. Since the broadband control at 0.05 Å is flat, this is neither counting
+statistics (peak *position* does not depend on flux) nor a slicing/grid artifact.
+It comes from the **wavelength assignment inside the narrow band**. Converting each
+slice's measured ring angle back through Bragg gives the *true* wavelength that
+produced it:
 
-- The transmitted band is triangular and near-zero at its edges, so the edge slices
-  (2.29, 2.64 Å) contain almost no genuine neutrons at that wavelength — they are
-  flux-starved, dominated by resolution tails and background, with large error bars
-  (±0.0013). Broadband slices are each well-populated with real neutrons at that
-  wavelength, so they sit flat.
-- The drift spans only 0.35 Å yet is ~40× steeper than the calibration's own
-  wavelength residual (0.1069 at 2.5/6 Å → 0.1074 at 10 Å) — far too steep to be a
-  real instrument effect.
+| slice **label** λ | true λ from ring angle |
+|---|---|
+| 2.287 | 2.223 |
+| 2.437 | 2.438 |
+| 2.487 | 2.494 |
+| 2.587 | 2.599 |
+| 2.637 | 2.658 |
 
-So the physics holds: **each wavelength gives the same Q** (broadband proves it),
-and a monochromatic run therefore *should* land at Q1. The single-bin shift is a
-separate, real effect — the weighting artifact of merging the whole band under one
-assigned wavelength — while the per-slice "drift" is just what happens when you
-slice a narrow, center-peaked band finer than its own wavelength resolution.
+The middle is correct (true ≈ label), but the labels are **compressed** relative to
+the true wavelengths — the ring angles span the full transmitted band (~2.22–2.66 Å,
+matching the 0.43 Å band width), while the labels span only 2.29–2.64. A mislabelled
+λ gives Q = 4π·sinθ/λ_assigned off by the mislabel ratio, varying across the band.
+So it is a real Q-scale error from the **TOF→wavelength conversion for a narrow
+band** (the chopper-driven frame correction), not a flux effect. Broadband —
+wide band, well-resolved wavelength axis — is immune.
 
-*(An earlier version of this page claimed the mono slices "overlap at Q1" from an
-argmax read of the same data — that was wrong; a proper Gaussian fit shows the
-spurious drift above, and the broadband test is the correct demonstration.)*
+**Practical impact is small:** the *combined* (multi-bin) mono peak still lands near
+Q1 (0.1065–0.1067), because it is the intensity-weighted average over the band,
+dominated by the centre where the distortion vanishes. So the recommendation holds.
+But the per-wavelength distortion inside a narrow band is a genuine EQSANS/drtsans
+narrow-band TOF→λ issue worth flagging.
+
+*(Earlier versions of this page first claimed the mono slices "overlap at Q1"
+(an argmax illusion), then blamed "flux-starved edge slices" — both wrong. A proper
+Gaussian fit shows a real drift, and the broadband control at the same 0.05 Å step
+being flat proves it is a narrow-band wavelength-assignment effect, not flux or
+slicing.)*
 
 ## Why broadband at 0.1 Å is fine but single-bin is not
 
