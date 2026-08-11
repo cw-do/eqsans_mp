@@ -35,10 +35,13 @@ Reproducing drtsans' own band math with each stored phase set (figure produced b
 our own code — see *How the figures were made*):
 
 ![Transmitted band per spread: wrong vs correct chopper phase](assets/monowl/monowl_bands.png)
+*Figure: band values from `diagnose_chopper.py` (reproducing drtsans' own transmission-band math), plotted by `make_monowl_plots.py`; the green bars are the actual drtsans transmitted bands read back from the reduction log.*
 
-Only one phase set is physically right: the **green** bars — bands centred
-**exactly at 2.50 Å with width = (dl/l) × 2.50** for every spread, i.e. what the
-instrument was set to. **This set agrees with the most recently known (correct)
+Only one phase set is physically right: the **green** bars — bands centred on
+**~2.48 Å (the 2.50 Å set point)** that widen smoothly with the spread setting
+(0.13–0.43 Å), i.e. a sensible monochromatic band. (A real chopper band is a bit
+wider than the ideal (dl/l) × λ because of the finite chopper opening time.)
+**This set agrees with the most recently known (correct)
 chopper phase.** It happens to be indexed in the drtsans table under the date-tag
 `20260101`; we don't know why it carries that date, and *the date is not the
 point* — what matters is that these are the correct phases and drtsans is not
@@ -59,6 +62,7 @@ six, and here it is empty. In the figure below the red-shaded strip is that
 is simply no wavelength open on all six choppers:
 
 ![dl/l=0.03: the six chopper openings share no common wavelength](assets/monowl/monowl_intersection.png)
+*Figure: per-chopper openings for dl/l=0.03 under the drtsans-selected phase, from `diagnose_chopper.py`.*
 
 **Fix:** make the reduction apply the correct chopper phases — the ones that
 reproduce the 2.50 Å bands (green above). In drtsans that means the runs must pick
@@ -206,6 +210,7 @@ recipe above — correct chopper phase, single-value transmission, and a single
 band-spanning bin (drtsans monochromatic mode engaged) — gives:
 
 ![AgBe I(Q) across the four spreads](assets/monowl/monowl_agbe.png)
+*Figure: reduced by `reduce_agbe_mono.py` — the single-bin recipe (correct phase + single-value transmission + drtsans monochromatic mode), NOT the 0.1 Å-step reduction. Single-bin verified: each `_trans.txt` holds one wavelength value and drtsans logged "Monochromatic mode detected … single bin spanning [w_min, w_max]" for every run. Curves read from the reduced `_Iq.dat` by `make_monowl_plots.py`.*
 
 - **dl/l = 0.10 and 0.15 are textbook AgBe** — three orders landing right on the
   reference positions (0.108 / 0.216 / 0.323 Å⁻¹, dotted lines). Peaks at the
@@ -229,13 +234,14 @@ counting statistics. The AgBe *scattering* runs behind the plot:
 
 | dl/l | scattering run | total detector counts | duration | count rate | band Δλ |
 |---|---|---|---|---|---|
-| 0.15 | 186246 | 1,672,096 | 6.8 min | 4118 /s | 0.375 Å |
-| 0.10 | 186234 | 653,419 | 6.8 min | 1607 /s | 0.249 Å |
-| 0.05 | 186223 | 440,797 | 54 min | 136 /s | 0.125 Å |
-| 0.03 | 186212 | 113,532 | **2.9 h** | **10.9 /s** | 0.075 Å |
+| 0.15 | 186246 | 1,672,096 | 6.8 min | 4118 /s | 0.426 Å |
+| 0.10 | 186234 | 653,419 | 6.8 min | 1607 /s | 0.301 Å |
+| 0.05 | 186223 | 440,797 | 54 min | 136 /s | 0.176 Å |
+| 0.03 | 186212 | 113,532 | **2.9 h** | **10.9 /s** | 0.126 Å |
 
-The count *rate* collapses far faster than the band narrows: the band is only 5×
-narrower (0.375 → 0.075 Å) but the rate is **~380× lower** (4118 → 11 counts/s),
+(Band Δλ is the actual drtsans transmitted band read from the reduction log.) The
+count *rate* collapses far faster than the band narrows: the band is only ~3.4×
+narrower (0.426 → 0.126 Å) but the rate is **~380× lower** (4118 → 11 counts/s),
 because tightening the monochromatic band throws away a rapidly growing fraction of
 the beam. The measurement already tried to compensate — dl/l=0.03 was counted for
 **2.9 hours** versus 6.8 minutes for dl/l=0.15 — yet it still collected ~15× *fewer*

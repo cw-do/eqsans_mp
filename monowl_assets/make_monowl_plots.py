@@ -38,8 +38,12 @@ GREY = "#8a8f98"
 SPREADS = ["0.03", "0.05", "0.10", "0.15"]
 SELECTED = {"0.03": None, "0.05": (2.562, 2.586),
             "0.10": (2.500, 2.649), "0.15": (2.438, 2.711)}
-CORRECT = {"0.03": (2.463, 2.538), "0.05": (2.438, 2.563),
-           "0.10": (2.376, 2.625), "0.15": (2.313, 2.688)}
+# correct-config bands = the REAL drtsans transmitted bands, read from the
+# "Monochromatic mode detected: single bin spanning [wmin,wmax]" notices logged
+# by reduce_agbe_mono.py (authoritative; these are what the reduction actually
+# used). They are wider than the ideal (dl/l)x2.5 and centred ~2.475 A.
+CORRECT = {"0.03": (2.412, 2.538), "0.05": (2.387, 2.563),
+           "0.10": (2.324, 2.625), "0.15": (2.262, 2.688)}
 
 
 def fig_bands():
@@ -52,7 +56,7 @@ def fig_bands():
         ax.broken_barh([(b[0], b[1] - b[0])], (y + 0.04, h), facecolors=GREEN,
                        edgecolor="#004a27", zorder=3)
         ax.text(b[1] + 0.01, y + 0.04 + h / 2,
-                "w={:.3f} A  (dl/l={:.3f})".format(b[1] - b[0], (b[1] - b[0]) / 2.5),
+                "band {:.3f} A".format(b[1] - b[0]),
                 va="center", ha="left", fontsize=8, color=GREEN)
         # selected (blue) or empty
         s = SELECTED[sp]
