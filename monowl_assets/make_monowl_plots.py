@@ -464,28 +464,59 @@ def fig_emission_model():
     lam_app = LAM + TE / C_TOT              # assigned wavelength
 
     fig, (a, b, c) = plt.subplots(1, 3, figsize=(13.6, 4.5))
-    # ---- (A) the (lambda, t_e) plane ------------------------------------
-    a.imshow(P[:, None] * np.ones_like(LAM), origin="lower", aspect="auto",
-             extent=[lam[0], lam[-1], te[0], te[-1]], cmap="Greys", alpha=0.9)
-    a.plot(lam, C_CH * (LAM1 - lam), color=BLUE, lw=1.6)
-    a.plot(lam, C_CH * (LAM2 - lam), color=BLUE, lw=1.6)
-    a.fill_between(lam, C_CH * (LAM1 - lam), C_CH * (LAM2 - lam),
-                   color=BLUE, alpha=0.12)
-    for la in (2.35, 2.55):                 # iso-assigned-wavelength lines
-        a.plot(lam, C_TOT * (la - lam), color=RED, ls="--", lw=1.1)
-    a.annotate("gate stripe (chopper opens/closes)\nslope −L_c/3956", xy=(2.72, 60),
-               fontsize=8, color=BLUE)
-    a.annotate("iso-ASSIGNED-wavelength\nslope −L_tot/3956", xy=(1.98, -190),
-               fontsize=8, color=RED)
-    a.annotate("too-fast neutrons pass\nwhen born LATE (tail)", xy=(2.13, 320),
-               fontsize=8, color="#1b2733")
-    a.annotate("too-slow pass when\nborn EARLY (rise)", xy=(2.70, -130),
-               fontsize=8, color="#1b2733")
-    a.set_xlabel("true wavelength (A)")
-    a.set_ylabel("emission time − mean (μs)")
-    a.set_title("(A) chopper gate in the (λ, emission-time) plane\n"
-                "grey = moderator emission density", fontsize=9.6)
-    a.set_xlim(lam[0], lam[-1]); a.set_ylim(te[0], te[-1])
+    # ---- (A) distance-time diagram (the intuitive view) ------------------
+    # Neutrons are straight lines from (birth time, 0) to the detector; slope =
+    # speed. Three example neutrons cross the SAME open chopper window; the
+    # reduction assigns wavelength by drawing a line back to the ASSUMED birth
+    # time (mean emission) -- dashed lines -- which mislabels the off-mean ones.
+    TBAR = 123.0                                     # mean emission time, us
+    gate_lo, gate_hi = TBAR + C_CH * LAM1, TBAR + C_CH * LAM2   # 3383..3997 us
+    # chopper line with open gap (light-blue strip marks the open window)
+    a.plot([0, gate_lo], [5.7, 5.7], color="k", lw=3.5)
+    a.plot([gate_hi, 13500], [5.7, 5.7], color="k", lw=3.5)
+    from matplotlib.patches import Rectangle
+    a.add_patch(Rectangle((gate_lo, 5.15), gate_hi - gate_lo, 1.1,
+                          facecolor=BLUE, alpha=0.25, edgecolor="none"))
+    a.axhline(18.15, color="0.5", lw=1, ls=":")
+    a.text(200, 18.5, "detector (18.15 m)", fontsize=8, color="0.35")
+    # three true trajectories: (birth time, true wavelength, colour)
+    cases = [(123.0, 2.50, GREEN), (500.0, 2.20, RED), (20.0, 2.75, BLUE)]
+    for tb, lm, col in cases:
+        tdet = tb + lm * C_TOT
+        a.plot([tb, tdet], [0, 18.15], color=col, lw=2.0)
+        if tb != 123.0:   # apparent-wavelength back-extrapolation
+            a.plot([TBAR, tdet], [0, 18.15], color=col, lw=1.3, ls="--", alpha=0.85)
+    a.annotate("truly 2.20 Å, born 380 μs LATE (tail)\n→ back-extrapolated to the assumed\nbirth time (dashed): ASSIGNED 2.28 Å",
+               xy=(9011, 15.3), xytext=(500, 15.0), fontsize=8, color=RED,
+               arrowprops=dict(arrowstyle="->", color=RED, lw=0.9))
+    a.annotate("truly 2.75 Å, born ~100 μs EARLY (rise)\n→ ASSIGNED 2.73 Å (dashed)",
+               xy=(8364, 12.0), xytext=(500, 11.4), fontsize=8, color=BLUE,
+               arrowprops=dict(arrowstyle="->", color=BLUE, lw=0.9))
+    a.annotate("on-time, 2.50 Å →\nlabelled 2.50 Å ✓", xy=(5621, 8.7),
+               xytext=(500, 8.0), fontsize=8, color=GREEN,
+               arrowprops=dict(arrowstyle="->", color=GREEN, lw=0.9))
+    a.annotate("all three pass the SAME\nopen chopper window", xy=(3690, 5.75),
+               xytext=(400, 3.0), fontsize=8.5, color="k",
+               arrowprops=dict(arrowstyle="->", color="k", lw=0.9))
+    # inset: zoom of the birth region with the emission pulse
+    ain = a.inset_axes([0.615, 0.02, 0.37, 0.235])
+    tprof = np.arange(0.0, 900.0, 4.0)
+    prof = emis_pdf(tprof)
+    ain.fill_between(tprof, 0, prof / prof.max(), color="0.6", alpha=0.6)
+    ain.axvline(TBAR, color="0.4", lw=0.9, ls="--")
+    ain.text(TBAR + 25, 0.86, "mean (assumed)", fontsize=6.5, color="0.3")
+    for tb, lm, col in cases:
+        ain.plot(tb, 0.02, "o", color=col, ms=6, clip_on=False, zorder=5)
+    ain.set_xlim(0, 900); ain.set_ylim(0, 1.05)
+    ain.set_yticks([])
+    ain.tick_params(labelsize=6.5)
+    ain.set_xlabel("birth time (μs)", fontsize=7)
+    ain.set_title("moderator emission pulse (zoom)", fontsize=7.5)
+    a.set_xlim(0, 13500); a.set_ylim(-0.4, 19.6)
+    a.set_xlabel("time after proton pulse (μs)")
+    a.set_ylabel("distance from moderator (m)")
+    a.set_title("(A) distance–time view: same chopper window,\n"
+                "different birth times → wrong assigned wavelength", fontsize=9.6)
     # ---- (B) spectra with the same gate timings -------------------------
     ideal = ((lam >= LAM1) & (lam <= LAM2)).astype(float)
     true_spec = W.sum(axis=0)
