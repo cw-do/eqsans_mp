@@ -188,6 +188,58 @@ but cannot re-label physically mislabeled events, and in a narrow band the
 contamination reaches everywhere. This also explains why fine binning converged to
 0.1066 rather than exactly 0.1069.
 
+### Picturing the mechanism — and a quantitative check
+
+![Emission-time model: gate in the (λ, emission-time) plane, spectrum reshaping, model vs measurement](assets/monowl/monowl2_model.png)
+*Figure: (A) the chopper gate drawn in the (true wavelength, emission time) plane — the gate is a diagonal stripe (slope set by the chopper distance), while lines of constant ASSIGNED wavelength have a different slope (set by the full flight path); because the slopes differ, the gate mixes true wavelengths across assigned labels. Grey shading is the moderator emission-time density (sharp rise, long tail). (B) the transmitted spectrum for the SAME chopper timings: the ideal no-spread gate would pass the dotted rectangle; the emission spread lets genuinely faster neutrons in via the late tail (green curve extends well below the nominal edge) and mildly slower ones via the early rise — the true band is wider and asymmetric, and the apparent (assigned-label) spectrum differs from both. (C) the mislabel predicted by this one-gate convolution model (emission = exponentially-modified Gaussian with the drtsans mean of 123 μs, rise ≈ −170 μs, tail ≈ +550 μs) overlaid on the eight AgBe-measured points — shape and magnitude reproduced with no per-point fitting. Model in make_monowl_plots.py (fig_emission_model).*
+
+Panel B is the direct answer to "how can the same chopper timings give a different
+beam?": the choppers define a window in *time*, and the moderator's emission spread
+converts that fixed time window into a **wider, asymmetric window in true
+wavelength** — extra fast neutrons ride in on the late tail, a few slow ones on the
+early rise. Panel C closes the loop quantitatively: a minimal convolution model
+(one equivalent gate × the emission distribution, mean pinned to drtsans' value)
+reproduces the measured mislabel curve across the band.
+
+## Why a TOF instrument sees this — and a reactor SANS never did
+
+**A velocity selector selects the physical quantity itself; a chopper selects a
+proxy.** At a reactor, the selector is a spinning helix: a neutron passes only if
+its *actual speed* matches the helix during its transit. The selection acts directly
+on velocity — no clock, no inference, and no second variable to correlate with
+(the beam is continuous; "when the neutron was born" is not even defined).
+
+At a pulsed source the wavelength is *inferred*: λ ∝ (t_arrival − t_birth)/L with
+**t_birth assumed** (the mean emission time). A chopper gates on arrival time at
+5.7 m, which is the combination t_birth + const·λ — it fundamentally cannot
+distinguish *fast-born-late* from *slow-born-early* (panel A above). When the gate
+window is wide (broadband) every interior wavelength passes with its full emission
+distribution and the assumption holds; when the window is narrow (monochromatic
+mode) the transmitted neutrons are correlated in exactly the two variables the
+inference assumes independent.
+
+Amusingly, reactors do carry the *other* half of the problem: a reactor SANS is the
+single-bin case — every neutron is assigned the one nominal selector wavelength,
+and the flux-weighted mean of the true transmitted spectrum is not exactly the
+geometric nominal. Reactor instruments absorb that by **calibrating the selector's
+effective wavelength — classically with AgBe**, the same Q1 = 0.1069 procedure used
+here. It works because a reactor spectrum is stable, so λ_eff is a constant. TOF
+instruments never needed that calibration because per-event timing resolves the
+wavelength — until a narrow gate breaks the timing assumption.
+
+**The principled fix — the chopper as the clock.** In the narrow-gate limit the
+information is not lost: every transmitted neutron passed the chopper at a known
+instant, so TOF can be re-referenced to the **chopper opening** using the
+chopper→detector flight path (12.4 m): λ = 3956·(t_arrival − t_gate)/12.4. The
+resolution is then set by the *gate duration* instead of the moderator emission
+spread — for the dl/l = 0.03 gate (~110 μs opening) that is δλ ≈ 0.034 Å versus
+0.07–0.09 Å from moderator-referencing, i.e. the narrow-gate data is genuinely
+*better* analysed treating the chopper as the source (the "pulse-shaping chopper"
+concept from high-resolution TOF spectrometers). drtsans always references the
+moderator — optimal for broadband, suboptimal for narrow gates; a mono-aware
+reduction would switch (or weight) the time reference as the gate narrows. This is
+the principled long-term enhancement, beyond clips and the dl/l floor.
+
 ## Practical guidance — a reliable dl/l floor vs wavelength
 
 The contaminated band-edge width is set by the *moderator*, not by the requested

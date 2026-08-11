@@ -417,6 +417,120 @@ def fig_emission():
     plt.close(fig)
 
 
+def fig_emission_model():
+    """Three-panel explainer of how moderator emission-time spread shapes a
+    monochromatic band cut by choppers with FIXED timings.
+
+    Model: one equivalent gate at the first chopper (L_c = 5.7 m) whose window
+    passes the nominal dl/l=0.15 band [2.262, 2.688] A for mean-time emission;
+    emission-time distribution = exponentially-modified Gaussian (sharp rise,
+    long tail) with the drtsans mean delay (123 us at 2.5 A).
+      (A) the (lambda, emission-time) plane: the gate is a diagonal stripe, so
+          it cannot separate 'fast born late' from 'slow born early'.
+      (B) transmitted spectrum with the SAME gate timings: ideal (no emission
+          spread) vs TRUE wavelength content vs APPARENT (assigned) labels.
+      (C) predicted mislabel (as implied emission-time offset) vs the eight
+          AgBe-measured points -- the convolution-model validation."""
+    import numpy as np
+    L_C, L_TOT = 5.7, 18.15                 # m
+    C_CH = L_C / 3956.0 * 1e6               # us per Angstrom at the chopper (1441)
+    C_TOT = L_TOT / 3956.0 * 1e6            # us per Angstrom total (4589)
+    LAM1, LAM2 = 2.262, 2.688               # nominal band (dl/l = 0.15)
+    MU, SIG, TAU = -77.0, 45.0, 200.0       # exGauss: mean = MU+TAU = 123 us
+    # (sharp rise ~ -170 us, tail reach ~ +550 us; mean pinned to drtsans' 123 us)
+
+    def emis_pdf(t):
+        # exponentially modified gaussian (t relative to the *mean* delay removed later)
+        from math import sqrt
+        s2 = SIG * SIG
+        z = (t - MU - s2 / TAU) / (np.sqrt(2.0) * SIG)
+        # exGauss pdf (numerically safe form)
+        val = (1.0 / (2 * TAU)) * np.exp((s2 / (2 * TAU * TAU)) - (t - MU) / TAU)
+        try:
+            from scipy.special import erfc
+            return val * erfc(-z)
+        except Exception:
+            import math
+            return val * np.vectorize(math.erfc)(-z)
+
+    lam = np.arange(1.95, 3.00, 0.002)
+    te = np.arange(-250.0, 700.0, 2.0)      # emission time minus mean, us
+    P = emis_pdf(te + 123.0)                # density vs (t_e - mean)
+    P = P / P.sum()
+    LAM, TE = np.meshgrid(lam, te)
+    # gate: pass iff arrival at chopper within window set for mean emission
+    GATE = (TE >= C_CH * (LAM1 - LAM)) & (TE <= C_CH * (LAM2 - LAM))
+    W = GATE * P[:, None]                   # transmitted weight (flat flux)
+    lam_app = LAM + TE / C_TOT              # assigned wavelength
+
+    fig, (a, b, c) = plt.subplots(1, 3, figsize=(13.6, 4.5))
+    # ---- (A) the (lambda, t_e) plane ------------------------------------
+    a.imshow(P[:, None] * np.ones_like(LAM), origin="lower", aspect="auto",
+             extent=[lam[0], lam[-1], te[0], te[-1]], cmap="Greys", alpha=0.9)
+    a.plot(lam, C_CH * (LAM1 - lam), color=BLUE, lw=1.6)
+    a.plot(lam, C_CH * (LAM2 - lam), color=BLUE, lw=1.6)
+    a.fill_between(lam, C_CH * (LAM1 - lam), C_CH * (LAM2 - lam),
+                   color=BLUE, alpha=0.12)
+    for la in (2.35, 2.55):                 # iso-assigned-wavelength lines
+        a.plot(lam, C_TOT * (la - lam), color=RED, ls="--", lw=1.1)
+    a.annotate("gate stripe (chopper opens/closes)\nslope −L_c/3956", xy=(2.72, 60),
+               fontsize=8, color=BLUE)
+    a.annotate("iso-ASSIGNED-wavelength\nslope −L_tot/3956", xy=(1.98, -190),
+               fontsize=8, color=RED)
+    a.annotate("too-fast neutrons pass\nwhen born LATE (tail)", xy=(2.13, 320),
+               fontsize=8, color="#1b2733")
+    a.annotate("too-slow pass when\nborn EARLY (rise)", xy=(2.70, -130),
+               fontsize=8, color="#1b2733")
+    a.set_xlabel("true wavelength (A)")
+    a.set_ylabel("emission time − mean (μs)")
+    a.set_title("(A) chopper gate in the (λ, emission-time) plane\n"
+                "grey = moderator emission density", fontsize=9.6)
+    a.set_xlim(lam[0], lam[-1]); a.set_ylim(te[0], te[-1])
+    # ---- (B) spectra with the same gate timings -------------------------
+    ideal = ((lam >= LAM1) & (lam <= LAM2)).astype(float)
+    true_spec = W.sum(axis=0)
+    bins = np.arange(2.0, 3.0, 0.01)
+    app_spec, _ = np.histogram(lam_app[GATE], bins=bins,
+                               weights=(P[:, None] * np.ones_like(LAM))[GATE])
+    def norm(y): return y / y.max() if y.max() > 0 else y
+    b.plot(lam, norm(ideal), color="0.5", lw=1.4, ls=":",
+           label="ideal gate (no emission spread)")
+    b.plot(lam, norm(true_spec), color=GREEN, lw=1.8,
+           label="TRUE wavelength content")
+    b.plot(0.5 * (bins[1:] + bins[:-1]), norm(app_spec), color=RED, lw=1.8,
+           label="APPARENT (assigned) spectrum")
+    b.set_xlabel("wavelength (A)"); b.set_ylabel("relative flux")
+    b.set_xlim(2.0, 3.0)
+    b.set_title("(B) same chopper timings, three spectra:\n"
+                "emission spread widens the TRUE band asymmetrically", fontsize=9.6)
+    b.legend(fontsize=7.5); b.grid(color="#eceef1")
+    # ---- (C) predicted mislabel vs the AgBe measurement -----------------
+    app_axis = np.arange(2.26, 2.68, 0.01)
+    pred = []
+    flat_app = lam_app[GATE]; flat_lam = LAM[GATE]
+    flat_w = (P[:, None] * np.ones_like(LAM))[GATE]
+    for la in app_axis:
+        m = (flat_app > la - 0.025) & (flat_app < la + 0.025)
+        if flat_w[m].sum() > 0:
+            mean_true = np.average(flat_lam[m], weights=flat_w[m])
+            pred.append((la, (la - mean_true) * C_TOT))
+    pred = np.array(pred)
+    c.plot(pred[:, 0], pred[:, 1], "-", color=GREEN, lw=2,
+           label="convolution model")
+    meas_l = [2.287, 2.337, 2.387, 2.437, 2.487, 2.537, 2.587, 2.637]
+    meas_o = [296, 114, 68, -5, -27, -28, -57, -95]
+    c.plot(meas_l, meas_o, "o", color=RED, ms=7, label="measured (AgBe per-slice)")
+    c.axhline(0, color="0.6", lw=1)
+    c.set_xlabel("assigned wavelength (A)")
+    c.set_ylabel("implied emission-time offset (μs)")
+    c.set_title("(C) model vs measurement:\nmislabel across the dl/l=0.15 band",
+                fontsize=9.6)
+    c.legend(fontsize=8); c.grid(color="#eceef1")
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl2_model.png"), dpi=130)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_bands()
     fig_intersection()
@@ -426,4 +540,5 @@ if __name__ == "__main__":
     fig_peakpos()
     fig_perslice_trend()
     fig_emission()
+    fig_emission_model()
     print("wrote monowl_* and monowl2_* .png in", HERE)
