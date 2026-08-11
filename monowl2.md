@@ -193,13 +193,35 @@ contamination reaches everywhere. This also explains why fine binning converged 
 ![Emission-time model: gate in the (λ, emission-time) plane, spectrum reshaping, model vs measurement](assets/monowl/monowl2_model.png)
 *Figure: (A) the chopper gate drawn in the (true wavelength, emission time) plane — the gate is a diagonal stripe (slope set by the chopper distance), while lines of constant ASSIGNED wavelength have a different slope (set by the full flight path); because the slopes differ, the gate mixes true wavelengths across assigned labels. Grey shading is the moderator emission-time density (sharp rise, long tail). (B) the transmitted spectrum for the SAME chopper timings: the ideal no-spread gate would pass the dotted rectangle; the emission spread lets genuinely faster neutrons in via the late tail (green curve extends well below the nominal edge) and mildly slower ones via the early rise — the true band is wider and asymmetric, and the apparent (assigned-label) spectrum differs from both. (C) the mislabel predicted by two emission models overlaid on the eight AgBe-measured points: green = exponentially-modified Gaussian with the drtsans mean of 123 μs and a measured tail (rise ≈ −170 μs, tail ≈ +550 μs); blue dashed = drtsans' own moderator width model. Model in make_monowl_plots.py (fig_emission_model).*
 
-Panel B is the direct answer to "how can the same chopper timings give a different
-beam?": the choppers define a window in *time*, and the moderator's emission spread
-converts that fixed time window into a **wider, asymmetric window in true
-wavelength** — extra fast neutrons ride in on the late tail, a few slow ones on the
-early rise. Panel C closes the loop quantitatively: a minimal convolution model
-(one equivalent gate × the emission distribution, mean pinned to drtsans' value)
-reproduces the measured mislabel curve across the band.
+In panel B the green and red curves describe the **same transmitted neutrons on two
+different wavelength axes**: green plots each neutron at the wavelength it *actually
+has* (what illuminates the sample and sets the Bragg angles); red plots the same
+neutrons at the wavelength the TOF reduction *assigns* them. With no emission spread
+both would equal the dotted rectangle; their disagreement **is** the mislabeling
+(a true-2.1 Å tail-passed neutron appears in red near 2.2 Å, displaced toward the
+band because the label shift is only L_chopper/L_total ≈ 31 % of the emission
+offset). Panel B is thus the direct answer to "how can the same chopper timings give
+a different beam?": the choppers define a window in *time*, and the emission spread
+converts it into a **wider, asymmetric window in true wavelength**. Panel C is the
+green↔red mismatch quantified bin by bin; the "measured-tail" parameters (rise
+≈ −170 μs, tail ≈ +550 μs) are **derived from this experiment's own AgBe data** —
+the ring angle acts as an in-situ wavelength meter and the eight per-slice fits set
+the tail (the mean stays pinned to drtsans' 123 μs) — not from an independent
+moderator characterisation, which is why refinement against the SNS moderator
+emission tables is still called for.
+
+**Why broadband's short edge is nearly immune while the mono band is hit at both
+edges** — an asymmetry the mechanism predicts, for three stacked reasons: (1) the
+short edge's in-band bias truncates only the **sharp early rise** (~100–170 μs →
+small), while the long edge truncates the **long tail** (~300–550 μs → large, over
+~0.4 Å); (2) the strong short-edge contamination is *sub-band* fast neutrons riding
+the tail, whose labels land mostly **below the band minimum — outside the broadband
+histogram window**, so broadband silently discards them; (3) whatever leaks into
+broadband's first bin is **diluted** by the abundant correctly-labelled flux there,
+whereas the mono band-edge bins sit on the transmission ramp where clean flux → 0,
+so the tail-fed component dominates (+296 μs at the lowest mono slice; the
+forced-config histogram extending below the physical gate edge made those bins
+almost purely tail-fed).
 
 **drtsans' own emission model — and its limitation.** drtsans does carry an
 emission-time *width*, not just the mean: `moderator_time_uncertainty(λ)` in
