@@ -222,6 +222,29 @@ band-spanning bin (drtsans monochromatic mode engaged) — gives:
   is modest here because at 4 m / 2.5 Å the detector geometry, not the wavelength
   spread, dominates the Q-resolution.
 
+### Why dl/l = 0.03 is still not usable — it is flux, and steeply so
+
+All four reductions used the **correct chopper phase**; dl/l=0.03 fails purely on
+counting statistics. The AgBe *scattering* runs behind the plot:
+
+| dl/l | scattering run | total detector counts | duration | count rate | band Δλ |
+|---|---|---|---|---|---|
+| 0.15 | 186246 | 1,672,096 | 6.8 min | 4118 /s | 0.375 Å |
+| 0.10 | 186234 | 653,419 | 6.8 min | 1607 /s | 0.249 Å |
+| 0.05 | 186223 | 440,797 | 54 min | 136 /s | 0.125 Å |
+| 0.03 | 186212 | 113,532 | **2.9 h** | **10.9 /s** | 0.075 Å |
+
+The count *rate* collapses far faster than the band narrows: the band is only 5×
+narrower (0.375 → 0.075 Å) but the rate is **~380× lower** (4118 → 11 counts/s),
+because tightening the monochromatic band throws away a rapidly growing fraction of
+the beam. The measurement already tried to compensate — dl/l=0.03 was counted for
+**2.9 hours** versus 6.8 minutes for dl/l=0.15 — yet it still collected ~15× *fewer*
+total neutrons. After banjo-background subtraction and normalisation, too little
+signal remains to resolve the peak, so the dl/l=0.03 curve is ~11 surviving Q
+points of noise (its apparent "peak" at 0.095 Å⁻¹ is not the AgBe ring). This is a
+source-flux limit, not a reduction problem: at dl/l=0.03 you would need
+dramatically longer counting (or more source flux) for usable data.
+
 (The same recipe also recovers porasil — a smooth SANS curve — for the wider
 spreads; see `reduce_mono_recipe.py`.)
 
