@@ -365,6 +365,23 @@ AgBe ring measured:
 ![Label map: where every transmitted neutron lands on the output axis, and what is really inside three output bins](assets/monowl/monowl2_labelmap.png)
 *Figure left: every transmitted neutron placed by TRUE wavelength (x) and ASSIGNED wavelength (y = the output axis). The population forms a band tilted off the correct-labelling diagonal; grey = assigned labels outside the design band, which drtsans DISCARDS (this is also why broadband's short edge is immune — its intruders fall in the grey). The red dotted line marks the first output bin, 2.287 Å: it intersects the population at true λ ≈ 2.2–2.3. Figure right: the true-wavelength composition of three output bins — the edge bins' content is off-centre from their label (▼ = mean true λ; model ≈ 2.25 for the 2.287 Å bin, measured 2.22 = the +296 μs point), while the mid-band bin is nearly centred. The mislabel measured in panel C is exactly this per-bin offset. Model in make_monowl_plots.py (fig_labelmap).*
 
+**The same map for broadband — why it is (mostly) not a problem there.** Running the
+identical pulse and identical labelling rule through the broadband gate:
+
+![Broadband label map: the cloud hugs the diagonal; only the closing edge bends, inside the standard clip](assets/monowl/monowl2_labelmap_bb.png)
+*Figure: the broadband (2.57–6.07 Å) version of the label map, same emission pulse and same labelling rule. Left: across the ~3 Å interior the population sits CENTRED on the correct-labelling diagonal — the per-neutron mislabel spread (cloud thickness, ~0.16 Å) is identical to the mono case, but at every interior wavelength the full emission pulse passes, so the errors are symmetric and the bin means stay on the diagonal (pure resolution broadening, already in dQ). Right: zoom on the closing edge — the only region where the mean bends off the diagonal (tail truncation, the measured q0 rise), and it lies inside the orange band that the standard cutTOFmax = 2000 μs clip removes anyway. fig_labelmap_bb in make_monowl_plots.py.*
+
+The contrast is the whole story in two pictures: **broadband and mono have the same
+per-neutron labelling errors** (same cloud thickness — the pulse is the pulse), but
+broadband's wide gate keeps the errors *balanced* (cloud centred on the diagonal,
+bin means correct) except in small edge regions that the histogram window and the
+standard clips discard — while the mono gate makes the *entire* cloud one-sided.
+Three layers protect broadband: (1) interior balance (full pulse passes → mean
+label = true), (2) the histogram window discards below-band intruder labels,
+(3) the cutTOF clips remove the bent edge regions. Mono mode loses all three at
+once: everything is edge, the window overlaps the intruder labels, and the clips
+would eat the whole band.
+
 **During which step does green become red — and which parameter is "wrong"?** The
 mislabelling happens at **event loading**, in the per-event TOF→wavelength
 conversion (`load_events` → `correct_emission_time` → `convert_to_wavelength`):

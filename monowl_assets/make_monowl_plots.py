@@ -676,6 +676,85 @@ def fig_labelmap():
     plt.close(fig)
 
 
+def fig_labelmap_bb():
+    """Broadband version of the label map: same emission pulse, same labelling
+    rule, but the wide gate keeps the population CENTRED on the correct-labelling
+    diagonal for almost the whole band. (Left) full band; (right) zoom on the
+    closing edge, where the only real deviation lives -- inside the region the
+    standard cutTOFmax clip removes anyway."""
+    import numpy as np
+    L_C, L_TOT = 5.7, 18.15
+    C_CH = L_C / 3956.0 * 1e6
+    C_TOT = L_TOT / 3956.0 * 1e6
+    LAM1, LAM2 = 2.574, 6.074          # broadband band (bbnoclip histogram)
+    MU, SIG, TAU = -77.0, 45.0, 200.0
+
+    def emis_pdf(t):
+        s2 = SIG * SIG
+        z = (t - MU - s2 / TAU) / (np.sqrt(2.0) * SIG)
+        val = (1.0 / (2 * TAU)) * np.exp((s2 / (2 * TAU * TAU)) - (t - MU) / TAU)
+        try:
+            from scipy.special import erfc
+            return val * erfc(-z)
+        except Exception:
+            import math
+            return val * np.vectorize(math.erfc)(-z)
+
+    lam = np.arange(2.30, 6.50, 0.004)
+    te = np.arange(-250.0, 700.0, 2.0)
+    P = emis_pdf(te + 123.0); P = P / P.sum()
+    LAM, TE = np.meshgrid(lam, te)
+    GATE = (TE >= C_CH * (LAM1 - LAM)) & (TE <= C_CH * (LAM2 - LAM))
+    W = GATE * P[:, None]
+    lam_app = LAM + TE / C_TOT
+    lo_clip = 500e-6 * 3956 / 18.15    # 0.109 A of labels removed at the bottom
+    hi_clip = 2000e-6 * 3956 / 18.15   # 0.436 A at the top
+
+    fig, (a, b) = plt.subplots(1, 2, figsize=(11.8, 4.9))
+    # left: full band
+    e = np.arange(2.35, 6.40, 0.02)
+    H, _, _ = np.histogram2d(LAM[GATE], lam_app[GATE], bins=[e, e], weights=W[GATE])
+    a.imshow(np.sqrt(H.T), origin="lower", extent=[e[0], e[-1], e[0], e[-1]],
+             aspect="equal", cmap="Greens")
+    a.plot([2.35, 6.40], [2.35, 6.40], color="0.4", ls="--", lw=1.0)
+    a.axhspan(2.35, LAM1, color="0.3", alpha=0.20)
+    a.axhspan(LAM2, 6.40, color="0.3", alpha=0.20)
+    a.axhspan(LAM1, LAM1 + lo_clip, color="#b26a00", alpha=0.30)
+    a.axhspan(LAM2 - hi_clip, LAM2, color="#b26a00", alpha=0.30)
+    a.annotate("interior (~3 Å): population CENTRED on the\ndiagonal — the full "
+               "emission pulse passes at\nevery λ, so the mean label = true λ;\n"
+               "only symmetric resolution broadening",
+               xy=(4.1, 4.15), xytext=(2.6, 5.35), fontsize=7.5, color="#0b3d20",
+               arrowprops=dict(arrowstyle="->", color="#0b3d20", lw=0.9))
+    a.text(3.6, 2.45, "grey: discarded by the histogram window\n"
+           "orange: removed by the STANDARD cutTOF clips", fontsize=7, color="k")
+    a.set_xlabel("TRUE wavelength (Å)")
+    a.set_ylabel("ASSIGNED wavelength (Å)  =  output axis")
+    a.set_title("Broadband: same pulse, same labelling rule —\n"
+                "but the cloud hugs the diagonal", fontsize=9.4)
+    # right: zoom on the closing edge
+    ez = np.arange(5.40, 6.30, 0.008)
+    Hz, _, _ = np.histogram2d(LAM[GATE], lam_app[GATE], bins=[ez, ez], weights=W[GATE])
+    b.imshow(np.sqrt(Hz.T), origin="lower", extent=[ez[0], ez[-1], ez[0], ez[-1]],
+             aspect="equal", cmap="Greens")
+    b.plot([5.40, 6.30], [5.40, 6.30], color="0.4", ls="--", lw=1.0)
+    b.axhspan(LAM2, 6.30, color="0.3", alpha=0.20)
+    b.axhspan(LAM2 - hi_clip, LAM2, color="#b26a00", alpha=0.30)
+    b.annotate("last ~0.4 Å: tail truncated →\nmean drops BELOW the diagonal\n"
+               "(labels < true — the measured\nclosing-edge rise in q0)",
+               xy=(5.95, 5.86), xytext=(5.44, 6.10), fontsize=7.5, color="#0b3d20",
+               arrowprops=dict(arrowstyle="->", color="#0b3d20", lw=0.9))
+    b.text(5.44, 5.70, "orange: the standard cutTOFmax\n(2000 μs) removes exactly\n"
+           "this bent region", fontsize=7.5, color="#7a4a00")
+    b.set_xlabel("TRUE wavelength (Å)")
+    b.set_ylabel("ASSIGNED wavelength (Å)")
+    b.set_title("Zoom on the closing edge: the only real deviation —\n"
+                "already inside the standard clip", fontsize=9.4)
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl2_labelmap_bb.png"), dpi=130)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_bands()
     fig_intersection()
@@ -687,4 +766,5 @@ if __name__ == "__main__":
     fig_emission()
     fig_emission_model()
     fig_labelmap()
+    fig_labelmap_bb()
     print("wrote monowl_* and monowl2_* .png in", HERE)
