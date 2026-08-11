@@ -119,21 +119,30 @@ The middle is correct (true ≈ label), but the labels are **compressed** relati
 the true wavelengths — the ring angles span the full transmitted band (~2.22–2.66 Å,
 matching the 0.43 Å band width), while the labels span only 2.29–2.64. A mislabelled
 λ gives Q = 4π·sinθ/λ_assigned off by the mislabel ratio, varying across the band.
-So it is a real Q-scale error from the **TOF→wavelength conversion for a narrow
-band** (the chopper-driven frame correction), not a flux effect. Broadband —
-wide band, well-resolved wavelength axis — is immune.
+
+**The cause is the chopper config we forced, not the data.** The monochromatic
+reduction is "special" only because we changed two things for it: (1) monkeypatched
+drtsans to the `20260101` chopper config (the default gives empty bands for narrow
+spreads), and (2) disabled TOF clipping. The chopper config feeds
+`correct_tof_frame`, which sets the TOF→wavelength/frame correction from the chopper
+geometry. Re-running the *same* dl/l=0.15 AgBe with the **default** config (no force)
+collapses the drift from 7.2σ to ~2σ (the reliable slices go flat) — so the forced
+`20260101` config, while it centres the band at 2.5 Å, skews the wavelength
+assignment *inside* the band. Broadband (default config, wide well-resolved band) is
+immune. The corollary is uncomfortable: the config needed to make the narrow bands
+*load* and centre correctly is the same one distorting the intra-band wavelength
+scale — so neither 6-chopper config is fully right for these runs. This is the same
+chopper-configuration problem flagged on the monoWL tab, now with a second symptom.
 
 **Practical impact is small:** the *combined* (multi-bin) mono peak still lands near
 Q1 (0.1065–0.1067), because it is the intensity-weighted average over the band,
 dominated by the centre where the distortion vanishes. So the recommendation holds.
-But the per-wavelength distortion inside a narrow band is a genuine EQSANS/drtsans
-narrow-band TOF→λ issue worth flagging.
 
 *(Earlier versions of this page first claimed the mono slices "overlap at Q1"
 (an argmax illusion), then blamed "flux-starved edge slices" — both wrong. A proper
-Gaussian fit shows a real drift, and the broadband control at the same 0.05 Å step
-being flat proves it is a narrow-band wavelength-assignment effect, not flux or
-slicing.)*
+Gaussian fit shows a real drift; the broadband control at 0.05 Å being flat rules
+out slicing; and the default-config test pins the cause on our forced chopper
+config.)*
 
 ## Why broadband at 0.1 Å is fine but single-bin is not
 
