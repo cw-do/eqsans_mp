@@ -7,9 +7,11 @@ d-spacing, so its ring must sit at the same Q at every spread — the EQSANS AgB
 calibration target **Q1 = 0.1069 Å⁻¹** (d(001) ≈ 58.8 Å; `TARGET_Q1` in the AgBe
 calibration) — only the *resolution* (peak width) should change.
 
-This page tracks that down. It uncovered **two** separate effects — a single-bin
-weighting shift, and a wavelength-axis distortion — and the root cause of the
-second is a **chopper-config mismatch between calibration and reduction**. The
+This page tracks that down (and was corrected several times as it did). The solid
+result: the **single-bin reduction** shifts the peak by forcing one wavelength into
+the Q calculation — fixed by a **wavelength-resolved** reduction. The chopper config
+does **not** reassign individual event wavelengths. A small (~0.5 %)
+monochromatic-vs-broadband peak offset remains as an open instrument-level item. The
 bottom line is in *Final verdict* at the end; the reasoning is below.
 
 ## The symptom
@@ -115,34 +117,39 @@ produced it:
 | 2.587 | 2.599 |
 | 2.637 | 2.658 |
 
-The middle is correct (true ≈ label), but the labels are **compressed** relative to
-the true wavelengths — the ring angles span the full transmitted band (~2.22–2.66 Å,
-matching the 0.43 Å band width), while the labels span only 2.29–2.64. A mislabelled
-λ gives Q = 4π·sinθ/λ_assigned off by the mislabel ratio, varying across the band.
+**It is NOT the reduction config.** It is tempting to blame the `20260101` config we
+forced for the mono reduction, but the data rules that out: re-reducing the *same*
+mono run with the **default** config gives the **same q0 at every matched wavelength**
+(≈0.1071–0.1074 near 2.5 Å with either config). The config changes only *which band
+loads* (its edges), not the wavelength assigned to a given event — consistent with
+the physics: `correct_tof_frame` only **frame-unwraps** slow neutrons (adds whole
+pulse periods), and the fast 2.5 Å neutrons here do not wrap, so their wavelength is
+config-independent. The apparent 7.2σ-vs-2σ difference between configs was only that
+the forced config's *wider* band reaches down to ~2.29 Å, where q0 droops; the
+default band starts at ~2.44 Å and never samples it.
 
-**The cause is the chopper config we forced, not the data.** The monochromatic
-reduction is "special" only because we changed two things for it: (1) monkeypatched
-drtsans to the `20260101` chopper config (the default gives empty bands for narrow
-spreads), and (2) disabled TOF clipping. The chopper config feeds
-`correct_tof_frame`, which sets the TOF→wavelength/frame correction from the chopper
-geometry. Re-running the *same* dl/l=0.15 AgBe with the **default** config (no force)
-collapses the drift from 7.2σ to ~2σ (the reliable slices go flat) — so the forced
-`20260101` config, while it centres the band at 2.5 Å, skews the wavelength
-assignment *inside* the band. Broadband (default config, wide well-resolved band) is
-immune. The corollary is uncomfortable: the config needed to make the narrow bands
-*load* and centre correctly is the same one distorting the intra-band wavelength
-scale — so neither 6-chopper config is fully right for these runs. This is the same
-chopper-configuration problem flagged on the monoWL tab, now with a second symptom.
+**What is left is a real, unexplained run-level offset.** Comparing the reduced
+*runs* rather than the configs: where the monochromatic run (186246) and the
+broadband run (186106) overlap in wavelength (~2.6 Å), the mono AgBe peak sits at
+≈0.1074 while broadband sits at ≈0.1067 — a **~0.5 % offset** — and the mono run
+droops further at short λ. Broadband is flat (0.1067–0.1068) wherever it is measured.
+This is a difference between the two **physical measurements** (different chopper
+*hardware* settings/timing for monochromatic vs broadband), present under either
+reduction config — most likely an **instrument-level chopper-phasing / TOF-timing**
+effect in the monochromatic setup, not a reduction artifact. It is not yet
+explained, and is flagged as an open item.
 
 **Practical impact is small:** the *combined* (multi-bin) mono peak still lands near
-Q1 (0.1065–0.1067), because it is the intensity-weighted average over the band,
-dominated by the centre where the distortion vanishes. So the recommendation holds.
+Q1 (0.1065–0.1067). The recommendation (wavelength-resolved reduction, standard
+calibration) holds.
 
-*(Earlier versions of this page first claimed the mono slices "overlap at Q1"
-(an argmax illusion), then blamed "flux-starved edge slices" — both wrong. A proper
-Gaussian fit shows a real drift; the broadband control at 0.05 Å being flat rules
-out slicing; and the default-config test pins the cause on our forced chopper
-config.)*
+*(This page has been corrected repeatedly as the analysis sharpened: it first
+claimed the mono slices "overlap at Q1" (argmax illusion), then blamed "flux-starved
+edge slices", then "a forced-config wavelength distortion / calibration mismatch" —
+all wrong. The verified facts: single-bin shifts the peak by band-centre weighting
+(use wavelength-resolved instead); the reduction **config does not reassign
+wavelengths**; and a small ~0.5 % monochromatic-vs-broadband peak offset remains, an
+open instrument-level question.)*
 
 ## Why broadband at 0.1 Å is fine but single-bin is not
 
@@ -189,67 +196,51 @@ This reverses the provisional recommendation on the monoWL tab (which framed
 single-bin as *the* fix): the correct approach is a wavelength-resolved reduction
 with the standard calibration.
 
-## Final verdict — a calibration ↔ reduction chopper-config mismatch
+## Final verdict — what is solid, and what is still open
 
-Pulling the whole investigation together, there are **two distinct effects**, and
-the more subtle one comes down to a config mismatch we introduced:
+This investigation was corrected several times as the analysis sharpened. The
+verified conclusions:
 
-**1. Single-bin weighting shift (a reduction-choice effect).** Collapsing the whole
-band into one wavelength bin forces a single λ into Q = 4π·sinθ/λ; the merged peak
-lands at the intensity-weighted mean wavelength, so it shifts with spread. Fixed by
-reducing wavelength-resolved (above).
+**1. Single-bin reduction shifts the peak (real; fixable).** Collapsing the whole
+band into one wavelength bin forces a single λ into Q = 4π·sinθ/λ, so the merged peak
+lands at the intensity-weighted mean wavelength and shifts with spread. **Fix:**
+reduce wavelength-resolved (multiple bins across the band), with the standard
+calibration. Then every spread gives the same peak position, differing only in
+resolution.
 
-**2. Per-slice wavelength distortion (a chopper-config mismatch).** This is the real
-root cause, and it is not the monochromatic *data* — it is a config difference we
-introduced for the monochromatic reduction:
+**2. The reduction config does NOT reassign individual wavelengths.** At a pulsed
+source the recorded time is relative to the proton pulse and ambiguous by whole pulse
+periods; `correct_tof_frame` only **frame-unwraps** slow neutrons (adds pulse
+periods). The fast 2.5 Å monochromatic neutrons do not wrap, so their wavelength is
+independent of the chopper config — confirmed by re-reducing the same mono run with
+two different configs and getting the **same q0 at every matched wavelength**. The
+chopper phase sets *which* wavelengths pass (the band), not each event's wavelength.
+*(An earlier version of this page claimed a config-driven "wavelength distortion /
+calibration mismatch" — that was wrong and has been retracted.)*
 
-- **How the config enters the wavelength.** drtsans selects a chopper config by
-  daystamp; for these Aug-2026 runs the default is the **20260304** ("March")
-  entry. The config drives the wavelength assignment through the frame correction:
-  `transmitted_bands` (built from the chopper **distances, phases and offsets**) →
-  `limiting_tofs` → `tof_min` → `EQSANSCorrectFrame(MinTOF=tof_min)` reassigns each
-  event's TOF → and wavelength = TOF · (h/mₙ) / distance. So the chopper geometry
-  feeds the TOF→wavelength conversion — **confirmed in the drtsans source, and
-  confirmed empirically** (swapping the config moves the fitted peaks).
+**3. Open item — a ~0.5 % monochromatic-vs-broadband peak offset.** Where the
+monochromatic run and a broadband run overlap in wavelength (~2.6 Å), the AgBe peak
+differs by ~0.5 % (mono ≈0.1074 vs broadband ≈0.1067), with a further droop at short
+λ in the mono run. This is a difference between the two **physical measurements**
+(different chopper hardware settings/timing), present under either reduction config —
+most plausibly an **instrument-level chopper-phasing / TOF-timing** effect in
+monochromatic mode. It is small (combined peak still ≈Q1) and **not yet explained**;
+it needs an instrument-level TOF/chopper-timing check, not a reduction change.
 
-- **The calibration used the default config.** All 2026B machine-physics
-  calibration — dark current, sensitivity, flux, and the AgBe geometry
-  (`scale_all`, `detoffset`, `samoffset`) — was done **without forcing the config**,
-  i.e. under **20260304**. The geometry was therefore tuned so AgBe lands at
-  Q1 = 0.1069 *given the 20260304 wavelength assignment*.
+## Note on calibration
 
-- **The monochromatic reduction used a different config.** We monkeypatched the
-  monochromatic runs to the **20260101** config (the default gives empty bands for
-  narrow spreads). That changes the wavelength assignment relative to what the
-  calibration assumed → **mismatch** → the AgBe peak and the per-slice wavelength
-  axis shift.
-
-- **The evidence.** Re-reducing the *same* dl/l=0.15 AgBe with the **default**
-  config collapses the per-slice drift from 7.2σ to ~2σ (reliable slices flat);
-  broadband, reduced under the default config that matches the calibration, is dead
-  flat at 0.1067; and the single-bin peaks scatter. The distortion tracks the
-  config, not the data.
-
-- **Neither 6-chopper config is fully right for these runs.** The default
-  (20260304) mis-centres the narrow bands (empty → IndexError for dl/l ≤ 0.05, and
-  off-centre at ~2.57 Å for the rest); the forced (20260101) centres the band at
-  2.5 Å but skews the wavelength axis *inside* it. Both are symptoms of the same
-  thing: the **6-chopper phase/geometry is not yet correctly implemented in
-  drtsans** (the config problem first flagged on the **monoWL** tab).
-
-## Path forward — recalibrate all machine physics under the correct config
-
-Because the chopper config sets the wavelength assignment, **the calibration and the
-reduction must use the same config**, and both must use the *correct* one. Until the
-correct 6-chopper phase/geometry is implemented in drtsans, every result here is
-provisional.
-
-> **Action item:** once the correct chopper phase configuration is in place,
-> **redo all 2026B machine-physics calibration under it** — dark current,
-> sensitivity, flux, and especially the AgBe geometry (`scale_all`, `detoffset`,
-> `samoffset`) — and then reduce all standard and monochromatic data with that same
-> config. The current 2026B calibration and the monochromatic reductions on these
-> tabs should be treated as provisional and re-derived at that point.
+All 2026B machine-physics calibration (dark, sensitivity, flux, AgBe geometry) was
+done under the default `20260304` config, without forcing. Because the detector
+**geometry** calibration (`detoffset`, `samoffset`) constrains scattering *angle*,
+which is wavelength-independent, it transfers across configs — so a config change at
+reduction time does not, by itself, invalidate the geometry calibration. The 6-chopper
+config still needs to be corrected upstream for other reasons (it gives empty/
+mis-centred bands for narrow monochromatic spreads — see the **monoWL** tab), and the
+~0.5 % monochromatic offset above should be understood; if the correct chopper
+configuration changes the *band definition* materially, it is prudent to re-verify the
+AgBe calibration under it. But the strong "recalibrate everything because the config
+distorts wavelengths" claim from an earlier version of this page is **withdrawn** — the
+config does not distort the per-event wavelengths.
 
 ## Scripts & data
 
