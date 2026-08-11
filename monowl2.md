@@ -191,7 +191,7 @@ contamination reaches everywhere. This also explains why fine binning converged 
 ### Picturing the mechanism — and a quantitative check
 
 ![Emission-time model: gate in the (λ, emission-time) plane, spectrum reshaping, model vs measurement](assets/monowl/monowl2_model.png)
-*Figure: (A) the chopper gate drawn in the (true wavelength, emission time) plane — the gate is a diagonal stripe (slope set by the chopper distance), while lines of constant ASSIGNED wavelength have a different slope (set by the full flight path); because the slopes differ, the gate mixes true wavelengths across assigned labels. Grey shading is the moderator emission-time density (sharp rise, long tail). (B) the transmitted spectrum for the SAME chopper timings: the ideal no-spread gate would pass the dotted rectangle; the emission spread lets genuinely faster neutrons in via the late tail (green curve extends well below the nominal edge) and mildly slower ones via the early rise — the true band is wider and asymmetric, and the apparent (assigned-label) spectrum differs from both. (C) the mislabel predicted by this one-gate convolution model (emission = exponentially-modified Gaussian with the drtsans mean of 123 μs, rise ≈ −170 μs, tail ≈ +550 μs) overlaid on the eight AgBe-measured points — shape and magnitude reproduced with no per-point fitting. Model in make_monowl_plots.py (fig_emission_model).*
+*Figure: (A) the chopper gate drawn in the (true wavelength, emission time) plane — the gate is a diagonal stripe (slope set by the chopper distance), while lines of constant ASSIGNED wavelength have a different slope (set by the full flight path); because the slopes differ, the gate mixes true wavelengths across assigned labels. Grey shading is the moderator emission-time density (sharp rise, long tail). (B) the transmitted spectrum for the SAME chopper timings: the ideal no-spread gate would pass the dotted rectangle; the emission spread lets genuinely faster neutrons in via the late tail (green curve extends well below the nominal edge) and mildly slower ones via the early rise — the true band is wider and asymmetric, and the apparent (assigned-label) spectrum differs from both. (C) the mislabel predicted by two emission models overlaid on the eight AgBe-measured points: green = exponentially-modified Gaussian with the drtsans mean of 123 μs and a measured tail (rise ≈ −170 μs, tail ≈ +550 μs); blue dashed = drtsans' own moderator width model. Model in make_monowl_plots.py (fig_emission_model).*
 
 Panel B is the direct answer to "how can the same chopper timings give a different
 beam?": the choppers define a window in *time*, and the moderator's emission spread
@@ -200,6 +200,19 @@ wavelength** — extra fast neutrons ride in on the late tail, a few slow ones o
 early rise. Panel C closes the loop quantitatively: a minimal convolution model
 (one equivalent gate × the emission distribution, mean pinned to drtsans' value)
 reproduces the measured mislabel curve across the band.
+
+**drtsans' own emission model — and its limitation.** drtsans does carry an
+emission-time *width*, not just the mean: `moderator_time_uncertainty(λ)` in
+`momentum_transfer.py`, used in the official dQ resolution. It is exactly **2× the
+mean-delay polynomial** (245 μs at 2.5 Å vs the 123 μs mean) and enters dQ as
+width²/12 — i.e. drtsans implicitly models emission as **uniform between 0 and
+245 μs**. Panel C shows this model as the blue dashed curve: being tail-less, it
+predicts almost no mislabel (±50 μs confined to the outermost bins) and **cannot
+reproduce the measured +296 μs opening-edge point**. The real moderator pulse has a
+long tail (reach ~+550 μs at 2.5 Å) that the uniform model truncates. Two
+consequences worth reporting to the drtsans team: the resolution dQ slightly
+underestimates the moderator term's tail, and any future monochromatic-mode support
+should use a tailed emission model, not the uniform one.
 
 ## Why a TOF instrument sees this — and a reactor SANS never did
 
@@ -248,36 +261,62 @@ wavelength** (the drtsans mean-delay curve is almost flat from 2–13 Å). So th
 *fractional* penalty falls as 1/λ, and monochromatic mode becomes progressively more
 trustworthy at long wavelength:
 
-| λ (Å) | contaminated Δλ | dl/l floor (no clean core below) | reliable dl/l (≥50 % clean core) |
-|---|---|---|---|
-| 1.0 | 0.21 Å | 21 % | 43 % |
-| 2.0 | 0.38 Å | 19 % | 38 % |
-| 2.5 | 0.38 Å | 15 % | 31 % |
-| 4.0 | 0.39 Å | 10 % | 20 % |
-| 6.0 | 0.40 Å | 6.6 % | 13 % |
-| 10.0 | 0.40 Å | 4.0 % | 8 % |
-| 13.0 | 0.41 Å | 3.1 % | 6 % |
+Two versions of the floor are given: an optimistic one using **drtsans' own
+moderator width** (`moderator_time_uncertainty`, a tail-less uniform model), and a
+conservative one anchored to the **measured** AgBe mislabels (which include the real
+tail). The truth sits between them, closer to the measured column:
 
-Assumptions: rise ≈ 200 μs and tail ≈ 350 μs (measured here at 2.5 Å from the AgBe
-mislabels), scaled with the drtsans mean-delay curve; blur evaluated at chopper 1
+| λ (Å) | Δλ_contam (drtsans width) | floor (drtsans) | Δλ_contam (measured) | floor (measured) | reliable dl/l (≥50 % clean) |
+|---|---|---|---|---|---|
+| 1.0 | 0.10 Å | 10 % | 0.21 Å | 21 % | 43 % |
+| 2.0 | 0.17 Å | 8.5 % | 0.38 Å | 19 % | 38 % |
+| 2.5 | 0.17 Å | 6.8 % | 0.38 Å | 15 % | 31 % |
+| 4.0 | 0.17 Å | 4.4 % | 0.39 Å | 10 % | 20 % |
+| 6.0 | 0.18 Å | 2.9 % | 0.40 Å | 6.6 % | 13 % |
+| 10.0 | 0.18 Å | 1.8 % | 0.40 Å | 4.0 % | 8 % |
+| 13.0 | 0.18 Å | 1.4 % | 0.41 Å | 3.1 % | 6 % |
+
+Assumptions: measured column uses rise ≈ 200 μs + tail ≈ 350 μs (from the AgBe
+mislabels at 2.5 Å) scaled with the drtsans width curve; blur evaluated at chopper 1
 (5.7 m). *Floor* = spread at which the emission blur spans the whole band (no
 wavelength in the band escapes selection). *Reliable* = spread with at least half
-the band clean after clipping the fixed edges. These are estimates to be refined
-with the actual SNS moderator emission tables — but the 2.5 Å row is anchored in
-this measurement, and it explains the whole campaign: **at 2.5 Å every spread we
-measured (dl/l ≤ 0.15) is below the floor**, so all of it was emission-dominated.
-The same series at 10 Å (floor 4 %) would have been mostly clean.
+the band clean after clipping the fixed edges. The 2.5 Å row explains the whole
+campaign: **every spread we measured (dl/l ≤ 0.15 at 2.5 Å) is below the measured
+floor**, so all of it was emission-dominated. The same series at 10 Å (floor 4 %)
+would have been mostly clean.
 
-Two corollaries worth noting:
+## Recommendation — how to actually use monochromatic mode
 
-- There is a **monochromaticity floor**: below dl/l ≈ Δλ_contam/λ, tightening the
-  chopper phases no longer narrows the *true* wavelength content — it only trades
-  flux for a larger fraction of emission-selected, mislabeled neutrons. (This is
-  also why dl/l = 0.03 at 2.5 Å was so unrewarding.)
-- For quantitative monochromatic work at short wavelength, the honest options are:
-  go to **longer wavelength**, use a **wider spread** (≥ the reliable column), or
-  reduce **wavelength-resolved with edge clips** and accept the flux loss — a
-  single-bin treatment is never safe at 2.5 Å.
+The two knobs — dl/l choice and TOF cuts — are **complementary, not alternatives**:
+the dl/l (per wavelength) decides whether a clean core *exists*; the TOF cuts /
+centre-bin selection then *harvest* it. Cuts cannot rescue a spread below the floor,
+because there the contamination fills the entire band (verified: 300 μs clips on
+dl/l = 0.15 at 2.5 Å removed the extremes but the core still drifted).
+
+Concrete recipe:
+
+1. **Pick the wavelength first.** Monochromatic mode is naturally a long-wavelength
+   technique here: at 2.5 Å the measured floor is ~15 %, at 6 Å ~7 %, at 10 Å ~4 %.
+   For narrow-spread physics (dl/l ≤ 5 %), work at λ ≳ 8–10 Å.
+2. **Request a spread above the floor with margin for the cuts:**
+   dl/l_request ≈ dl/l_wanted + Δλ_contam/λ (measured column). E.g. an effective 5 %
+   at 10 Å → request ~9 %; an effective 5 % at 2.5 Å → request ~20 %.
+3. **Reduce wavelength-resolved** (several bins across the band — never single-bin)
+   with the standard calibration.
+4. **Cut the band edges.** For the 2.5 Å band the measured contamination reach is
+   ~0.17 Å on the low-label side and ~0.13 Å on the high side, i.e.
+   `cutTOFmin ≈ 800 μs`, `cutTOFmax ≈ 600 μs` — note the asymmetry is *opposite* to
+   the broadband defaults (500/2000), because in a narrow band the emission tail
+   contaminates the low-label side. Equivalently: drop the edge wavelength bins and
+   keep only the centre bins. Scale the cuts with the width curve at other
+   wavelengths.
+5. **Verify with AgBe each time:** reduce AgBe per-slice and check the fitted peak
+   is flat at 0.1069 across the kept bins — the acceptance test that the core is
+   clean (this page's method).
+6. Below the floor (e.g. dl/l = 0.03 at 2.5 Å), no reduction choice helps —
+   tightening the phases only trades flux for mislabeled neutrons. Either accept
+   ~0.5–1 % Q-scale softness, or wait for a **chopper-as-clock** reduction
+   (previous section), which is the principled fix for narrow gates.
 
 **Practical impact is small:** the *combined* (multi-bin) mono peak still lands near
 Q1 (0.1065–0.1067). The recommendation (wavelength-resolved reduction, standard

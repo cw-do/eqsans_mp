@@ -505,18 +505,29 @@ def fig_emission_model():
                 "emission spread widens the TRUE band asymmetrically", fontsize=9.6)
     b.legend(fontsize=7.5); b.grid(color="#eceef1")
     # ---- (C) predicted mislabel vs the AgBe measurement -----------------
-    app_axis = np.arange(2.26, 2.68, 0.01)
-    pred = []
-    flat_app = lam_app[GATE]; flat_lam = LAM[GATE]
-    flat_w = (P[:, None] * np.ones_like(LAM))[GATE]
-    for la in app_axis:
-        m = (flat_app > la - 0.025) & (flat_app < la + 0.025)
-        if flat_w[m].sum() > 0:
-            mean_true = np.average(flat_lam[m], weights=flat_w[m])
-            pred.append((la, (la - mean_true) * C_TOT))
-    pred = np.array(pred)
+    def mislabel_curve(weight_t):
+        """Mean mislabel (as implied emission-time offset, us) vs assigned
+        wavelength for emission-time weights `weight_t` over the te axis."""
+        Wt = GATE * weight_t[:, None]
+        fa, fl, fw = lam_app[GATE], LAM[GATE], Wt[GATE]
+        out = []
+        for la in np.arange(2.26, 2.68, 0.01):
+            m = (fa > la - 0.025) & (fa < la + 0.025)
+            if fw[m].sum() > 0:
+                out.append((la, (la - np.average(fl[m], weights=fw[m])) * C_TOT))
+        return np.array(out)
+
+    pred = mislabel_curve(P)
+    # drtsans' own moderator model: moderator_time_uncertainty(2.5 A) = 245 us,
+    # entering dQ as width^2/12 -> a UNIFORM emission distribution of full width
+    # 245 us whose mean (122.6 us) is exactly drtsans' DELAY_FIT mean delay.
+    P_DRT = ((te >= -122.6) & (te <= 122.6)).astype(float)
+    P_DRT = P_DRT / P_DRT.sum()
+    pred_drt = mislabel_curve(P_DRT)
     c.plot(pred[:, 0], pred[:, 1], "-", color=GREEN, lw=2,
-           label="convolution model")
+           label="model, measured-tail emission")
+    c.plot(pred_drt[:, 0], pred_drt[:, 1], "--", color=BLUE, lw=1.8,
+           label="model, drtsans uniform width (245 μs)")
     meas_l = [2.287, 2.337, 2.387, 2.437, 2.487, 2.537, 2.587, 2.637]
     meas_o = [296, 114, 68, -5, -27, -28, -57, -95]
     c.plot(meas_l, meas_o, "o", color=RED, ms=7, label="measured (AgBe per-slice)")
