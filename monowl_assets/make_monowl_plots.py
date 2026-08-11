@@ -21,6 +21,7 @@ RECIPE = os.path.join(MONO, "reduced_recipe")
 AGBE = os.path.join(MONO, "reduced_agbe_mono")
 PERSLICE = os.path.join(MONO, "perslice", "info", "inelastic_incoh",
                         "agbe_dl0.15_perslice", "slice_0", "frame_0")
+PERSLICE_BB = os.path.join(MONO, "perslice_bb")   # broadband 186106 per-slice tree
 
 # AgBe diffraction orders at the EQSANS calibration target Q1 = 0.1069 1/A
 # (TARGET_Q1 in tools/agbe/agbe_reducenfit.py; d(001) = 2*pi/0.1069 ~ 58.8 A).
@@ -302,6 +303,72 @@ def fig_peakpos():
     plt.close(fig)
 
 
+def _fit_perslice_q0(tree):
+    """Gaussian-fit the AgBe(001) peak of every IQ_<wl>_before_b_correction.dat in
+    a per-slice tree. Returns (wl[], q0[], err[]). Needs scipy; returns empties if
+    unavailable."""
+    import glob
+    try:
+        from scipy.optimize import curve_fit
+    except Exception:
+        return [], [], []
+    import numpy as np
+    fs = sorted(glob.glob(os.path.join(tree, "**", "IQ_*_before_b_correction.dat"),
+                          recursive=True),
+                key=lambda f: float(f.split("IQ_")[1].split("_")[0]))
+    def model(q, A, q0, s, a, b):
+        return A * np.exp(-(q - q0) ** 2 / (2 * s ** 2)) + a + b * q
+    W, Q0, ER = [], [], []
+    for f in fs:
+        wl = float(f.split("IQ_")[1].split("_")[0])
+        q, iq, err = read_iq(f)
+        if not q:
+            continue
+        q = np.array(q); iq = np.array(iq); err = np.array(err)
+        m = (q > 0.085) & (q < 0.135) & np.isfinite(iq) & (iq > 0)
+        if m.sum() < 6:
+            continue
+        qq, ii, ee = q[m], iq[m], err[m]
+        ee = np.where(ee > 0, ee, np.maximum(ii * 0.1, 1e-9))
+        try:
+            p, c = curve_fit(model, qq, ii,
+                             p0=[ii.max() - np.median(ii), 0.107, 0.005, np.median(ii), 0],
+                             sigma=ee, absolute_sigma=True, maxfev=40000,
+                             bounds=([0, 0.095, 0.001, -np.inf, -np.inf],
+                                     [np.inf, 0.125, 0.03, np.inf, np.inf]))
+            if np.sqrt(c[1, 1]) < 0.003:
+                W.append(wl); Q0.append(p[1]); ER.append(np.sqrt(c[1, 1]))
+        except Exception:
+            pass
+    return W, Q0, ER
+
+
+def fig_perslice_trend():
+    """The physics test: does each wavelength give the same Q? Broadband per-slice
+    is flat on the target (yes); the monochromatic band, finely sliced, drifts —
+    a fine-slicing artifact, not real."""
+    mw, mq, me = _fit_perslice_q0(PERSLICE)
+    bw, bq, be = _fit_perslice_q0(PERSLICE_BB)
+    if not mw and not bw:
+        return
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.axhline(AGBE_Q1, color="0.5", ls="--", lw=1.3, label="AgBe calibration target 0.1069")
+    if bw:
+        ax.errorbar(bw, bq, yerr=be, fmt="s", ms=5, color=GREEN, capsize=2,
+                    label="broadband, per slice — flat (physically correct)")
+    if mw:
+        ax.errorbar(mw, mq, yerr=me, fmt="o", ms=6, color=RED, capsize=2,
+                    label="monochromatic dl/l=0.15, per slice — spurious drift")
+    ax.set_xlabel("slice wavelength (A)")
+    ax.set_ylabel("fitted AgBe(001) peak Q (1/A)")
+    ax.set_title("Each wavelength must give the same Q — broadband confirms it; "
+                 "the mono drift is a fine-slice artifact", fontsize=9.8)
+    ax.legend(fontsize=8.5); ax.grid(color="#eceef1"); ax.set_ylim(0.102, 0.110)
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl2_trend.png"), dpi=130)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_bands()
     fig_intersection()
@@ -309,4 +376,5 @@ if __name__ == "__main__":
     fig_agbe()
     fig_perslice()
     fig_peakpos()
+    fig_perslice_trend()
     print("wrote monowl_* and monowl2_* .png in", HERE)

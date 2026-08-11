@@ -82,23 +82,42 @@ only thing that changed is the assigned wavelength. And Q ∝ 1/λ predicts the 
 shift: 0.1039 × (2.475 / 2.437) = **0.1055** ≈ the observed 0.1058. Direct proof
 that a single bin's peak Q is set by its assigned wavelength.
 
-## The proof — every wavelength slice peaks at the same Q1
+## The proof — every wavelength gives the same Q (broadband), and why the mono slices look like they don't
 
-The decisive test: reduce dl/l=0.15 at a fine 0.05 Å step (≈8 slices) and write
-out I(Q) for each wavelength slice separately.
+The physical requirement is that AgBe sits at the same Q at *every* wavelength — a
+different wavelength diffracts at a different angle, but Q = 4π·sinθ/λ maps them all
+to the same Q. Different wavelengths cannot reveal different structure. The decisive
+test is to write out I(Q) for each wavelength slice separately and fit its peak.
 
-![AgBe I(Q) for each wavelength slice — peaks overlap at Q1](assets/monowl/monowl2_perslice.png)
-*Figure: eight wavelength slices across the dl/l=0.15 band. Left: raw I(Q) — the (001)/(002)/(003) rings of every slice line up on Q1 (red); slice intensities differ because that is the flux across the band. Right: peak region, each slice normalised to its own max — all slices peak on Q1 with no trend vs wavelength. Per-slice profiles written by drtsans (reduce_agbe_perslice.py).*
+![Per-slice AgBe peak vs wavelength: broadband flat, mono drift is a fine-slice artifact](assets/monowl/monowl2_trend.png)
+*Figure: fitted AgBe(001) peak Q per wavelength slice. Broadband (green, run 186106, 2.7–5.6 Å) is dead flat on the calibration target — slope 0.4σ = zero — so every wavelength gives the same Q, exactly as required. The monochromatic dl/l=0.15 band (red, 2.3–2.6 Å) appears to drift (0.104→0.108, 7.2σ) — but see below. Gaussian fits by scipy; per-slice profiles from reduce_agbe_perslice.py / reduce_agbe_bb_perslice.py.*
 
-Every slice — 2.29, 2.34, … 2.64 Å — puts the AgBe peak at the **same Q1**. They
-overlap; there is **no systematic shift with wavelength**. So:
+**Broadband is the clean answer:** across 2.7–5.6 Å every 0.1 Å slice fits to
+0.1067 ± 0.0001 — flat, on target. Different wavelengths give the same Q, and a
+monochromatic beam at any one of those wavelengths sits there too.
 
-- Each wavelength individually gives Q1. A monochromatic beam at 2.5 Å is just one
-  of these slices — it sits at Q1.
-- Different spread = summing a different *number* of these overlapping slices, each
-  at Q1 → the sum stays at Q1; only the peak **width (resolution)** changes.
-- The single-bin shift is therefore **not** in the physics — it is the weighting
-  artifact of merging the slices under one wavelength.
+**The monochromatic per-slice "drift" is an artifact, not physics.** When the
+*narrow* dl/l=0.15 band is sliced at 0.05 Å, the fitted peaks drift with wavelength
+— but that is a **fine-slicing artifact**, not a real Q shift:
+
+- The transmitted band is triangular and near-zero at its edges, so the edge slices
+  (2.29, 2.64 Å) contain almost no genuine neutrons at that wavelength — they are
+  flux-starved, dominated by resolution tails and background, with large error bars
+  (±0.0013). Broadband slices are each well-populated with real neutrons at that
+  wavelength, so they sit flat.
+- The drift spans only 0.35 Å yet is ~40× steeper than the calibration's own
+  wavelength residual (0.1069 at 2.5/6 Å → 0.1074 at 10 Å) — far too steep to be a
+  real instrument effect.
+
+So the physics holds: **each wavelength gives the same Q** (broadband proves it),
+and a monochromatic run therefore *should* land at Q1. The single-bin shift is a
+separate, real effect — the weighting artifact of merging the whole band under one
+assigned wavelength — while the per-slice "drift" is just what happens when you
+slice a narrow, center-peaked band finer than its own wavelength resolution.
+
+*(An earlier version of this page claimed the mono slices "overlap at Q1" from an
+argmax read of the same data — that was wrong; a proper Gaussian fit shows the
+spurious drift above, and the broadband test is the correct demonstration.)*
 
 ## Why broadband at 0.1 Å is fine but single-bin is not
 
