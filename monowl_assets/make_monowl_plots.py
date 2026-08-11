@@ -586,6 +586,96 @@ def fig_emission_model():
     plt.close(fig)
 
 
+def fig_labelmap():
+    """The missing link: where every transmitted neutron ends up on the OUTPUT
+    axis. (Left) 2D map of true wavelength vs assigned wavelength with the
+    drtsans histogram window overlaid -- assigned labels outside [2.262, 2.688]
+    are DISCARDED, the rest populate the output bins. (Right) the true-lambda
+    composition of three output bins: edge bins are off-centre from their label,
+    which IS the measured mislabel."""
+    import numpy as np
+    L_C, L_TOT = 5.7, 18.15
+    C_CH = L_C / 3956.0 * 1e6
+    C_TOT = L_TOT / 3956.0 * 1e6
+    LAM1, LAM2 = 2.262, 2.688
+    MU, SIG, TAU = -77.0, 45.0, 200.0
+
+    def emis_pdf(t):
+        s2 = SIG * SIG
+        z = (t - MU - s2 / TAU) / (np.sqrt(2.0) * SIG)
+        val = (1.0 / (2 * TAU)) * np.exp((s2 / (2 * TAU * TAU)) - (t - MU) / TAU)
+        try:
+            from scipy.special import erfc
+            return val * erfc(-z)
+        except Exception:
+            import math
+            return val * np.vectorize(math.erfc)(-z)
+
+    lam = np.arange(1.95, 3.00, 0.002)
+    te = np.arange(-250.0, 700.0, 2.0)
+    P = emis_pdf(te + 123.0); P = P / P.sum()
+    LAM, TE = np.meshgrid(lam, te)
+    GATE = (TE >= C_CH * (LAM1 - LAM)) & (TE <= C_CH * (LAM2 - LAM))
+    W = GATE * P[:, None]
+    lam_app = LAM + TE / C_TOT
+
+    fig, (a, b) = plt.subplots(1, 2, figsize=(11.8, 4.8))
+    # left: 2D density of (true, assigned)
+    e = np.arange(2.02, 2.92, 0.008)
+    H, _, _ = np.histogram2d(LAM[GATE], lam_app[GATE], bins=[e, e],
+                             weights=W[GATE])
+    a.imshow(H.T, origin="lower", extent=[e[0], e[-1], e[0], e[-1]],
+             aspect="equal", cmap="Greens", norm=None)
+    a.plot([2.02, 2.92], [2.02, 2.92], color="0.4", ls="--", lw=1.1)
+    a.text(2.71, 2.75, "correct labelling\n(assigned = true)", fontsize=7.5,
+           color="0.35", rotation=38)
+    # drtsans histogram window on the ASSIGNED axis
+    a.axhspan(2.02, LAM1, color="0.3", alpha=0.22)
+    a.axhspan(LAM2, 2.92, color="0.3", alpha=0.22)
+    a.axhline(LAM1, color="k", lw=1); a.axhline(LAM2, color="k", lw=1)
+    a.text(2.05, 2.13, "assigned < 2.262 →\nDISCARDED by the\nhistogram window",
+           fontsize=7.5, color="k")
+    a.text(2.05, 2.80, "assigned > 2.688 → DISCARDED", fontsize=7.5, color="k")
+    a.annotate("truly-2.2 Å neutrons: part discarded,\npart survives into the first"
+               " output bins\n(the 'intruders')", xy=(2.21, 2.30),
+               xytext=(2.33, 2.075), fontsize=7.5, color=RED,
+               arrowprops=dict(arrowstyle="->", color=RED, lw=0.9))
+    a.axhline(2.287, color=RED, lw=0.8, ls=":")
+    a.text(2.73, 2.293, "output bin 2.287 Å", fontsize=7, color=RED)
+    a.set_xlabel("TRUE wavelength (Å)")
+    a.set_ylabel("ASSIGNED wavelength (Å)  =  output axis")
+    a.set_title("Where every transmitted neutron lands on the output axis\n"
+                "(shade = discarded; only the band window is ever output)",
+                fontsize=9.4)
+    # right: true-lambda composition of three output bins
+    picks = [(2.287, RED), (2.487, GREEN), (2.637, BLUE)]
+    for ba, col in picks:
+        m = GATE & (np.abs(lam_app - ba) < 0.025)
+        h, edges = np.histogram(LAM[m], bins=np.arange(2.05, 2.85, 0.01),
+                                weights=W[m])
+        if h.max() <= 0:
+            continue
+        c = 0.5 * (edges[1:] + edges[:-1])
+        b.plot(c, h / h.max(), color=col, lw=1.8,
+               label="output bin %.3f Å" % ba)
+        mean_true = np.average(LAM[m], weights=W[m])
+        b.axvline(ba, color=col, ls=":", lw=1.2)
+        b.plot(mean_true, 1.02, "v", color=col, ms=7, clip_on=False)
+    b.annotate("bin LABELLED 2.287 Å actually contains\ntrue λ ≈ 2.15–2.30, well below its label\n"
+               "(model mean ▼ ≈ 2.25; measured from the\nAgBe ring: 2.22, i.e. +296 μs)",
+               xy=(2.22, 0.75), xytext=(2.30, 0.48), fontsize=7.5, color=RED,
+               arrowprops=dict(arrowstyle="->", color=RED, lw=0.9))
+    b.set_xlabel("TRUE wavelength (Å)")
+    b.set_ylabel("relative content of the output bin")
+    b.set_title("What is really inside three output bins\n"
+                "(dotted = bin label; ▼ = mean true wavelength)", fontsize=9.4)
+    b.legend(fontsize=7.5, loc="upper right")
+    b.grid(color="#eceef1")
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl2_labelmap.png"), dpi=130)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_bands()
     fig_intersection()
@@ -596,4 +686,5 @@ if __name__ == "__main__":
     fig_perslice_trend()
     fig_emission()
     fig_emission_model()
+    fig_labelmap()
     print("wrote monowl_* and monowl2_* .png in", HERE)

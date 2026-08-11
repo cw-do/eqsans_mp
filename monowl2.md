@@ -324,6 +324,47 @@ pulse; measured −5 μs at 2.437). Region by region:
   (−170 μs) compared to the tail (+550 μs) — the spectrum-edge asymmetry is the
   pulse asymmetry.
 
+**The compact statement: panel C is an axis contraction about a pivot near
+2.44 Å.** Below the pivot the offsets are positive (assigned > true: labels pulled
+*up* toward the centre), above it negative (assigned < true: labels pulled *down*)
+— equivalently, the **true wavelength band is wider than the labelled band**
+(measured: true 2.22–2.66 vs labels 2.29–2.64). Three quantitative features:
+
+- **Why opposite signs:** the gate forces a birth-time↔wavelength trade — to pass
+  on the short-λ side a neutron must be born *late* (τ > 0 mandatory), on the
+  long-λ side *early* (τ < 0). The fixed-birth-time labelling then converts τ
+  directly into a wavelength error +τ/4589 — positive on the low side, negative on
+  the high side. The two signs are the two sides of the same trade.
+- **The contraction ratio is set by where the chopper sits on the flight path.**
+  The gate demands δt = 1441·δλ of birth-time shift per Å of wavelength offset;
+  the labelling repays δt/4589 of apparent wavelength — so at most
+  **L_chopper/L_total = 5.7/18.15 = 31 %** of any gate-forced offset reappears as
+  label error. Measured: ~391 μs across the 0.35 Å band → ≈ 24 % contraction,
+  approaching the 31 % ceiling (reduced because ⟨τ⟩ tracks the sliding window only
+  partially — the pulse density concentrates near its mean). A chopper at the
+  detector would give 100 % contraction; one at the moderator, 0 %.
+- **Why the pivot sits at ~2.44, not the band centre 2.475:** the pivot is where
+  the sliding window is *balanced* on the pulse (⟨τ⟩ = 0). Because the pulse is
+  asymmetric — long late tail, short rise — balance occurs with the window shifted
+  toward the low-λ side. A symmetric pulse would pivot exactly at the band centre;
+  the pivot's displacement is itself a measure of the pulse asymmetry.
+
+**Why the output never shows 2.1–2.2 Å — the histogram window, and where the shift
+really lives.** drtsans' wavelength axis is *not* open-ended: after labelling,
+`convert_to_wavelength` rebins events onto **exactly the design band**
+(`Rebin(w_min, step, w_max)` with the config-computed edges, 2.262–2.688 Å here).
+Any event whose *assigned* wavelength falls outside that window is **discarded —
+not folded, not wrapped, simply cut**. That is why no transmission or I(q,λ)
+output ever shows a 2.1 Å bin, and why the per-slice measurements (panel C) span
+only the band. The discarded events cost intensity but cause no shift. **The shift
+comes from the mislabelled neutrons whose assigned wavelength lands *inside* the
+window**: a truly-2.22 Å neutron assigned 2.29 survives into the first output bin,
+so that bin's *true* content sits well below its label — which is exactly what the
+AgBe ring measured:
+
+![Label map: where every transmitted neutron lands on the output axis, and what is really inside three output bins](assets/monowl/monowl2_labelmap.png)
+*Figure left: every transmitted neutron placed by TRUE wavelength (x) and ASSIGNED wavelength (y = the output axis). The population forms a band tilted off the correct-labelling diagonal; grey = assigned labels outside the design band, which drtsans DISCARDS (this is also why broadband's short edge is immune — its intruders fall in the grey). The red dotted line marks the first output bin, 2.287 Å: it intersects the population at true λ ≈ 2.2–2.3. Figure right: the true-wavelength composition of three output bins — the edge bins' content is off-centre from their label (▼ = mean true λ; model ≈ 2.25 for the 2.287 Å bin, measured 2.22 = the +296 μs point), while the mid-band bin is nearly centred. The mislabel measured in panel C is exactly this per-bin offset. Model in make_monowl_plots.py (fig_labelmap).*
+
 **During which step does green become red — and which parameter is "wrong"?** The
 mislabelling happens at **event loading**, in the per-event TOF→wavelength
 conversion (`load_events` → `correct_emission_time` → `convert_to_wavelength`):
