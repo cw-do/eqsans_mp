@@ -174,12 +174,39 @@ do:
 
 Five independent features line up: the deviation direction at each edge, the
 magnitude (30–300 μs vs the 123 μs mean delay of a coupled moderator), the
-**asymmetry** (short edge worse — long late tail; long edge milder — sharp rise),
-the config-independence (the selection happened in hardware at measurement time),
-and the sizes of the **standard TOF clips (500 μs low / 2000 μs high)** — which turn
-out to be sized precisely to discard the two contaminated edge regions (≈0.11 Å and
-≈0.44 Å). The clips exist *because of this physics*; we had to disable them for the
-monochromatic band, thereby keeping only contaminated territory.
+**asymmetry**, the config-independence (the selection happened in hardware at
+measurement time), and the consistency with the **standard TOF clips
+(500 μs low / 2000 μs high)** discussed next.
+
+**Which edge needs which clip — two different mechanisms.** Care is needed here,
+because the mono band and a broadband band have *opposite* contamination
+asymmetries:
+
+- **In-band truncation** (the only mechanism a wide band's interior edges feel):
+  the *opening* (short-λ) edge excludes **early**-emitted neutrons → truncates only
+  the sharp rise (~170 μs, small); the *closing* (long-λ) edge excludes
+  **late**-emitted ones → truncates the long tail (~550 μs, large). So for
+  broadband, small-clip-low / big-clip-high is the **correct** order. In detector-TOF
+  units the reaches map through the lever arm L_tot/L_chopper ≈ 3.2: high edge
+  ≈ 550×3.2 ≈ 1750 μs (↔ the 2000 μs clip), low edge ≈ max(170×3.2, tail's direct
+  label displacement ≈ 550) ≈ 500–550 μs (↔ the 500 μs clip). Confirmed by the
+  broadband no-clip data: long-edge slices biased *early* (−111 μs at 6.02 Å, same
+  sign/scale as mono's closing edge), short edge clean.
+- **Intruders** (sub-band fast neutrons riding the late tail through the opening):
+  these are what give the mono band its big **+296 μs at the short side**. Broadband
+  is structurally protected from them (labels fall below the histogram minimum →
+  dropped; residue diluted by clean flux), so they do not set the broadband clip. In
+  a narrow band they survive and dominate — which is why the **mono** cut asymmetry
+  *flips* (≈800 μs low / 600 μs high in the recipe below) relative to broadband's
+  500/2000.
+
+A caveat for honesty: the historical 500/2000 clips serve several purposes at once —
+they also guard against **frame overlap** at the long-λ end (the slowest neutrons of
+one frame mixing with the fastest of the next; another reason the high clip is the
+large one) and prompt-pulse/chopper-penumbra effects. The emission mechanism
+reproduces their asymmetry and magnitudes strikingly well, but it is one of the
+reasons, not the only one. We had to disable the clips for the monochromatic band,
+thereby keeping only contaminated territory.
 
 **A clip cannot cure a narrow band.** Re-reducing mono dl/l=0.15 with modest 300 μs
 edge clips removes the worst extremes (0.1039 and 0.1077 disappear) but the
@@ -425,7 +452,10 @@ moderator emits each wavelength over a ~100–300 μs distribution; near gate ed
 transmitted neutrons are emission-time-selected and the one-emission-time TOF→λ
 assignment mislabels them. Confirmed out-of-sample: the broadband band edges show
 the same deviations once the standard TOF clips are off, and those clips
-(500/2000 μs) turn out to be sized exactly to remove the contaminated regions. A
+(500/2000 μs) are consistent in size and asymmetry with the two in-band
+contaminated regions (though the clips also serve frame-overlap and prompt-pulse
+protection); note the mono band's cut asymmetry *flips* (bigger cut on the low
+side) because the tail-riding intruders survive there. A
 narrow monochromatic band is *all* edge — hence the drift across the whole band, the
 ~0.5 % offset at 2.6 Å (mono near its closing edge vs broadband plateau), and the
 failure of fine binning to fully converge. Practical consequence: monochromatic
