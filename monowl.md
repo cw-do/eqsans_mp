@@ -114,26 +114,88 @@ as possible."
 
 ## How we fixed it for this test (temporary)
 
-The fix used to prove recovery is a **temporary, local workaround — nothing in the
-shared drtsans install or its configuration was modified.** In the demonstration
-script (`reduce_agbe_mono.py`) we, at runtime and in-memory only:
+`EQVar` / `reduceNow` only expose the parameters that go into the reduction JSON —
+input files, detector/sample offsets, `wavelengthStep`, transmission *values*, and
+so on. The three things that are wrong here are **not** JSON parameters, so they
+cannot be set through `EQVar`:
 
-1. **Forced the correct chopper phase** — monkeypatched
-   `EQSANSDiskChopperSet.get_chopper_configuration` to use the `20260101` phase
-   set instead of the auto-selected one.
-2. **Forced single-value transmission** — monkeypatched `calculate_transmission`
-   to use an empty fit function (raw single value, no `a·λ+b` fit).
-3. **Forced a single wavelength bin** — tagged each workspace with the
-   `monochromatic` sample log (and set the wavelength step to the band width), so
-   drtsans bins the whole band into one slice and bypasses the per-wavelength
-   corrections.
-4. Ran the reduction **in-process** (`reduceNow(..., debug=True)`) so the patches
-   actually apply (the default path spawns a fresh subprocess that would not see
-   them).
+- the **chopper phase set** is chosen by drtsans internally from the run's start
+  date, not passed in;
+- the **transmission fit** (`LinearBackground`) is hardcoded inside
+  `process_transmission`; and
+- **monochromatic single-bin mode** is triggered by a sample log, not a JSON key.
 
-These patches live only inside the demonstration script and vanish when it exits.
-They are enough to **prove the cause and recover data now**, but they are not a
-setup anyone should run production reductions through.
+So the demonstration script reaches into the drtsans objects at runtime and
+overrides them (monkeypatching) — a **temporary, in-memory workaround that touches
+nothing on disk** in the shared drtsans install:
+
+```python
+# (1) correct chopper phase.  EQSANSDiskChopperSet is the drtsans class built from
+#     a run's chopper logs; get_chopper_configuration(start_time) reads the phase
+#     table and returns the set for that date.  Force it to the 20260101 set:
+from drtsans.tof.eqsans.chopper import EQSANSDiskChopperSet
+_orig = EQSANSDiskChopperSet.get_chopper_configuration
+EQSANSDiskChopperSet.get_chopper_configuration = \
+    lambda self, start_time: _orig(self, "2026-01-02T00:00:00Z")
+
+# (2) single-value transmission.  rapi is drtsans.tof.eqsans.reduction_api, the
+#     module that runs one configuration; its process_transmission() calls
+#     calculate_transmission() with a hardcoded LinearBackground fit.  Default the
+#     fit to "" so it returns the RAW transmission instead of fitting a*lam+b:
+import drtsans.tof.eqsans.reduction_api as rapi
+_orig_ct = rapi.calculate_transmission
+def _ct(*a, **k):
+    k.setdefault("fit_function", "")
+    return _orig_ct(*a, **k)
+rapi.calculate_transmission = _ct
+
+# (3) single wavelength bin.  Tag every workspace 'monochromatic' just before
+#     drtsans converts it to wavelength, so it makes ONE band-spanning bin:
+import drtsans.tof.eqsans.correct_frame as cf
+from drtsans.samplelogs import SampleLogs
+_orig_cw = cf.convert_to_wavelength
+def _cw(ws, bands=None, bin_width=0.1, events=True, output_workspace=None):
+    SampleLogs(ws).insert("monochromatic", 1)
+    return _orig_cw(ws, bands=bands, bin_width=bin_width, events=events,
+                    output_workspace=output_workspace)
+cf.convert_to_wavelength = _cw
+
+reduceNow(eq, debug=True)   # debug=True runs IN-PROCESS so the patches take effect
+```
+
+The scripts: `reduce_mono_recipe.py` applies patches (1)+(2) at the default 0.1 Å
+step (the first proof that data comes out); `reduce_agbe_mono.py` adds patch (3),
+the single band-spanning bin, and is what produced the AgBe figure above.
+
+Two details worth calling out:
+
+- **`reduceNow` normally spawns a fresh `python3` subprocess**, which would not see
+  any of these in-memory patches — the reduction would silently run unpatched.
+  `debug=True` runs it in the *same* process, so the overrides apply. (This is why
+  an earlier attempt appeared to "work" but hadn't actually used the patch.)
+- These patches live only inside the script and vanish when it exits. They prove
+  the cause and recover data now, but are **not** a setup to run production through
+  — the real fixes belong upstream (next section).
+
+### Does the wavelength step still matter if the transmission is a single number?
+
+Yes — they are two separate things. Making the transmission single-valued (patch 2)
+only stops drtsans from *fitting* transmission against wavelength; it does not
+change how the **sample** data is binned. The sample events are independently
+histogrammed in wavelength using `wavelengthStep`, and at the default **0.1 Å** a
+wider band still spans 2–3 wavelength bins (dl/l=0.10, band ≈0.25 Å → bins at
+≈2.37, 2.47, 2.57 Å — the same three values our computed transmission had there).
+Each of those wavelength slices is normalised by its own flux and sensitivity and
+then combined into the final I(Q) — which is exactly the wavelength-dependent
+averaging that monochromatic mode is meant to avoid.
+
+So the step still affects the result even with a single-value transmission. Only
+when the step spans the whole band (patch 3, or `wavelengthStep` = band width) does
+the sample collapse to one slice — and then the transmission is genuinely one
+number too, because it is binned on the same wavelength axis. In short: **patch 2
+stops the *crash*; patch 3 gives the physically correct single-wavelength
+reduction.** At 0.1 Å the reduction runs, but it is still a 2–3-slice average, not a
+true monochromatic result.
 
 ## Result — AgBe across the four spreads
 
