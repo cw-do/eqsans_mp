@@ -15,8 +15,16 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RECIPE = os.path.normpath(os.path.join(
-    HERE, "..", "..", "2026B_mp", "reduction", "mono_diagnosis", "reduced_recipe"))
+MONO = os.path.normpath(os.path.join(
+    HERE, "..", "..", "2026B_mp", "reduction", "mono_diagnosis"))
+RECIPE = os.path.join(MONO, "reduced_recipe")
+AGBE = os.path.join(MONO, "reduced_agbe_mono")
+
+# AgBe silver-behenate diffraction orders (d = 58.38 A -> Q = 2*pi*n/d)
+AGBE_Q = [0.10763, 0.21526, 0.32289]
+# spread colours match the site (SPREAD_COLOR in index.html)
+SPREAD_COLOR = {"0.03": "#0067b9", "0.05": "#00703c",
+                "0.10": "#b26a00", "0.15": "#c0392b"}
 
 GREEN = "#00703c"
 BLUE = "#0067b9"
@@ -159,8 +167,52 @@ def fig_iq():
     plt.close(fig)
 
 
+def fig_agbe():
+    """AgBe across the four spreads: full I(Q) with diffraction orders marked,
+    plus the first peak normalised to compare resolution/statistics."""
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(11.4, 4.7))
+    spreads = ["0.15", "0.10", "0.05", "0.03"]
+    for sp in spreads:
+        q, iq, err = read_iq(os.path.join(AGBE, "agbe_dl{0}_Iq.dat".format(sp)))
+        if not q:
+            continue
+        col = SPREAD_COLOR[sp]
+        axL.plot(q, iq, "-o", ms=2.6, lw=1.0, color=col, label="dl/l = " + sp)
+    for qc in AGBE_Q:
+        axL.axvline(qc, color=GREY, ls=":", lw=1, zorder=0)
+    axL.text(AGBE_Q[0], axL.get_ylim()[1], " AgBe orders", color=GREY, fontsize=8,
+             va="top")
+    axL.set_xscale("log"); axL.set_yscale("log")
+    axL.set_xlabel("Q (1/A)"); axL.set_ylabel("I(Q)  (1/cm)")
+    axL.set_title("AgBe I(Q) vs spread — full range", fontsize=10.5)
+    axL.legend(fontsize=8.5, title="wider band = more flux")
+    axL.grid(which="both", color="#eceef1")
+
+    # right: first-order peak, each normalised to its own max in [0.08,0.14]
+    for sp in spreads:
+        q, iq, err = read_iq(os.path.join(AGBE, "agbe_dl{0}_Iq.dat".format(sp)))
+        pk = [(x, y) for x, y in zip(q, iq) if 0.07 < x < 0.15]
+        if len(pk) < 3:
+            continue
+        ymax = max(y for _, y in pk)
+        col = SPREAD_COLOR[sp]
+        axR.plot([x for x, _ in pk], [y / ymax for _, y in pk], "-o", ms=3.2,
+                 lw=1.2, color=col, label="dl/l = " + sp)
+    axR.axvline(AGBE_Q[0], color=GREY, ls=":", lw=1)
+    axR.text(AGBE_Q[0], 1.02, " AgBe(001) 0.1076", color=GREY, fontsize=8, va="bottom")
+    axR.set_xlabel("Q (1/A)"); axR.set_ylabel("I(Q) / peak")
+    axR.set_title("First AgBe peak, peak-normalised", fontsize=10.5)
+    axR.set_xlim(0.07, 0.15)
+    axR.legend(fontsize=8.5)
+    axR.grid(color="#eceef1")
+    fig.tight_layout()
+    fig.savefig(os.path.join(HERE, "monowl_agbe.png"), dpi=130)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     fig_bands()
     fig_intersection()
     fig_iq()
-    print("wrote monowl_bands.png, monowl_intersection.png, monowl_iq.png in", HERE)
+    fig_agbe()
+    print("wrote monowl_bands/intersection/iq/agbe .png in", HERE)
