@@ -293,6 +293,37 @@ tail neutrons of +200…+550 μs with milder ones and averages to +296 μs, and 
 closing edge averages the rise side to −95 μs. So panel C spanning −100…+300 μs
 while the pulse spans −170…+550 μs is exactly consistent.
 
+**Reading the green→red deformation region by region (the sliding-window
+picture).** For each true wavelength the gate is a **fixed-width window in birth
+time** (614 μs = 1441 μs/Å × the 0.426 Å band) whose position slides **earlier** as
+λ increases (1441 μs per Å) — while the emission pulse spans ~720 μs (−170…+550).
+Since the window is narrower than the pulse, *no wavelength passes its complete
+emission distribution*: the quantitative meaning of "a narrow band is all
+penumbra". The transmitted mean birth offset ⟨τ⟩ therefore slides from very late
+(+) at low λ to early (−) at high λ — **panel C's curve is literally this
+sliding-window mean** (zero crossing ≈ 2.44, where the window is centred on the
+pulse; measured −5 μs at 2.437). Region by region:
+
+- **Below the band (green's short-λ tail → labelled longer):** a truly-2.15 Å
+  neutron passes only if born ≥ +161 μs late (window entirely in the tail); its
+  label 2.15 + τ/4589 is strictly longer. The displacement is only 31 %
+  (L_chopper/L_total) of the offset the gate demanded, so these neutrons **pile up
+  just below and at the low band edge** — red's steepened left flank.
+- **Interior (red's peak shifts left of green's):** two flows converge — the
+  relabelled sub-band population is *added* around 2.25–2.40, while upper-interior
+  neutrons (window sliding off the tail, ⟨τ⟩ < 0) are labelled slightly shorter,
+  moving weight leftward. Red gains on the left, loses on the right → apex moves
+  left. (Green's own peak already sits at ~2.40, not the band centre 2.475: the
+  window captures the most pulse probability there, since cutting the sparse far
+  tail costs less flux than cutting the dense rise.)
+- **High side (contraction):** in-band high λ has the window over the rise with
+  the tail excluded (⟨τ⟩ ≈ −60 μs at 2.65) → labels pulled left, red deflates from
+  ~2.6 up; truly-above-band neutrons (to ~2.81, passing only via early birth) are
+  labelled strictly shorter (a 2.75 Å neutron → 2.71–2.73), so green's high tail
+  contracts in red to ~2.73. This side is *small* because the rise is short
+  (−170 μs) compared to the tail (+550 μs) — the spectrum-edge asymmetry is the
+  pulse asymmetry.
+
 **During which step does green become red — and which parameter is "wrong"?** The
 mislabelling happens at **event loading**, in the per-event TOF→wavelength
 conversion (`load_events` → `correct_emission_time` → `convert_to_wavelength`):
