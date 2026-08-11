@@ -259,12 +259,28 @@ band because the label shift is only L_chopper/L_total ≈ 31 % of the emission
 offset). Panel B is thus the direct answer to "how can the same chopper timings give
 a different beam?": the choppers define a window in *time*, and the emission spread
 converts it into a **wider, asymmetric window in true wavelength**. Panel C is the
-green↔red mismatch quantified bin by bin; the "measured-tail" parameters (rise
-≈ −170 μs, tail ≈ +550 μs) are **derived from this experiment's own AgBe data** —
-the ring angle acts as an in-situ wavelength meter and the eight per-slice fits set
-the tail (the mean stays pinned to drtsans' 123 μs) — not from an independent
-moderator characterisation, which is why refinement against the SNS moderator
-emission tables is still called for.
+green↔red mismatch quantified bin by bin.
+
+**Provenance — what comes from where.** Purely from drtsans code / instrument
+config: the mean emission delay (123 μs, `emission_delay`), drtsans' emission width
+(245 μs uniform, `moderator_time_uncertainty` — the blue dashed curve only), the
+geometry (L_chopper = 5.7 m, L_total = 18.15 m), and the design band
+[2.262, 2.688] Å (the dotted rectangle). From the AgBe measurement: the eight red
+points in panel C (Gaussian fits of the AgBe ring per wavelength slice, with
+λ_true = λ_assigned·q0/Q1), and the emission **shape** (rise ≈ −170 μs,
+tail ≈ +550 μs) — **two free parameters fitted so the model reproduces those eight
+points**, the mean staying pinned to drtsans' value. The green/red curves in panel B
+are therefore *model predictions using the AgBe-fitted shape*, not measured spectra.
+
+**Circularity caveat.** Because the shape was fitted to the same eight points, the
+green curve's agreement in panel C is partly circular — it shows a simple
+2-parameter asymmetric emission with the drtsans mean *can* reproduce the whole
+mislabel curve, not that it was independently predicted. What is *not* circular:
+the **blue dashed** curve (drtsans' own width, zero free parameters) **failing**
+the points; the **broadband closing-edge rise**, measured before any model tuning;
+and the clip-size consistency. A truly independent emission shape must come from
+the SNS moderator emission tables (or a monitor-spectrum measurement) — the
+outstanding refinement.
 
 **Why broadband's short edge is nearly immune while the mono band is hit at both
 edges** — an asymmetry the mechanism predicts, for three stacked reasons: (1) the
