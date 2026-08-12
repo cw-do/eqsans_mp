@@ -412,7 +412,8 @@ def collect_plots(cycle_dir, cycle_id):
         dirnames[:] = [d for d in dirnames
                        if not d.startswith("scaleall_")
                        and "gridsnap" not in d.lower()
-                       and d != "__pycache__" and d != ".git"]
+                       and d != "__pycache__" and d != ".git"
+                       and d != "beam_spectra"]   # has its own monoWL3 tab
         for f in filenames:
             if not f.lower().endswith(".png"):
                 continue
@@ -564,6 +565,44 @@ def collect_varyspread(cycle_dir, cycle_id):
     return out
 
 
+# --- beam spectra (monochromatic beam character) ---------------------------
+
+def collect_beam_spectra(cycle_dir, cycle_id):
+    """Monochromatic beam-character spectra from beam_spectra/beam_spectra.json.
+
+    Written by tools/beam_spectra/make_beam_spectra.py. Each record is one
+    empty-flux run: raw TOF + drtsans wavelength spectrum in a side-by-side PNG.
+    Copies the PNGs into assets/<cycle>/beam_spectra/ and returns the records
+    (run/title/counts/duration/wavelength/spread + figure src), plus the name of
+    the generating script for display.
+    """
+    bdir = os.path.join(cycle_dir, "beam_spectra")
+    bjson = os.path.join(bdir, "beam_spectra.json")
+    if not os.path.isfile(bjson):
+        return None
+    try:
+        with open(bjson, errors="replace") as fh:
+            payload = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    dest_dir = os.path.join(ASSETS_DIR, cycle_id, "beam_spectra")
+    records = []
+    for d in payload.get("records", []):
+        rec = {k: d.get(k) for k in ("run", "title", "counts", "duration",
+                                     "wavelength", "spread", "wl_ok")}
+        png = d.get("png")
+        if png:
+            src = os.path.join(bdir, png)
+            if os.path.exists(src) and os.path.getsize(src) <= MAX_PLOT_BYTES:
+                os.makedirs(dest_dir, exist_ok=True)
+                shutil.copy2(src, os.path.join(dest_dir, png))
+                rec["src"] = f"assets/{cycle_id}/beam_spectra/{png}"
+        records.append(rec)
+    return {"script": payload.get("script"),
+            "run_range": payload.get("run_range"),
+            "records": records}
+
+
 # --- masks -----------------------------------------------------------------
 
 def collect_masks(cycle_dir, cycle_id):
@@ -631,6 +670,7 @@ def scan_cycle(folder):
     plots = collect_plots(cycle_dir, cid)
     standards = collect_standards(cycle_dir, cid)
     varyspread = collect_varyspread(cycle_dir, cid)
+    beam_spectra = collect_beam_spectra(cycle_dir, cid)
     masks = collect_masks(cycle_dir, cid)
     readme = read_readme(cycle_dir)
 
@@ -672,6 +712,7 @@ def scan_cycle(folder):
         "plots": plots,
         "standards": standards,
         "varyspread": varyspread,
+        "beam_spectra": beam_spectra,
         "masks": masks,
         "readme": readme,
         "attenuation": attenuation,
