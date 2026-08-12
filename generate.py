@@ -87,7 +87,9 @@ def build_atten_table(xlsx_path):
     for rr in range(3, 60):
         lam = grid.get((rr, 1), "")
         dll = grid.get((rr, 2), "")
-        if not lam:
+        try:                                   # only real data rows; skip blanks
+            float(lam)                         # and free-text notes (e.g. the
+        except (TypeError, ValueError):        # distortion caveat in column 1)
             continue
         cells = [grid.get((rr, 3 + i), "") for i in range(6)]
         cand = [(parse(c)[0], s) for s, c in zip(slits, cells)
