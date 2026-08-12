@@ -21,23 +21,12 @@ noise-limited nor detector-distorted.
   ≤ 20 k cps (bold cell). Where the highest available option is only a few hundred
   cps, that is genuinely the best choice — a larger slit would distort.
 
-## Count rate (cps) by slit, with recommended choice
+As a rule of thumb the recommended slit **closes down (fewer counts) as the spread
+widens**, since a wider band lets more of the beam through; and it **opens back up
+at long wavelength**, where the incident flux is lower. Where the best available
+option is only a few hundred cps, that is genuinely the safest choice — a larger
+slit would distort — and the transmission simply needs a longer count.
 
-<!-- ATTEN_TABLE -->
-
-## Reading the recommendations
-
-- **Short wavelengths at narrow spread** (e.g. 2.5 Å / 5 %) tolerate a large open
-  slit (d20) because the beam is already spread thin; as the spread widens the beam
-  intensifies and the recommended slit closes down (d20 → d5 → d25Cd at 2.5 Å).
-- **Across most of 2.5–8 Å**, the practical choice is **d5 at 5 % spread** and
-  **d25Cd at 10–15 %** — the d5 slit distorts (>20 k cps) once the spread reaches
-  10 %, so the cadmium slit becomes the only safe option and rates drop to a few
-  hundred cps (long transmission counts needed).
-- **Long wavelengths** (10–15 Å) are low-flux enough that the **larger open slits
-  (d10–d20)** are back in play and give the highest clean rates.
-- **1 Å** is barely measurable — only the largest slit (d25) registers anything,
-  and only at ≥ 10 % spread.
-
-Source: `2026B_mp/attenuation_for_trans.xlsx` (W. Heller). This tab is regenerated
-from that spreadsheet by `doc/generate.py`.
+The count-rate table below is **specific to the selected cycle** (generated from
+that cycle's own `attenuation_for_trans.xlsx` by `doc/generate.py`). It is measured
+per cycle and may not be repeated every cycle.

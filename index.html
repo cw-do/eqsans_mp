@@ -141,7 +141,27 @@
   .readme table{border-collapse:collapse;margin:12px 0;display:block;overflow-x:auto}
   .readme th,.readme td{border:1px solid var(--line);padding:6px 10px;font-size:13px}
   .readme th{background:var(--bg2)}
-  .readme blockquote{border-left:3px solid var(--green);margin:0;padding-left:14px;color:var(--muted)}
+  /* attenuation table: keep the λ and dL/L columns tight instead of stretched */
+  .atten table td:nth-child(1),.atten table th:nth-child(1),
+  .atten table td:nth-child(2),.atten table th:nth-child(2){
+    width:1px;white-space:nowrap;text-align:center}
+  .atten table td,.atten table th{text-align:center}
+  .atten table td:last-child,.atten table th:last-child{text-align:left}
+  mark{background:#ffe680;color:inherit;padding:0 1px;border-radius:2px}
+  .search-wrap{position:relative;margin-left:auto;padding:5px 0}
+  #search{font:inherit;font-size:13px;padding:4px 9px;border:1px solid var(--line);
+    border-radius:4px;background:#fff;width:170px}
+  #search:focus{outline:none;border-color:var(--green);width:220px}
+  #searchresults{position:absolute;right:0;top:34px;z-index:40;width:360px;max-height:60vh;
+    overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:5px;
+    box-shadow:0 6px 24px #0002;display:none}
+  #searchresults.on{display:block}
+  .sr-item{display:block;width:100%;text-align:left;background:none;border:0;
+    border-bottom:1px solid var(--line);padding:8px 11px;cursor:pointer;font:inherit}
+  .sr-item:hover{background:var(--bg2)}
+  .sr-lbl{font-size:12px;color:var(--green);font-weight:600}
+  .sr-snip{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.35}
+  .sr-empty{padding:10px 11px;color:var(--muted);font-size:12.5px}
   .readme img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:4px;background:#fff;display:block;margin:12px 0}
   .lightbox{position:fixed;inset:0;background:#000a;display:none;align-items:center;
     justify-content:center;z-index:50;padding:24px}
@@ -180,6 +200,10 @@
         <button data-view="monowl">monoWL</button>
         <button data-view="monowl2">monoWL2</button>
         <button data-view="atten">Atten (trans)</button>
+      </div>
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="search the site…" autocomplete="off">
+        <div id="searchresults"></div>
       </div>
     </div>
   </nav>
@@ -883,19 +907,21 @@ function renderMonowl2(){
   return wrap;
 }
 
-function renderAtten(){
+function renderAtten(c){
   const wrap = el("div");
-  const head = el("div","cyclehead");
-  head.append(el("h2","","Attenuation for transmission"));
-  head.append(el("span","badge latest","monochromatic mode"));
-  wrap.append(head);
-  wrap.append(el("div","sub","Slit-1 choice for monochromatic transmission measurements — highest count rate that stays below the ~20 k cps detector-distortion onset (W. Heller)."));
+  wrap.append(el("div","sectitle","Attenuation for transmission (monochromatic)"));
   if(D.attenuation_md){
     const r = el("div","readme");
     r.innerHTML = mdToHtml(D.attenuation_md);
     wrap.append(r);
+  }
+  if(c && c.attenuation){
+    const t = el("div","readme atten");
+    t.innerHTML = mdToHtml(c.attenuation);
+    wrap.append(t);
   } else {
-    wrap.append(el("div","empty","No attenuation data found. Add doc/attenuation.md and the cycle's attenuation_for_trans.xlsx, then regenerate."));
+    wrap.append(el("div","empty","No attenuation-for-transmission study for cycle "+
+      (c?esc(c.id):"?")+" (this is measured per cycle and may not be repeated)."));
   }
   return wrap;
 }
@@ -907,7 +933,6 @@ function render(){
   if(view==="choppers"){ main.append(renderChoppers()); return; }
   if(view==="monowl"){ main.append(renderMonowl()); return; }
   if(view==="monowl2"){ main.append(renderMonowl2()); return; }
-  if(view==="atten"){ main.append(renderAtten()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }
@@ -927,8 +952,10 @@ function render(){
 
   main.append(view === "standards" ? renderStandards(c)
             : view === "masks" ? renderMasks(c)
+            : view === "atten" ? renderAtten(c)
             : view === "details" ? renderDetails(c)
             : renderSummary(c));
+  if(window.__searchTerm) highlightIn(main, window.__searchTerm);
 }
 
 function buildSelect(){
@@ -939,14 +966,98 @@ function buildSelect(){
     sel.append(o);
   });
   sel.value = current;
-  sel.onchange = () => { current = sel.value; render(); };
+  sel.onchange = () => { window.__searchTerm=null; current = sel.value; render(); };
+}
+function setActiveTab(v){
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));
 }
 document.getElementById("tabs").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
-  view = b.dataset.view;
-  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));
+  window.__searchTerm=null;
+  view = b.dataset.view; setActiveTab(view);
   render();
 });
+
+/* ---------- site search ---------- */
+function fileNames(list){ return (list||[]).map(f=>(f.name||"")+" "+(f.path||"")).join(" "); }
+function buildSearchIndex(){
+  const ix=[];
+  const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
+            ["monoWL2","monowl2",D.monowl2_md],["Attenuation (intro)","atten",D.attenuation_md]];
+  md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
+  D.cycles.forEach(c=>{
+    if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"details",cycle:c.id,text:c.readme});
+    if(c.attenuation) ix.push({lbl:"Cycle "+c.id+" · Attenuation",view:"atten",cycle:c.id,text:c.attenuation});
+    const files=[fileNames(c.dark_current),fileNames(c.sensitivity),fileNames(c.flux),
+      c.agbe?JSON.stringify(c.agbe):""].join(" ");
+    ix.push({lbl:"Cycle "+c.id+" · files & AgBe",view:"summary",cycle:c.id,text:files});
+    const std=(c.standards||[]).map(s=>[s.sample,s.config,s.run].join(" ")).join("  ");
+    if(std.trim()) ix.push({lbl:"Cycle "+c.id+" · Standards",view:"standards",cycle:c.id,text:std});
+  });
+  return ix;
+}
+let SEARCH_IX=null;
+function snippet(text,q){
+  const i=text.toLowerCase().indexOf(q.toLowerCase()); if(i<0) return "";
+  const a=Math.max(0,i-40), b=Math.min(text.length,i+q.length+50);
+  return (a>0?"…":"")+text.slice(a,b).replace(/\s+/g," ").trim()+(b<text.length?"…":"");
+}
+function runSearch(q){
+  const box=document.getElementById("searchresults");
+  q=(q||"").trim();
+  if(q.length<2){ box.classList.remove("on"); box.innerHTML=""; return; }
+  if(!SEARCH_IX) SEARCH_IX=buildSearchIndex();
+  const ql=q.toLowerCase();
+  const hits=SEARCH_IX.filter(e=>e.text && e.text.toLowerCase().includes(ql)).slice(0,25);
+  box.innerHTML="";
+  if(!hits.length){ box.innerHTML='<div class="sr-empty">No matches for “'+esc(q)+'”.</div>'; box.classList.add("on"); return; }
+  hits.forEach(h=>{
+    const it=el("button","sr-item");
+    it.innerHTML='<div class="sr-lbl">'+esc(h.lbl)+'</div><div class="sr-snip">'+esc(snippet(h.text,q))+'</div>';
+    it.onclick=()=>{
+      window.__searchTerm=q;
+      if(h.cycle && byId[h.cycle]){ current=h.cycle; const sel=document.getElementById("cycle"); if(sel) sel.value=current; }
+      view=h.view; setActiveTab(view);
+      box.classList.remove("on");
+      render();
+    };
+    box.append(it);
+  });
+  box.classList.add("on");
+}
+function highlightIn(root,term){
+  if(!term) return;
+  const rx=new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+    acceptNode:n=>{
+      const p=n.parentElement;
+      if(!p || p.closest("script,style,mark,svg")) return NodeFilter.FILTER_REJECT;
+      rx.lastIndex=0;
+      return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+    }});
+  const targets=[]; let n; while((n=walker.nextNode())) targets.push(n);
+  let first=null;
+  targets.forEach(node=>{
+    rx.lastIndex=0;
+    const frag=document.createDocumentFragment(); let last=0,m; const s=node.nodeValue;
+    while((m=rx.exec(s))){
+      frag.append(document.createTextNode(s.slice(last,m.index)));
+      const mk=el("mark","",m[0]); if(!first) first=mk; frag.append(mk); last=m.index+m[0].length;
+    }
+    frag.append(document.createTextNode(s.slice(last)));
+    node.parentNode.replaceChild(frag,node);
+  });
+  if(first) first.scrollIntoView({block:"center"});
+}
+(function(){
+  const inp=document.getElementById("search"); let tmr;
+  inp.addEventListener("input",()=>{ clearTimeout(tmr); tmr=setTimeout(()=>runSearch(inp.value),160); });
+  inp.addEventListener("focus",()=>{ if(inp.value.trim().length>=2) runSearch(inp.value); });
+  document.addEventListener("click",e=>{
+    if(!e.target.closest(".search-wrap")) document.getElementById("searchresults").classList.remove("on");
+  });
+  inp.addEventListener("keydown",e=>{ if(e.key==="Escape"){ inp.value=""; runSearch(""); inp.blur(); }});
+})();
 
 document.getElementById("genstamp").textContent = "Generated "+(D.generated||"—");
 document.getElementById("rootpath").textContent = D.display_root||"";

@@ -632,6 +632,15 @@ def scan_cycle(folder):
     masks = collect_masks(cycle_dir, cid)
     readme = read_readme(cycle_dir)
 
+    # per-cycle attenuation-for-transmission study (W. Heller), if measured
+    attenuation = None
+    axlsx = os.path.join(cycle_dir, "attenuation_for_trans.xlsx")
+    if os.path.isfile(axlsx) and os.path.getsize(axlsx) > 0:
+        try:
+            attenuation = build_atten_table(axlsx)
+        except Exception as exc:                       # noqa: BLE001
+            print(f"  ! attenuation parse failed for {folder}: {exc}", file=sys.stderr)
+
     flux_curve = None
     primary_flux = next((f for f in flux if f.get("primary")), None)
     if primary_flux:
@@ -663,6 +672,7 @@ def scan_cycle(folder):
         "varyspread": varyspread,
         "masks": masks,
         "readme": readme,
+        "attenuation": attenuation,
     }
 
 
@@ -735,8 +745,9 @@ def main():
         except OSError:
             monowl2_md = None
 
-    # Attenuation-for-transmission tab: doc/attenuation.md with an <!-- ATTEN_TABLE -->
-    # placeholder filled from W. Heller's spreadsheet in the cycle folder.
+    # Attenuation-for-transmission tab: generic intro (doc/attenuation.md); the
+    # count-rate TABLE is per-cycle (each cycle's own attenuation_for_trans.xlsx),
+    # stored in cycle["attenuation"] and rendered under the selected cycle.
     attenuation_md = None
     ap = os.path.join(DOC_DIR, "attenuation.md")
     if os.path.isfile(ap):
@@ -745,16 +756,6 @@ def main():
                 attenuation_md = fh.read()
         except OSError:
             attenuation_md = None
-    if attenuation_md and "<!-- ATTEN_TABLE -->" in attenuation_md:
-        xlsx = None
-        for folder in folders:                       # newest cycle first
-            cand = os.path.join(ROOT, folder, "attenuation_for_trans.xlsx")
-            if os.path.isfile(cand) and os.path.getsize(cand) > 0:
-                xlsx = cand
-                break
-        table = build_atten_table(xlsx) if xlsx else \
-            "*(attenuation_for_trans.xlsx not found in any cycle folder.)*"
-        attenuation_md = attenuation_md.replace("<!-- ATTEN_TABLE -->", table)
 
     # monoWL plots live in doc/monowl_assets/ (committed) -> assets/monowl/ each
     # run; both monowl.md and monowl2.md reference assets/monowl/*.png.
