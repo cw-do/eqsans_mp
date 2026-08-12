@@ -179,6 +179,7 @@
         <button data-view="choppers">Choppers</button>
         <button data-view="monowl">monoWL</button>
         <button data-view="monowl2">monoWL2</button>
+        <button data-view="atten">Atten (trans)</button>
       </div>
     </div>
   </nav>
@@ -882,6 +883,23 @@ function renderMonowl2(){
   return wrap;
 }
 
+function renderAtten(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Attenuation for transmission"));
+  head.append(el("span","badge latest","monochromatic mode"));
+  wrap.append(head);
+  wrap.append(el("div","sub","Slit-1 choice for monochromatic transmission measurements — highest count rate that stays below the ~20 k cps detector-distortion onset (W. Heller)."));
+  if(D.attenuation_md){
+    const r = el("div","readme");
+    r.innerHTML = mdToHtml(D.attenuation_md);
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No attenuation data found. Add doc/attenuation.md and the cycle's attenuation_for_trans.xlsx, then regenerate."));
+  }
+  return wrap;
+}
+
 /* ---------- shell ---------- */
 function render(){
   const main = document.getElementById("main");
@@ -889,6 +907,7 @@ function render(){
   if(view==="choppers"){ main.append(renderChoppers()); return; }
   if(view==="monowl"){ main.append(renderMonowl()); return; }
   if(view==="monowl2"){ main.append(renderMonowl2()); return; }
+  if(view==="atten"){ main.append(renderAtten()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }

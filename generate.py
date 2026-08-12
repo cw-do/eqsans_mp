@@ -35,6 +35,76 @@ import shutil
 import sys
 from datetime import datetime, timezone
 
+# --- attenuation-for-transmission table (from W. Heller's xlsx) ------------
+
+def build_atten_table(xlsx_path):
+    """Read attenuation_for_trans.xlsx (stdlib only) and return a markdown table
+    of detector count rate (cps) per slit-1 choice, with a recommended slit per
+    (wavelength, dL/L): the largest non-distorted rate that stays <= 20 k cps."""
+    import zipfile
+    import xml.etree.ElementTree as ET
+    M = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+    z = zipfile.ZipFile(xlsx_path)
+    shared = []
+    if "xl/sharedStrings.xml" in z.namelist():
+        for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall(M + "si"):
+            shared.append("".join(t.text or "" for t in si.iter(M + "t")))
+    ws = ET.fromstring(z.read("xl/worksheets/sheet1.xml"))
+
+    def cidx(ref):
+        n = 0
+        for ch in re.match("[A-Z]+", ref).group():
+            n = n * 26 + (ord(ch) - 64)
+        return n
+
+    grid = {}
+    for cell in ws.iter(M + "c"):
+        ref = cell.get("r")
+        v = cell.find(M + "v")
+        rr = int(re.search(r"\d+", ref).group())
+        cc = cidx(ref)
+        val = shared[int(v.text)] if (cell.get("t") == "s" and v is not None) \
+            else (v.text if v is not None else "")
+        grid[(rr, cc)] = (val or "").strip()
+
+    slits = ["d25Cd", "d5", "d10", "d15", "d20", "d25"]
+
+    def parse(s):
+        s = (s or "").strip()
+        if not s or s.lower() == "nm":
+            return (None, False)
+        dist = "dis" in s.lower()
+        num = s.split("/")[0].strip().lower()
+        mult = 1000 if num.endswith("k") else 1
+        num = num.rstrip("k")
+        try:
+            return (float(num) * mult, dist)
+        except ValueError:
+            return (None, dist)
+
+    lines = ["| λ (Å) | dL/L | " + " | ".join(slits) + " | **Recommended slit** |",
+             "|---|---|" + "---|" * 6 + "---|"]
+    for rr in range(3, 60):
+        lam = grid.get((rr, 1), "")
+        dll = grid.get((rr, 2), "")
+        if not lam:
+            continue
+        cells = [grid.get((rr, 3 + i), "") for i in range(6)]
+        cand = [(parse(c)[0], s) for s, c in zip(slits, cells)
+                if parse(c)[0] is not None and not parse(c)[1] and parse(c)[0] <= 20000]
+        rec = max(cand)[1] if cand else None
+        disp = []
+        for s, c in zip(slits, cells):
+            disp.append(("**%s**" % c) if (s == rec and c) else (c if c else "·"))
+        if rec:
+            cps = dict((s, parse(c)[0]) for s, c in zip(slits, cells))[rec]
+            recstr = "**%s** (%s cps)" % (rec, "{:,}".format(int(cps)))
+        else:
+            recstr = "— (none ≤ 20k)"
+        lines.append("| %s | %s%% | " % (lam, dll) + " | ".join(disp) + " | %s |" % recstr)
+    return "\n".join(lines)
+
+
 # --- locations -------------------------------------------------------------
 
 DOC_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -665,6 +735,27 @@ def main():
         except OSError:
             monowl2_md = None
 
+    # Attenuation-for-transmission tab: doc/attenuation.md with an <!-- ATTEN_TABLE -->
+    # placeholder filled from W. Heller's spreadsheet in the cycle folder.
+    attenuation_md = None
+    ap = os.path.join(DOC_DIR, "attenuation.md")
+    if os.path.isfile(ap):
+        try:
+            with open(ap, errors="replace") as fh:
+                attenuation_md = fh.read()
+        except OSError:
+            attenuation_md = None
+    if attenuation_md and "<!-- ATTEN_TABLE -->" in attenuation_md:
+        xlsx = None
+        for folder in folders:                       # newest cycle first
+            cand = os.path.join(ROOT, folder, "attenuation_for_trans.xlsx")
+            if os.path.isfile(cand) and os.path.getsize(cand) > 0:
+                xlsx = cand
+                break
+        table = build_atten_table(xlsx) if xlsx else \
+            "*(attenuation_for_trans.xlsx not found in any cycle folder.)*"
+        attenuation_md = attenuation_md.replace("<!-- ATTEN_TABLE -->", table)
+
     # monoWL plots live in doc/monowl_assets/ (committed) -> assets/monowl/ each
     # run; both monowl.md and monowl2.md reference assets/monowl/*.png.
     src = os.path.join(DOC_DIR, "monowl_assets")
@@ -682,6 +773,7 @@ def main():
         "chopper_md": chopper_md,
         "monowl_md": monowl_md,
         "monowl2_md": monowl2_md,
+        "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
     with open(out, "w") as fh:
