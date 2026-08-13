@@ -651,6 +651,73 @@ def read_readme(cycle_dir):
     return None
 
 
+# --- data provenance (which script produced each on-page product) ----------
+
+# Shared toolkit scripts: one master copy under tools/, stable relative paths.
+TOOLKIT = {
+    "report_standards":  "tools/reduce/report_standards.py",
+    "find_absscale":     "tools/reduce/find_absscale.py",
+    "report_varyspread": "tools/reduce/report_varyspread.py",
+    "run_flux":          "tools/flux/run_flux.py",
+}
+
+
+def _script(cycle_dir, *rel):
+    """Display path of the first of these cycle-local scripts that exists."""
+    for r in rel:
+        p = os.path.join(cycle_dir, r)
+        if os.path.isfile(p):
+            return display_path(p)
+    return None
+
+
+def build_provenance(cycle_dir, has_flux, has_dark):
+    """Map each on-page data product to the script(s) that produced it.
+
+    Cycle-local scripts are detected by presence, so historical cycles that
+    predate the toolkit are never mislabeled. Shared toolkit scripts (which
+    leave no per-cycle file) are cited only when a cycle-local reduction script
+    proves the cycle used the current MP toolkit. Dark current is a raw file
+    (not reduced/plotted) whose fetch tool leaves no trace, so it is not tagged.
+    """
+    prov = {}
+    agbe_s = _script(cycle_dir, "agbe_calibration/agbe_reducenfit.py",
+                     "agbe_reducenfit.py")
+    if agbe_s:
+        prov["agbe"] = agbe_s
+
+    prep = _script(cycle_dir, "prepare_sensitivity.py")
+    qc = _script(cycle_dir, "check_sensitivity.py")
+    flood = _script(cycle_dir, "plot_flood.py")
+    if prep or qc or flood:
+        parts = []
+        if prep:
+            parts.append("data: " + prep)
+        plots = [p for p in (qc, flood) if p]
+        if plots:
+            parts.append("QC plots: " + ", ".join(plots))
+        prov["sensitivity"] = " · ".join(parts)
+
+    red_std = _script(cycle_dir, "reduction/reduce_standards.py",
+                      "reduction/reduce_standards_fixedbb.py")
+    if red_std:
+        prov["standards"] = ("reduced by " + red_std + " · tabulated by " +
+                             TOOLKIT["report_standards"] +
+                             " · absolute scale by " + TOOLKIT["find_absscale"])
+
+    red_vs = _script(cycle_dir, "reduction/reduce_varyspread.py")
+    if red_vs:
+        prov["varyspread"] = ("reduced by " + red_vs + " · tabulated by " +
+                              TOOLKIT["report_varyspread"])
+
+    # The flux pipeline lives in tools/flux (no per-cycle script); attribute it
+    # only when a cycle-local reduction script proves current-toolkit use.
+    toolkit_era = bool(agbe_s or red_std or red_vs)
+    if toolkit_era and has_flux:
+        prov["flux"] = TOOLKIT["run_flux"] + " (fluxlib.py)"
+    return prov
+
+
 # --- per-cycle scan --------------------------------------------------------
 
 def sort_key(year, half):
@@ -695,6 +762,8 @@ def scan_cycle(folder):
         if mm:
             ipts = mm.group(1)
 
+    provenance = build_provenance(cycle_dir, bool(flux), bool(dark))
+
     return {
         "id": cid,
         "folder": folder,
@@ -716,6 +785,7 @@ def scan_cycle(folder):
         "masks": masks,
         "readme": readme,
         "attenuation": attenuation,
+        "provenance": provenance,
     }
 
 

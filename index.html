@@ -75,6 +75,9 @@
   table.vars td:last-child{text-align:right;font-family:var(--mono);font-weight:600}
   .scalecomp{font-family:var(--mono);color:var(--green)}
   .empty{padding:14px 16px;color:var(--muted);font-size:13px;font-style:italic}
+  .prov{margin:8px 0 2px;font-size:11.5px;color:var(--muted);line-height:1.45}
+  .prov .provlabel{opacity:.8}
+  .prov .provscript{font-family:var(--mono);color:#4a5560;word-break:break-word}
   /* reduction-config code block */
   .codecard{margin-top:18px}
   .codehead{display:flex;align-items:center;gap:9px}
@@ -270,6 +273,16 @@ function fileRow(f, tag){
   return row;
 }
 
+// "produced by <script>" attribution line. `text` may mix words and script
+// paths; the whole tail is shown in a muted monospace.
+function provLine(text){
+  if(!text) return document.createDocumentFragment();
+  const d = el("div","prov");
+  d.append(el("span","provlabel","produced by "));
+  d.append(el("span","provscript", esc(text)));
+  return d;
+}
+
 function card(title, node, dotColor){
   const c = el("div","card");
   const h = el("h3","", "<span class='dot'></span>"+esc(title));
@@ -360,24 +373,28 @@ function codeCard(title, code){
 /* ---------- summary view ---------- */
 function renderSummary(c){
   const wrap = el("div");
+  const P = c.provenance || {};
 
   // Dark current
   const dc = el("div");
   if(c.dark_current.length){
     // primary + extras
     c.dark_current.forEach((f,i)=> dc.append(fileRow(f, i===0?"primary":"alt")));
+    if(P.dark_current) dc.append(provLine(P.dark_current));
   } else dc.append(el("div","empty","No dark-current file found."));
 
   // Sensitivity
   const sn = el("div");
   if(c.sensitivity.length){
     c.sensitivity.forEach(f => sn.append(fileRow(f, distLabel(f.distance))));
+    if(P.sensitivity) sn.append(provLine(P.sensitivity));
   } else sn.append(el("div","empty","No sensitivity files found."));
 
   // Flux
   const fx = el("div");
   if(c.flux.length){
     c.flux.forEach(f => fx.append(fileRow(f, f.primary?"primary":(f.subdir||"alt"))));
+    if(P.flux) fx.append(provLine(P.flux));
   } else fx.append(el("div","empty","No flux spectrum file found."));
 
   // AgBe instrument variables
@@ -409,6 +426,7 @@ function renderSummary(c){
     if(a.partial) src.push("calibration in progress");
     if(a.note) av.append(el("div","empty",esc(a.note)));
     if(src.length) av.append(el("div","empty",esc(src.join("  ·  "))));
+    if(P.agbe) av.append(provLine(P.agbe));
   } else {
     av.append(el("div","empty","No AgBe calibration results for this cycle."));
   }
@@ -478,6 +496,7 @@ function fluxSVG(series){
 
 function renderDetails(c){
   const wrap = el("div");
+  const P = c.provenance || {};
 
   if(c.flux_curve && c.flux_curve.x && c.flux_curve.x.length){
     wrap.append(el("div","sectitle","Flux spectrum"));
@@ -498,12 +517,14 @@ function renderDetails(c){
     const ov = found ? "  ·  overlay vs "+series.slice(1).map(s=>s.label).join(", ") : "";
     box.append(el("div","filemeta","&nbsp;"+esc(c.flux_curve.label||"")+esc(ov)));
     wrap.append(box);
+    if(P.flux) wrap.append(provLine(P.flux));
   }
 
   // AgBe calibration report, verbatim
   if(c.agbe && c.agbe.report_text){
     wrap.append(el("div","sectitle","AgBe calibration report"));
     wrap.append(codeCard(c.agbe.source || "calibration_report.txt", c.agbe.report_text));
+    if(P.agbe) wrap.append(provLine(P.agbe));
   }
 
   // plots grouped by category
@@ -513,12 +534,14 @@ function renderDetails(c){
     ["flux","Flux / overlays"],
     ["other","Other"],
   ];
+  const catProv = {sensitivity:P.sensitivity, agbe:P.agbe, flux:P.flux};
   let anyPlot = false;
   groups.forEach(([cat,label])=>{
     const items = c.plots.filter(p=>p.category===cat);
     if(!items.length) return;
     anyPlot = true;
     wrap.append(el("div","sectitle",esc(label)));
+    if(catProv[cat]) wrap.append(provLine(catProv[cat]));
     const g = el("div","plotgrid");
     items.forEach(p=>{
       const pc = el("div","plotcard");
@@ -723,6 +746,7 @@ function varyspreadSection(c, wrap){
   wrap.append(el("div","sectitle","Monochromatic spread series (dl/l · 4 m, 2.5 Å)"));
   wrap.append(el("div","sub", vs.length+" datasets — same sample vs monochromatic beam spread; "+
     ok+" produced I(Q)."+(ok<vs.length?" See chopper.md for the monochromatic-reduction issue.":"")));
+  if((c.provenance||{}).varyspread) wrap.append(provLine(c.provenance.varyspread));
   const bySample={};
   vs.forEach(d=>{ (bySample[d.sample]=bySample[d.sample]||[]).push(d); });
   const grid=el("div","stdgrid");
@@ -764,6 +788,7 @@ function renderStandards(c){
     return wrap;
   }
   wrap.append(el("div","sub",std.length+" reduced datasets · porsil & agbe are banjo-subtracted; blockedbeam & peltierwindow have no background."));
+  if((c.provenance||{}).standards) wrap.append(provLine(c.provenance.standards));
 
   // --- overlay per configuration: all samples in one plot ---
   const distOrder={"4m":0,"2o5m":1,"1o3m":2};
