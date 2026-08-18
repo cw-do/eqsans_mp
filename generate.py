@@ -217,6 +217,9 @@ def find_sensitivity(cycle_dir):
     return out
 
 
+#  Preserved/superseded directories kept on disk for comparison but off the page
+#  (e.g. agbe_37618.OLD_drtsans1.33/, reduced.OLD_drtsans1.33/).
+PRESERVED_RE = re.compile(r"\.old|old_drtsans|superseded|backup|choppertmp", re.I)
 #  Superseded/backup flux copies to keep off the page (renamed originals kept
 #  on disk for comparison, e.g. *.OLD_drtsans1.33_choppertmp.txt).
 FLUX_SKIP_RE = re.compile(r"\.old|old_|superseded|backup|choppertmp|\bprev\b", re.I)
@@ -381,7 +384,8 @@ def find_agbe(cycle_dir):
         dirnames[:] = [d for d in dirnames
                        if not d.startswith("scaleall_")
                        and not d.startswith("scale_detoffset")
-                       and d != "__pycache__" and d != ".git"]
+                       and d != "__pycache__" and d != ".git"
+                       and not PRESERVED_RE.search(d)]
         m = re.search(r"agbe_(\d{4,7})", os.path.basename(dirpath))
         if m and ipts is None:
             ipts = m.group(1)
@@ -439,7 +443,8 @@ def collect_plots(cycle_dir, cycle_id):
                        and "gridsnap" not in d.lower()
                        and d != "__pycache__" and d != ".git"
                        and d != "beam_spectra"   # has its own monoWL3 tab
-                       and d != "flux"]          # pipeline scaffold; curated below
+                       and d != "flux"           # pipeline scaffold; curated below
+                       and not PRESERVED_RE.search(d)]   # preserved *.OLD_* dirs
         for f in filenames:
             if not f.lower().endswith(".png"):
                 continue
