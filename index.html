@@ -556,6 +556,16 @@ function renderDetails(c){
     box.append(el("div","filemeta","&nbsp;"+esc(c.flux_curve.label||"")+esc(ov)));
     wrap.append(box);
     if(P.flux) wrap.append(provLine(P.flux));
+    if(c.flux_compare){
+      const cmp = el("div","fluxbox");
+      cmp.append(el("div","filemeta","Re-reduction check — flux under drtsans --dev (updated chopper phase) vs the previous build:"));
+      const img = el("img");
+      img.src = c.flux_compare; img.alt = "old vs new flux comparison";
+      img.style.maxWidth = "100%"; img.style.cursor = "zoom-in";
+      img.onclick = () => openLightbox(c.flux_compare);
+      cmp.append(img);
+      wrap.append(cmp);
+    }
   }
 
   // AgBe calibration report, verbatim

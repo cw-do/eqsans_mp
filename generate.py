@@ -302,6 +302,22 @@ def read_flux_curve(display_flux_path):
     return {"x": xs, "y": ys, "yerr": es}
 
 
+def find_flux_compare(cycle_dir, cycle_id):
+    """Curated old-vs-new flux comparison PNG (from tools/flux/compare_flux.py).
+
+    Lives in the flux/ scaffold, which collect_plots skips; surface it
+    deliberately in the Details flux section as a re-reduction diagnostic.
+    """
+    src = os.path.join(cycle_dir, "flux", "flux_compare_dev_vs_stable.png")
+    if not os.path.isfile(src):
+        return None
+    dest_dir = os.path.join(ASSETS_DIR, cycle_id)
+    os.makedirs(dest_dir, exist_ok=True)
+    dest = os.path.join(dest_dir, "flux_compare.png")
+    shutil.copy2(src, dest)
+    return f"assets/{cycle_id}/flux_compare.png"
+
+
 AGBE_KEYS = {
     "scale_y": re.compile(r"scale_y\s*:?\s*=?\s*([0-9.]+)", re.I),
     "scale_all": re.compile(r"scale_all\s*:?\s*=?\s*([0-9.]+)", re.I),
@@ -422,7 +438,8 @@ def collect_plots(cycle_dir, cycle_id):
                        if not d.startswith("scaleall_")
                        and "gridsnap" not in d.lower()
                        and d != "__pycache__" and d != ".git"
-                       and d != "beam_spectra"]   # has its own monoWL3 tab
+                       and d != "beam_spectra"   # has its own monoWL3 tab
+                       and d != "flux"]          # pipeline scaffold; curated below
         for f in filenames:
             if not f.lower().endswith(".png"):
                 continue
@@ -819,6 +836,7 @@ def scan_cycle(folder):
 
     provenance = build_provenance(cycle_dir, bool(flux), bool(dark))
     prov_meta = load_reduction_provenance(cycle_dir)
+    flux_compare = find_flux_compare(cycle_dir, cid)
 
     return {
         "id": cid,
@@ -833,6 +851,7 @@ def scan_cycle(folder):
         "sensitivity": sens,
         "flux": flux,
         "flux_curve": flux_curve,
+        "flux_compare": flux_compare,
         "agbe": agbe,
         "plots": plots,
         "standards": standards,
