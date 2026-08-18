@@ -149,6 +149,8 @@
   .readme pre code{background:none;padding:0}
   .readme img{display:block;max-width:760px;width:100%;height:auto;margin:14px auto;
     background:#fff;border:1px solid var(--line);border-radius:4px;cursor:zoom-in}
+  .readme blockquote{margin:12px 0;padding:10px 16px;border-left:4px solid #00703c;
+    background:#f4faf5;border-radius:0 6px 6px 0;color:#2f3a30}
   .readme table{border-collapse:collapse;margin:12px 0;display:block;overflow-x:auto}
   .readme th,.readme td{border:1px solid var(--line);padding:6px 10px;font-size:13px}
   .readme th{background:var(--bg2)}
@@ -205,6 +207,7 @@
       <div class="tabs" id="tabs">
         <button data-view="summary" class="active">Summary</button>
         <button data-view="details">Details</button>
+        <button data-view="readme">README</button>
         <button data-view="standards">Standards</button>
         <button data-view="masks">Masks</button>
         <button data-view="choppers">Choppers</button>
@@ -607,11 +610,24 @@ function renderDetails(c){
       "Modern cycles (2025B onward) include QC and AgBe plots."));
   }
 
+  return wrap;
+}
+
+/* ---------- README view (per-cycle README.md, formatted) ---------- */
+function renderReadme(c){
+  const wrap = el("div");
   if(c.readme){
-    wrap.append(el("div","sectitle","Cycle README"));
+    const meta = el("div","sub");
+    meta.style.marginBottom = "10px";
+    meta.append(document.createTextNode("Rendered from "));
+    const p = el("span","", esc(c.path+"/README.md")); p.style.fontFamily="var(--mono)";
+    meta.append(p);
+    wrap.append(meta);
     const r = el("div","readme");
     r.innerHTML = mdToHtml(c.readme);
     wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No README.md found in this cycle folder."));
   }
   return wrap;
 }
@@ -655,7 +671,10 @@ function mdToHtml(md){
     let m;
     if((m=ln.match(/^(#{1,4})\s+(.*)/))){ out.push("<h"+m[1].length+">"+mdInline(m[2])+"</h"+m[1].length+">"); i++; continue; }
     if(/^\s*(---|\*\*\*|___)\s*$/.test(ln)){ out.push("<hr>"); i++; continue; }
-    if(/^\s*>/.test(ln)){ out.push("<blockquote>"+mdInline(ln.replace(/^\s*>\s?/,""))+"</blockquote>"); i++; continue; }
+    if(/^\s*>/.test(ln)){
+      let q=[]; while(i<lines.length && /^\s*>/.test(lines[i])){ q.push(mdInline(lines[i].replace(/^\s*>\s?/,""))); i++; }
+      out.push("<blockquote>"+q.join("<br>")+"</blockquote>"); continue;
+    }
     if(/^\s*[-*+]\s+/.test(ln)){
       let items=[]; while(i<lines.length && /^\s*[-*+]\s+/.test(lines[i])){ items.push("<li>"+mdInline(lines[i].replace(/^\s*[-*+]\s+/,""))+"</li>"); i++; }
       out.push("<ul>"+items.join("")+"</ul>"); continue;
@@ -1084,6 +1103,7 @@ function render(){
             : view === "masks" ? renderMasks(c)
             : view === "atten" ? renderAtten(c)
             : view === "monowl3" ? renderBeamSpectra(c)
+            : view === "readme" ? renderReadme(c)
             : view === "details" ? renderDetails(c)
             : renderSummary(c));
   if(window.__searchTerm) highlightIn(main, window.__searchTerm);
@@ -1117,7 +1137,7 @@ function buildSearchIndex(){
             ["monoWL2","monowl2",D.monowl2_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
-    if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"details",cycle:c.id,text:c.readme});
+    if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});
     if(c.attenuation) ix.push({lbl:"Cycle "+c.id+" · Attenuation",view:"atten",cycle:c.id,text:c.attenuation});
     const files=[fileNames(c.dark_current),fileNames(c.sensitivity),fileNames(c.flux),
       c.agbe?JSON.stringify(c.agbe):""].join(" ");
