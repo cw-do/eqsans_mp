@@ -78,6 +78,14 @@
   .prov{margin:8px 0 2px;font-size:11.5px;color:var(--muted);line-height:1.45}
   .prov .provlabel{opacity:.8}
   .prov .provscript{font-family:var(--mono);color:#4a5560;word-break:break-word}
+  .rrnotes{border:1px solid #cfe3d4;background:#f4faf5;border-radius:8px;padding:12px 14px;margin:0 0 16px}
+  .rrhead{font-size:12px;font-weight:600;color:#00703c;margin-bottom:8px;letter-spacing:.01em}
+  .rrrow{padding:5px 0;border-top:1px solid #e4efe6}
+  .rrrow:first-of-type{border-top:none}
+  .rrkey{display:inline-block;min-width:96px;font-weight:600;color:#274a30;text-transform:capitalize}
+  .rrmeta{font-family:var(--mono);font-size:11.5px;color:#4a5560;word-break:break-word}
+  .rrnote{font-size:12px;color:#3a434d;margin:3px 0 1px 96px;line-height:1.45}
+  @media(max-width:640px){.rrnote{margin-left:0}}
   /* reduction-config code block */
   .codecard{margin-top:18px}
   .codehead{display:flex;align-items:center;gap:9px}
@@ -283,6 +291,34 @@ function provLine(text){
   return d;
 }
 
+// Re-reduction notes: surfaces reduction_provenance.json (script/drtsans/date/
+// note) as a visible per-cycle update log. Empty fragment when none.
+function reReductionPanel(c){
+  const meta = c.prov_meta || {};
+  const keys = Object.keys(meta);
+  if(!keys.length) return document.createDocumentFragment();
+  const order = ["flux","sensitivity","agbe","standards","varyspread","beam_spectra"];
+  keys.sort((a,b)=>{const ia=order.indexOf(a),ib=order.indexOf(b);
+    return (ia<0?99:ia)-(ib<0?99:ib);});
+  const box = el("div","rrnotes");
+  box.append(el("div","rrhead","Re-reduction log — updated products (script · drtsans build · date)"));
+  keys.forEach(k=>{
+    const m = meta[k]||{};
+    const row = el("div","rrrow");
+    row.append(el("span","rrkey", esc(k)));
+    const bits=[];
+    if(m.script) bits.push(m.script);
+    const vd=[];
+    if(m.drtsans) vd.push("drtsans "+m.drtsans.replace(/^(\d+\.\d+).*/, (s,v)=>v+(/dev/.test(m.drtsans)?"dev":"")));
+    if(m.date) vd.push(m.date);
+    if(vd.length) bits.push(vd.join(", "));
+    row.append(el("span","rrmeta", esc(bits.join("  ·  "))));
+    if(m.note) row.append(el("div","rrnote", esc(m.note)));
+    box.append(row);
+  });
+  return box;
+}
+
 function card(title, node, dotColor){
   const c = el("div","card");
   const h = el("h3","", "<span class='dot'></span>"+esc(title));
@@ -374,6 +410,8 @@ function codeCard(title, code){
 function renderSummary(c){
   const wrap = el("div");
   const P = c.provenance || {};
+
+  wrap.append(reReductionPanel(c));
 
   // Dark current
   const dc = el("div");

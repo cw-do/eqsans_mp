@@ -217,21 +217,30 @@ def find_sensitivity(cycle_dir):
     return out
 
 
+#  Superseded/backup flux copies to keep off the page (renamed originals kept
+#  on disk for comparison, e.g. *.OLD_drtsans1.33_choppertmp.txt).
+FLUX_SKIP_RE = re.compile(r"\.old|old_|superseded|backup|choppertmp|\bprev\b", re.I)
+#  Pipeline scaffold folders whose deliverable is already copied to top level.
+FLUX_SKIP_SUBDIR = {"flux"}
+
+
 def find_flux(cycle_dir):
     """Beam flux spectrum text files. Prefer a top-level / 'final' one."""
     candidates = []
     # top level
     for f in sorted(os.listdir(cycle_dir)):
-        if "flux" in f.lower() and f.lower().endswith(".txt"):
+        if "flux" in f.lower() and f.lower().endswith(".txt") \
+                and not FLUX_SKIP_RE.search(f):
             candidates.append(os.path.join(cycle_dir, f))
     # one level down (e.g. final_flux/, flux_4m/) if nothing at top level
     subdir_hits = []
     for sub in sorted(os.listdir(cycle_dir)):
         subpath = os.path.join(cycle_dir, sub)
-        if not os.path.isdir(subpath):
+        if not os.path.isdir(subpath) or sub.lower() in FLUX_SKIP_SUBDIR:
             continue
         for f in sorted(os.listdir(subpath)):
-            if "flux" in f.lower() and f.lower().endswith(".txt"):
+            if "flux" in f.lower() and f.lower().endswith(".txt") \
+                    and not FLUX_SKIP_RE.search(f):
                 subdir_hits.append((sub, os.path.join(subpath, f)))
 
     entries = []
@@ -671,6 +680,46 @@ def _script(cycle_dir, *rel):
     return None
 
 
+def load_reduction_provenance(cycle_dir):
+    """Optional per-cycle reduction_provenance.json.
+
+    Maps an on-page product (flux, agbe, standards, sensitivity, varyspread,
+    beam_spectra) to {script, drtsans, date, note}. Each reduction step appends
+    its entry so the page can show *when* a product was generated and with
+    which drtsans build, not just which script. Missing file -> {}.
+    """
+    p = os.path.join(cycle_dir, "reduction_provenance.json")
+    if not os.path.isfile(p):
+        return {}
+    try:
+        with open(p) as fh:
+            data = json.load(fh)
+        return {k: v for k, v in data.items() if not k.startswith("_")}
+    except Exception as exc:                               # noqa: BLE001
+        print(f"  ! reduction_provenance.json parse failed in {cycle_dir}: {exc}",
+              file=sys.stderr)
+        return {}
+
+
+def _stamp(meta, key):
+    """' · drtsans <ver>, <date>' suffix for product `key`, or '' if none."""
+    m = meta.get(key)
+    if not m:
+        return ""
+    bits = []
+    ver = m.get("drtsans")
+    if ver:
+        # 1.34.0.dev20260814133834 -> 1.34dev; 1.33.0 -> 1.33
+        short = ver
+        mm = re.match(r"(\d+\.\d+).*?(dev)?", ver)
+        if mm:
+            short = mm.group(1) + ("dev" if "dev" in ver else "")
+        bits.append("drtsans " + short)
+    if m.get("date"):
+        bits.append(m["date"])
+    return (" · " + ", ".join(bits)) if bits else ""
+
+
 def build_provenance(cycle_dir, has_flux, has_dark):
     """Map each on-page data product to the script(s) that produced it.
 
@@ -680,11 +729,12 @@ def build_provenance(cycle_dir, has_flux, has_dark):
     proves the cycle used the current MP toolkit. Dark current is a raw file
     (not reduced/plotted) whose fetch tool leaves no trace, so it is not tagged.
     """
+    meta = load_reduction_provenance(cycle_dir)
     prov = {}
     agbe_s = _script(cycle_dir, "agbe_calibration/agbe_reducenfit.py",
                      "agbe_reducenfit.py")
     if agbe_s:
-        prov["agbe"] = agbe_s
+        prov["agbe"] = agbe_s + _stamp(meta, "agbe")
 
     prep = _script(cycle_dir, "prepare_sensitivity.py")
     qc = _script(cycle_dir, "check_sensitivity.py")
@@ -696,25 +746,30 @@ def build_provenance(cycle_dir, has_flux, has_dark):
         plots = [p for p in (qc, flood) if p]
         if plots:
             parts.append("QC plots: " + ", ".join(plots))
-        prov["sensitivity"] = " · ".join(parts)
+        prov["sensitivity"] = " · ".join(parts) + _stamp(meta, "sensitivity")
 
     red_std = _script(cycle_dir, "reduction/reduce_standards.py",
                       "reduction/reduce_standards_fixedbb.py")
     if red_std:
         prov["standards"] = ("reduced by " + red_std + " · tabulated by " +
                              TOOLKIT["report_standards"] +
-                             " · absolute scale by " + TOOLKIT["find_absscale"])
+                             " · absolute scale by " + TOOLKIT["find_absscale"] +
+                             _stamp(meta, "standards"))
 
     red_vs = _script(cycle_dir, "reduction/reduce_varyspread.py")
     if red_vs:
         prov["varyspread"] = ("reduced by " + red_vs + " · tabulated by " +
-                              TOOLKIT["report_varyspread"])
+                              TOOLKIT["report_varyspread"] +
+                              _stamp(meta, "varyspread"))
 
-    # The flux pipeline lives in tools/flux (no per-cycle script); attribute it
-    # only when a cycle-local reduction script proves current-toolkit use.
+    # Flux: prefer a cycle-local pipeline (scaffolded in <cycle>_mp/flux) and
+    # fall back to the shared master. Attribute it only when a cycle-local
+    # reduction script proves current-toolkit use.
+    flux_s = _script(cycle_dir, "flux/run_flux.py")
     toolkit_era = bool(agbe_s or red_std or red_vs)
-    if toolkit_era and has_flux:
-        prov["flux"] = TOOLKIT["run_flux"] + " (fluxlib.py)"
+    if has_flux and (flux_s or toolkit_era):
+        prov["flux"] = (flux_s or TOOLKIT["run_flux"]) + " (fluxlib.py)" + \
+            _stamp(meta, "flux")
     return prov
 
 
@@ -763,6 +818,7 @@ def scan_cycle(folder):
             ipts = mm.group(1)
 
     provenance = build_provenance(cycle_dir, bool(flux), bool(dark))
+    prov_meta = load_reduction_provenance(cycle_dir)
 
     return {
         "id": cid,
@@ -786,6 +842,7 @@ def scan_cycle(folder):
         "readme": readme,
         "attenuation": attenuation,
         "provenance": provenance,
+        "prov_meta": prov_meta,
     }
 
 
