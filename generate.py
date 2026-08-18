@@ -770,15 +770,16 @@ def build_provenance(cycle_dir, has_flux, has_dark):
             parts.append("QC plots: " + ", ".join(plots))
         prov["sensitivity"] = " · ".join(parts) + _stamp(meta, "sensitivity")
 
-    red_std = _script(cycle_dir, "reduction/reduce_standards.py",
-                      "reduction/reduce_standards_fixedbb.py")
+    red_std = _script(cycle_dir, "reduction/reduce_standards_fixedbb.py",
+                      "reduction/reduce_standards.py")
     if red_std:
         prov["standards"] = ("reduced by " + red_std + " · tabulated by " +
                              TOOLKIT["report_standards"] +
                              " · absolute scale by " + TOOLKIT["find_absscale"] +
                              _stamp(meta, "standards"))
 
-    red_vs = _script(cycle_dir, "reduction/reduce_varyspread.py")
+    red_vs = _script(cycle_dir, "reduction/reduce_varyspread_dev.py",
+                     "reduction/reduce_varyspread.py")
     if red_vs:
         prov["varyspread"] = ("reduced by " + red_vs + " · tabulated by " +
                               TOOLKIT["report_varyspread"] +

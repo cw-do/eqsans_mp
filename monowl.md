@@ -10,6 +10,20 @@ documents why — three issues in how drtsans handles a monochromatic run, two o
 which crash it outright — and shows a recipe that recovers the data, demonstrated
 on AgBe.
 
+> **Update — 2026-08-18: the chopper-phase fix landed, and the data now
+> reduces.** The drtsans team corrected the EQSANS chopper phase information in
+> the development build (`1.34.0.dev20260814`). Re-running under `drtsans --dev`
+> with the **default** chopper configuration — *no forced-config injection* —
+> the whole vary-spread series now reduces: **16/16 ok (was 0/16)**. The primary
+> bug below (wrong auto-selected config → empty transmitted band → `IndexError`)
+> is fixed at the source. The only patch still required is single-value
+> transmission (`fit_function=""`) for the narrow band; that is a *separate*
+> drtsans limitation (a one-bin band cannot feed the hardcoded two-parameter
+> transmission fit) and has nothing to do with the chopper phase. Reduced with
+> `reduction/reduce_varyspread_dev.py`; see the **Standards → Monochromatic
+> spread series** section for the recovered I(Q). The diagnosis below is retained
+> as the record of the original failure and the physics of the narrow band.
+
 ## Symptoms
 
 Every spread failed, but with three *different* errors, which was the first clue:
