@@ -939,6 +939,16 @@ def main():
                 monowl2_md = fh.read()
         except OSError:
             monowl2_md = None
+    # Fourth monochromatic page (no-transmission-hack test on drtsans --dev, and
+    # how I(Q,lambda) is recovered despite the dev build's single-bin override).
+    monowl4_md = None
+    mp4 = os.path.join(DOC_DIR, "monowl4.md")
+    if os.path.isfile(mp4):
+        try:
+            with open(mp4, errors="replace") as fh:
+                monowl4_md = fh.read()
+        except OSError:
+            monowl4_md = None
 
     # Attenuation-for-transmission tab: generic intro (doc/attenuation.md); the
     # count-rate TABLE is per-cycle (each cycle's own attenuation_for_trans.xlsx),
@@ -955,7 +965,7 @@ def main():
     # monoWL plots live in doc/monowl_assets/ (committed) -> assets/monowl/ each
     # run; both monowl.md and monowl2.md reference assets/monowl/*.png.
     src = os.path.join(DOC_DIR, "monowl_assets")
-    if (monowl_md or monowl2_md) and os.path.isdir(src):
+    if (monowl_md or monowl2_md or monowl4_md) and os.path.isdir(src):
         dest = os.path.join(ASSETS_DIR, "monowl")
         os.makedirs(dest, exist_ok=True)
         for f in os.listdir(src):
@@ -969,6 +979,7 @@ def main():
         "chopper_md": chopper_md,
         "monowl_md": monowl_md,
         "monowl2_md": monowl2_md,
+        "monowl4_md": monowl4_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
