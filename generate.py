@@ -949,6 +949,15 @@ def main():
                 monowl4_md = fh.read()
         except OSError:
             monowl4_md = None
+    # Fifth monochromatic page (drtsans --qa: mono reduction with NO hacks at all).
+    monowl5_md = None
+    mp5 = os.path.join(DOC_DIR, "monowl5.md")
+    if os.path.isfile(mp5):
+        try:
+            with open(mp5, errors="replace") as fh:
+                monowl5_md = fh.read()
+        except OSError:
+            monowl5_md = None
 
     # Attenuation-for-transmission tab: generic intro (doc/attenuation.md); the
     # count-rate TABLE is per-cycle (each cycle's own attenuation_for_trans.xlsx),
@@ -965,7 +974,7 @@ def main():
     # monoWL plots live in doc/monowl_assets/ (committed) -> assets/monowl/ each
     # run; both monowl.md and monowl2.md reference assets/monowl/*.png.
     src = os.path.join(DOC_DIR, "monowl_assets")
-    if (monowl_md or monowl2_md or monowl4_md) and os.path.isdir(src):
+    if (monowl_md or monowl2_md or monowl4_md or monowl5_md) and os.path.isdir(src):
         dest = os.path.join(ASSETS_DIR, "monowl")
         os.makedirs(dest, exist_ok=True)
         for f in os.listdir(src):
@@ -980,6 +989,7 @@ def main():
         "monowl_md": monowl_md,
         "monowl2_md": monowl2_md,
         "monowl4_md": monowl4_md,
+        "monowl5_md": monowl5_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")

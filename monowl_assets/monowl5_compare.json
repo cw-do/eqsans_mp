@@ -1,0 +1,144 @@
+{
+  "target_q1": 0.1069,
+  "qa_ok": 16,
+  "dev_ok": 16,
+  "max_abs_frac_dev": 0,
+  "rows": [
+    {
+      "sample": "porasil",
+      "spread": "0.03",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "porasil",
+      "spread": "0.05",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "porasil",
+      "spread": "0.10",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "porasil",
+      "spread": "0.15",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "agbe",
+      "spread": "0.03",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0,
+      "qa_peak": 0.10455396802178059,
+      "dev_peak": 0.10455396802178059
+    },
+    {
+      "sample": "agbe",
+      "spread": "0.05",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0,
+      "qa_peak": 0.1060976924636239,
+      "dev_peak": 0.1060976924636239
+    },
+    {
+      "sample": "agbe",
+      "spread": "0.10",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0,
+      "qa_peak": 0.10840660583522665,
+      "dev_peak": 0.10840660583522665
+    },
+    {
+      "sample": "agbe",
+      "spread": "0.15",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0,
+      "qa_peak": 0.10949722280096366,
+      "dev_peak": 0.10949722280096366
+    },
+    {
+      "sample": "PMMA",
+      "spread": "0.03",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "PMMA",
+      "spread": "0.05",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "PMMA",
+      "spread": "0.10",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "PMMA",
+      "spread": "0.15",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "blockedbeam",
+      "spread": "0.03",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "blockedbeam",
+      "spread": "0.05",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "blockedbeam",
+      "spread": "0.10",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    },
+    {
+      "sample": "blockedbeam",
+      "spread": "0.15",
+      "qa_ok": true,
+      "dev_ok": true,
+      "intensity_ratio": 1.0,
+      "max_abs_frac_dev": 0.0
+    }
+  ]
+}
