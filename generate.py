@@ -443,6 +443,8 @@ def collect_plots(cycle_dir, cycle_id):
                        and "gridsnap" not in d.lower()
                        and d != "__pycache__" and d != ".git"
                        and d != "beam_spectra"   # has its own monoWL3 tab
+                       and d != "reduced_water"  # has its own Water tab
+                       and d != "solid_angle_audit"
                        and d != "flux"           # pipeline scaffold; curated below
                        and not PRESERVED_RE.search(d)]   # preserved *.OLD_* dirs
         for f in filenames:
@@ -981,6 +983,24 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(src, f), os.path.join(dest, f))
 
+    # Water (H2O / D2O) high-Q study: doc/water.md, figures committed in
+    # doc/water_assets/ (from 2026B_mp/reduction/analyze_water.py) -> assets/water/.
+    water_md = None
+    wp = os.path.join(DOC_DIR, "water.md")
+    if os.path.isfile(wp):
+        try:
+            with open(wp, errors="replace") as fh:
+                water_md = fh.read()
+        except OSError:
+            water_md = None
+    wsrc = os.path.join(DOC_DIR, "water_assets")
+    if water_md and os.path.isdir(wsrc):
+        wdest = os.path.join(ASSETS_DIR, "water")
+        os.makedirs(wdest, exist_ok=True)
+        for f in os.listdir(wsrc):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(wsrc, f), os.path.join(wdest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -990,6 +1010,7 @@ def main():
         "monowl2_md": monowl2_md,
         "monowl4_md": monowl4_md,
         "monowl5_md": monowl5_md,
+        "water_md": water_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
