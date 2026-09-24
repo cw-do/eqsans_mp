@@ -387,7 +387,7 @@ function reductionConfig(c){
   if(c.dark_current.length) pairs.push(["DARK_CURRENT", c.dark_current[0].path]);
   // Prefer floods rebuilt with the reduction geometry when a cycle has them.
   const sens = c.sensitivity.some(f=>f.recommended) ? c.sensitivity.filter(f=>f.recommended) : c.sensitivity;
-  if(sens!==c.sensitivity) out.push("# floods built with the AgBe reduction geometry (sensitivity_redgeom/, see Water tab)");
+  if(sens.some(f=>f.variant==="redgeom")) out.push("# floods built with the AgBe reduction geometry (see Water (high-Q) tab)");
   const toks = sens.map(distToken);
   const dup = new Set(toks.filter((t,i)=>toks.indexOf(t)!==i));
   sens.forEach(f => pairs.push([floodVar(f,dup), f.path]));
@@ -453,15 +453,25 @@ function renderSummary(c){
   // Sensitivity
   const sn = el("div");
   if(c.sensitivity.length){
-    if(c.sensitivity.some(f=>f.variant)){
+    if(c.sensitivity.some(f=>f.variant==="nominal")){
       sn.append(el("div","sensnote",
         "Use the <b>recommended</b> floods: rebuilt with the same geometry as the reductions "+
         "(AgBe samoffset / detoffset / scalecomp), so the solid angle divided out of the flood "+
         "and out of each sample cancel. The originals (nominal geometry) put +5 % at 20° / "+
         "+11 % at 30° on 1.3 m data — see the <b>Water (high-Q)</b> tab."));
+    } else if(c.sensitivity.some(f=>f.variant==="redgeom")){
+      const g = (c.sensitivity.find(f=>f.geometry)||{}).geometry || {};
+      const built = (c.sensitivity.find(f=>f.built)||{}).built || "";
+      sn.append(el("div","sensnote",
+        "Built with the <b>reduction geometry</b> (samoffset "+g.samoffset+", detoffset "+g.detoffset+
+        ", scalecomp ["+(g.scalecomp||[]).join(", ")+"])"+(built?" on "+esc(built.slice(0,10)):"")+
+        ", so the solid angle divided out of the flood and out of each sample cancel. The "+
+        "nominal-geometry originals are kept alongside as <code>*.OLD_nominal_geometry.nxs</code>; "+
+        "see the <b>Water (high-Q)</b> tab, §8."));
     }
     c.sensitivity.forEach(f => {
-      const tag = distLabel(f.distance) + (f.variant==="redgeom" ? " · recommended"
+      const onlyNew = !c.sensitivity.some(x=>x.variant==="nominal");
+      const tag = distLabel(f.distance) + (f.variant==="redgeom" ? (onlyNew ? " · reduction geometry" : " · recommended")
                  : f.variant==="nominal" ? " · original (nominal geom.)" : "");
       const row = fileRow(f, tag);
       if(f.variant==="redgeom") row.classList.add("recommended");

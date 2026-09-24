@@ -204,8 +204,10 @@ def find_dark_current(cycle_dir):
 
 
 #  Floods rebuilt with the AgBe reduction geometry (prepare_sensitivity.py since
-#  2026-09-24; see the Water tab). When present they are the recommended files and
-#  the top-level ones are shown as the nominal-geometry originals.
+#  2026-09-24; see the Water tab). A cycle may keep them in sensitivity_redgeom/ for
+#  review (shown as recommended, top-level ones as the nominal originals); once swapped
+#  in, a top-level flood with a <flood>.geometry.json sidecar is marked "redgeom" and the
+#  renamed originals (*.OLD_nominal_geometry.nxs) are skipped.
 REDGEOM_SUBDIR = "sensitivity_redgeom"
 
 
@@ -233,12 +235,24 @@ def find_sensitivity(cycle_dir):
         out.append(e)
     for f in sorted(os.listdir(cycle_dir)):
         low = f.lower()
-        if low.startswith("sensitivity") and low.endswith(".nxs"):
+        if low.startswith("sensitivity") and low.endswith(".nxs") \
+                and not PRESERVED_RE.search(f):          # *.OLD_nominal_geometry.nxs etc.
             e = file_entry(os.path.join(cycle_dir, f))
             e["distance"] = distance_of(f)
             e["run"] = run_number(f)
             if f in redgeom:
                 e["variant"] = "nominal"
+            else:
+                # a flood built by prepare_sensitivity.py >= 2026-09-24 carries its geometry
+                try:
+                    with open(os.path.join(cycle_dir, f) + ".geometry.json") as fh:
+                        g = json.load(fh)
+                    if isinstance(g.get("geometry"), dict):
+                        e["variant"] = "redgeom"
+                        e["geometry"] = g["geometry"]
+                        e["built"] = g.get("date")
+                except (OSError, ValueError):
+                    pass
             out.append(e)
     out.sort(key=lambda e: (e["distance"] or 99, not e.get("recommended"), e["name"]))
     return out
