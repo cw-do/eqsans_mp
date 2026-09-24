@@ -1,0 +1,30 @@
+{
+ "1o3m": {
+  "max_2theta": 35.82803843002789,
+  "change_at_max": 0.8579323157065496,
+  "n_valid_new": 44917,
+  "n_valid_prod": 44917,
+  "change_at_5": 0.9949700656559854,
+  "change_at_10": 0.9844496304065427,
+  "change_at_20": 0.9483793169876481,
+  "change_at_30": 0.885503990921513,
+  "tth_vs_reduction_geometry_max_abs_deg": 0.06478470935465053,
+  "vs_test_flood_max_abs_dev": 0.0
+ },
+ "2o5m": {
+  "max_2theta": 18.618398339655414,
+  "change_at_max": 0.9763574215948823,
+  "n_valid_new": 44916,
+  "n_valid_prod": 44916,
+  "change_at_5": 0.9982325512961302,
+  "change_at_10": 0.9917948423650786
+ },
+ "4m": {
+  "max_2theta": 11.402016849411362,
+  "change_at_max": 0.9934216418533202,
+  "n_valid_new": 44916,
+  "n_valid_prod": 44916,
+  "change_at_5": 0.9985890106364306,
+  "change_at_10": 0.9945949721527428
+ }
+}

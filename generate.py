@@ -203,17 +203,44 @@ def find_dark_current(cycle_dir):
     return out
 
 
+#  Floods rebuilt with the AgBe reduction geometry (prepare_sensitivity.py since
+#  2026-09-24; see the Water tab). When present they are the recommended files and
+#  the top-level ones are shown as the nominal-geometry originals.
+REDGEOM_SUBDIR = "sensitivity_redgeom"
+
+
 def find_sensitivity(cycle_dir):
-    """Sensitivity (flood) files at the top level, one per distance."""
+    """Sensitivity (flood) files at the top level, one per distance, plus any
+    reduction-geometry rebuilds in sensitivity_redgeom/ (marked recommended)."""
     out = []
+    sub = os.path.join(cycle_dir, REDGEOM_SUBDIR)
+    redgeom = sorted(f for f in os.listdir(sub)
+                     if f.lower().startswith("sensitivity") and f.lower().endswith(".nxs")) \
+        if os.path.isdir(sub) else []
+    for f in redgeom:
+        e = file_entry(os.path.join(sub, f))
+        e["distance"] = distance_of(f)
+        e["run"] = run_number(f)
+        e["variant"] = "redgeom"
+        e["recommended"] = True
+        try:
+            with open(os.path.join(sub, f) + ".geometry.json") as fh:
+                g = json.load(fh)
+            e["geometry"] = g.get("geometry")
+            e["built"] = g.get("date")
+        except (OSError, ValueError):
+            pass
+        out.append(e)
     for f in sorted(os.listdir(cycle_dir)):
         low = f.lower()
         if low.startswith("sensitivity") and low.endswith(".nxs"):
             e = file_entry(os.path.join(cycle_dir, f))
             e["distance"] = distance_of(f)
             e["run"] = run_number(f)
+            if f in redgeom:
+                e["variant"] = "nominal"
             out.append(e)
-    out.sort(key=lambda e: (e["distance"] or 99, e["name"]))
+    out.sort(key=lambda e: (e["distance"] or 99, not e.get("recommended"), e["name"]))
     return out
 
 
@@ -446,6 +473,7 @@ def collect_plots(cycle_dir, cycle_id):
                        and d != "reduced_water"  # has its own Water tab
                        and d != "solid_angle_audit"
                        and d != "flood_geometry_test"
+                       and d != REDGEOM_SUBDIR   # its plot is on the Water tab
                        and d != "flux"           # pipeline scaffold; curated below
                        and not PRESERVED_RE.search(d)]   # preserved *.OLD_* dirs
         for f in filenames:

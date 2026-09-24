@@ -201,6 +201,10 @@
   footer code{font-family:var(--mono)}
   footer .org{color:var(--text);font-weight:600}
   .mutelink{color:var(--muted)}
+  .sensnote{padding:10px 16px;font-size:13px;color:var(--text);background:#eef6f1;
+    border-bottom:1px solid var(--line);line-height:1.45}
+  .filerow.recommended .filetag{background:var(--green);color:#fff;border-color:var(--green)}
+  .filerow.superseded{opacity:.62}
 </style>
 </head>
 <body>
@@ -381,9 +385,12 @@ function reductionConfig(c){
 
   const pairs = [];
   if(c.dark_current.length) pairs.push(["DARK_CURRENT", c.dark_current[0].path]);
-  const toks = c.sensitivity.map(distToken);
+  // Prefer floods rebuilt with the reduction geometry when a cycle has them.
+  const sens = c.sensitivity.some(f=>f.recommended) ? c.sensitivity.filter(f=>f.recommended) : c.sensitivity;
+  if(sens!==c.sensitivity) out.push("# floods built with the AgBe reduction geometry (sensitivity_redgeom/, see Water tab)");
+  const toks = sens.map(distToken);
   const dup = new Set(toks.filter((t,i)=>toks.indexOf(t)!==i));
-  c.sensitivity.forEach(f => pairs.push([floodVar(f,dup), f.path]));
+  sens.forEach(f => pairs.push([floodVar(f,dup), f.path]));
   const pf = c.flux.find(f=>f.primary) || c.flux[0];
   if(pf) pairs.push(["FLUX_FILE", pf.path]);
   if(pairs.length){
@@ -446,7 +453,21 @@ function renderSummary(c){
   // Sensitivity
   const sn = el("div");
   if(c.sensitivity.length){
-    c.sensitivity.forEach(f => sn.append(fileRow(f, distLabel(f.distance))));
+    if(c.sensitivity.some(f=>f.variant)){
+      sn.append(el("div","sensnote",
+        "Use the <b>recommended</b> floods: rebuilt with the same geometry as the reductions "+
+        "(AgBe samoffset / detoffset / scalecomp), so the solid angle divided out of the flood "+
+        "and out of each sample cancel. The originals (nominal geometry) put +5 % at 20° / "+
+        "+11 % at 30° on 1.3 m data — see the <b>Water (high-Q)</b> tab."));
+    }
+    c.sensitivity.forEach(f => {
+      const tag = distLabel(f.distance) + (f.variant==="redgeom" ? " · recommended"
+                 : f.variant==="nominal" ? " · original (nominal geom.)" : "");
+      const row = fileRow(f, tag);
+      if(f.variant==="redgeom") row.classList.add("recommended");
+      if(f.variant==="nominal") row.classList.add("superseded");
+      sn.append(row);
+    });
     if(P.sensitivity) sn.append(provLine(P.sensitivity));
   } else sn.append(el("div","empty","No sensitivity files found."));
 

@@ -3,7 +3,8 @@
 **Date:** 2026-09-24 · **drtsans:** stable production `1.34.0` (no monkeypatches)
 · **scripts:** `2026B_mp/reduction/reduce_water.py`,
 `2022A_mp/reduction/reduce_water_2022.py`, `2026B_mp/reduction/analyze_water.py`,
-`2026B_mp/reduction/flood_geometry_test/` (flood fix test)
+`2026B_mp/reduction/flood_geometry_test/` (flood fix test), `2026B_mp/prepare_sensitivity.py`
+→ `2026B_mp/sensitivity_redgeom/` (rebuilt floods)
 
 **Short answer.** Flat-scattering water does show a high-Q upturn, but it is **not
 water physics**. In every wavelength slice, the intensity rises with scattering
@@ -18,7 +19,8 @@ not cancel. That predicts **+4.9 % at 20° and +11 % at 30°**. **Tested directl
 (§7):** rebuilding the flood with the reduction geometry — or switching solid angle
 off in *both* flood and reduction — flattens water to within **0.4–1.3 % at 20°**
 and **0.8–2.5 % at 30°**. Switching it off in the flood alone makes the rise ~3×
-worse. Every flood script since 2020B has this mismatch. In the combined I(Q), two wavelength effects at the band edge partly
+worse. Every flood script since 2020B has this mismatch. **The 2026B floods have been rebuilt
+with the reduction geometry (§8) — use `2026B_mp/sensitivity_redgeom/`.** In the combined I(Q), two wavelength effects at the band edge partly
 hide the rise, and can even turn it into a drop. The only genuine high-Q feature is
 **liquid water's first structure-factor peak at Q ≈ 1.95–2.0 Å⁻¹**, which the 1 Å
 band at 1.3 m reaches (strong in D2O).
@@ -271,8 +273,68 @@ cycle's samoffset, detoffset and AgBe scaleComponents. It is a drop-in file
 change, and users keep the default `useSolidAngleCorrection: true`. drtsans's
 preparer has no offset setter; `make_test_floods.py` adds one by overriding
 `_prepare_data_opts`, which should be reported upstream. "SA off in both" works
-equally well, but every user's reduction would have to change. **Not applied yet**:
-the production floods and `instrument_configuration/` are unchanged.
+equally well, but every user's reduction would have to change. Done for 2026B — §8.
+
+## 8. The 2026B floods, rebuilt with the reduction geometry
+
+**`prepare_sensitivity.py` now builds floods with the reduction geometry** (2026-09-24;
+the 2026B copy and the `tools/sensitivity/` master). It reads samoffset / detoffset /
+scalecomp from the cycle's `agbe_calibration/*/calibration_report.txt`, loads the
+flood and the beam-centre run with them, and writes `<flood>.geometry.json` next to
+each file recording the geometry, its source, the drtsans build and the date.
+`--nominal` gives the old behaviour; `--outdir DIR` writes elsewhere. The previous
+script is kept as `2026B_mp/legacy/prepare_sensitivity_2026B_nominal_geometry.py`.
+
+A new cycle now needs **two passes**. The AgBe calibration uses the floods, and the
+floods need the calibration:
+
+```
+for c in 4m 2o5m 1o3m; do drtsans --classic prepare_sensitivity.py $c --nominal; done   # pass 1
+drtsans --classic agbe_calibration/agbe_reducenfit.py                                   # AgBe
+for c in 4m 2o5m 1o3m; do drtsans --classic prepare_sensitivity.py $c; done             # pass 2
+```
+
+AgBe fits peak **positions**; the flood's smooth angular factor is < 0.5 % at the ring
+angles, so the calibration does not need a second iteration.
+
+**The rebuilt 2026B floods** (drtsans 1.34.0, same runs and settings as before —
+flood / direct beam 186200 / 186098, 186201 / 186131, 186202 / 186164):
+
+| distance | recommended flood | original (nominal geometry, still in `2026B_mp/`) |
+|---|---|---|
+| 4 m | `2026B_mp/sensitivity_redgeom/Sensitivity_patched_thinPMMA_4m_186200.nxs` | `2026B_mp/Sensitivity_patched_thinPMMA_4m_186200.nxs` |
+| 2.5 m | `2026B_mp/sensitivity_redgeom/Sensitivity_patched_thinPMMA_2o5m_186201.nxs` | `2026B_mp/Sensitivity_patched_thinPMMA_2o5m_186201.nxs` |
+| 1.3 m | `2026B_mp/sensitivity_redgeom/Sensitivity_patched_thinPMMA_1o3m_186202.nxs` | `2026B_mp/Sensitivity_patched_thinPMMA_1o3m_186202.nxs` |
+
+The **Summary** tab lists them as *recommended*, and its copy-paste reduction config
+now points at them.
+
+**What changes in reduced data.** Reductions divide by the flood, so every reduced
+curve changes by original / rebuilt flood, per pixel. Plotted against the pixel's
+scattering angle in the reduction geometry:
+
+![Effect of the rebuilt floods on reduced intensity](assets/water/flood_redgeom_vs_production.png)
+
+| distance | 2θ = 5° | 10° | 20° | 30° | detector edge |
+|---|---|---|---|---|---|
+| 1.3 m | −0.5 % | −1.6 % | **−5.2 %** | **−11.4 %** | −14 % at 36° |
+| 2.5 m | −0.2 % | −0.8 % | — | — | −2.4 % at 19° |
+| 4 m | −0.1 % | −0.5 % | — | — | −0.7 % at 11° |
+
+- **1.3 m is where it matters.** The rebuilt flood removes the water upturn (§7): water
+  is flat to ≤ 1.3 % at 20°. The new 1.3 m flood is identical, pixel for pixel, to the
+  test flood used in §7.
+- **2.5 m:** a 2.4 % droop correction at the detector edge. **4 m:** below 1 %.
+- Pixel counts are unchanged (44 916–44 917 valid pixels, same masks and thresholds).
+- Absolute scale is set at small angles (porsil), where the change is < 0.5 %, so
+  absolute calibration is essentially unaffected.
+- Validation: `2026B_mp/sensitivity_redgeom/validate_floods.py`. It recomputes each
+  pixel's angle exactly as the reduction places it; this matches the reduction
+  geometry to 0.06°.
+
+**Still open:** swapping these into `2026B_mp/` itself (the folder user reductions
+point to) or `instrument_configuration/` is a separate step. Earlier cycles' floods
+have the same mismatch and would need the same rebuild.
 
 ## Verdict
 
@@ -284,7 +346,8 @@ the production floods and `instrument_configuration/` are unchanged.
    AgBe-calibrated one. **A flood rebuilt with the reduction geometry removes it**
    (water flat to ≤ 1.3 % at 20°, ≤ 2.5 % at 30°); so does solid angle off in both
    flood and reduction. Off in the flood only makes it ~3× worse. Every flood since
-   2020B was built this way.
+   2020B was built this way. **`prepare_sensitivity.py` is fixed and the 2026B floods
+   are rebuilt — use `2026B_mp/sensitivity_redgeom/`** (§8).
 3. How it shows up in a combined I(Q) depends on the **band-edge flux
    normalisation**. It can appear as an upturn (2022 D2O 2.5 Å, 1.28×; any data
    with a mismatched flux file), as a bump before the edge (all configurations), or
@@ -295,9 +358,9 @@ the production floods and `instrument_configuration/` are unchanged.
    the 1 Å band (D2O 1.70× plateau), at the same Q in 2022 and 2026 once 2022's Q
    is AgBe-rescaled.
 
-**Follow-ups:** adopt geometry-matched floods in `prepare_sensitivity.py` (and
-decide whether to republish the 2026B floods); report the missing offset setter to
-the drtsans team; the 4 m monochromatic water series (needs empty-beam runs matched to
+**Follow-ups:** decide whether to swap the rebuilt floods into `2026B_mp/` and
+`instrument_configuration/`; rebuild earlier cycles' floods if their data will be
+re-reduced; report the missing offset setter to the drtsans team; the 4 m monochromatic water series (needs empty-beam runs matched to
 its attenuators); the IPTS-36254 vanadium series, a λ-independent elastic flat
 scatterer that would confirm the angular factor without any water physics; and a
 fix for the band-edge slice (drop the first 0.1 Å bin or tighten the TOF cut).
@@ -310,4 +373,6 @@ flux swap, per-λ profiles); `solid_angle_audit/sa_test.py` → the solid-angle
 on/off test and the flood-mismatch prediction; `flood_geometry_test/make_test_floods.py`
 → the three test floods, `reduce_water_floodtest.py` → 16/16 per-λ reductions,
 `compare_floodtest.py` → the §7 figure and `water_floodtest.json`;
+`prepare_sensitivity.py` → `2026B_mp/sensitivity_redgeom/` (3 floods + geometry
+sidecars), `validate_floods.py` → the §8 figure and `flood_redgeom_vs_production.json`;
 `analyze_water.py` → the other figures and `doc/water_assets/water_metrics.json`.
