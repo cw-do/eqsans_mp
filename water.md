@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-24 · **drtsans:** stable production `1.34.0` (no monkeypatches)
 · **scripts:** `2026B_mp/reduction/reduce_water.py`,
-`2022A_mp/reduction/reduce_water_2022.py`, `2026B_mp/reduction/analyze_water.py`
+`2022A_mp/reduction/reduce_water_2022.py`, `2026B_mp/reduction/analyze_water.py`,
+`2026B_mp/reduction/flood_geometry_test/` (flood fix test)
 
 **Short answer.** Flat-scattering water does show a high-Q upturn, but it is **not
 water physics**. In every wavelength slice, the intensity rises with scattering
@@ -13,8 +14,11 @@ on/off test show it is applied exactly once. What goes wrong is the **sensitivit
 (flood) file**: it was built with the solid-angle correction computed for the
 *nominal* geometry (pixels at z ≈ 1.29 m), while the reduction computes it for the
 *calibrated* geometry (z ≈ 1.07 m, after the sample/detector offsets). The two do
-not cancel. That alone predicts **+4.9 % at 20° and +11 % at 30°** — most of the
-measured rise. In the combined I(Q), two wavelength effects at the band edge partly
+not cancel. That predicts **+4.9 % at 20° and +11 % at 30°**. **Tested directly
+(§7):** rebuilding the flood with the reduction geometry — or switching solid angle
+off in *both* flood and reduction — flattens water to within **0.4–1.3 % at 20°**
+and **0.8–2.5 % at 30°**. Switching it off in the flood alone makes the rise ~3×
+worse. Every flood script since 2020B has this mismatch. In the combined I(Q), two wavelength effects at the band edge partly
 hide the rise, and can even turn it into a drop. The only genuine high-Q feature is
 **liquid water's first structure-factor peak at Q ≈ 1.95–2.0 Å⁻¹**, which the 1 Å
 band at 1.3 m reaches (strong in D2O).
@@ -112,9 +116,8 @@ What this rules out, and what it points to:
 - **Not a double solid-angle correction** — that would be 1/cos³ 2θ, 3–4× too
   large, and the audit shows the correction is applied once (§6).
 - **It is the flood's solid-angle geometry.** The green curve in the figure above is
-  the predicted factor from §6, computed pixel by pixel with no free parameter. It
-  matches the data to ~17° and accounts for ~80–90 % of the rise at 20° and ~75 % at
-  30°. The remaining +1 % at 20° / +3–4 % at 30° is still open (candidates in §6).
+  the predicted factor from §6, computed pixel by pixel with no free parameter. The
+  direct test in §7 confirms it: with a geometry-matched flood the rise is gone.
 
 The same factor appears in the combined I(Q) as a bump toward each
 configuration's edge. For the three configurations sharing the 2.5 Å band, the
@@ -201,26 +204,87 @@ Smaller angle effects checked:
   tubes come out ~7.6 % high relative to front tubes, nearly flat in angle (≤ +1 %).
 - Dark current: ~2 × 10⁻⁶ of the water rate.
 
-**Fix (not applied — it changes every user's reduction at 1.3 m):** build the
-flood with the reduction geometry. The preparer has no offset setter, but
-`scale_components` exists; the offsets would need a small drtsans change or a
-patched loader. Alternatively, multiply the existing flood by SA_sample / SA_flood,
-or turn solid angle off in both the flood and the reduction (they are at the same
-distance). The 2022 data show the same rise. The 2022 flood was presumably built the
-same way, but that has not been checked.
+The fix is tested in §7.
 
 Audit script and numbers: `2026B_mp/reduction/solid_angle_audit/sa_test.py`,
 `sa_test_results.txt`; predicted curve `sa_flood_mismatch.csv`.
+
+## 7. Testing the fix — the same flood built four ways
+
+**Why the flood geometry matters at all.** The flood is measured at the sample
+position, so the measured flood already contains the *true* solid angle of every
+pixel: F = ε · Ω_true · P (ε = pixel efficiency, P = PMMA scattering). If nobody
+computed a solid angle, the flood would carry the right geometry by itself. But both
+our flood recipe and the reduction divide by a *computed* solid angle:
+
+- flood: S = F / SA_flood = ε · Ω_true · P / SA_flood
+- sample: I = I_raw / SA_sample / S = σ · SA_flood / SA_sample (Ω_true and ε cancel)
+
+The true geometry drops out; what remains is the ratio of the two *computed* solid
+angles. It is 1 only if both are computed with the same geometry. Ours were not:
+the flood with nominal geometry (z ≈ 1.29 m), the reduction with the AgBe-calibrated
+one (z ≈ 1.07 m).
+
+**The test** (2026-09-24, drtsans 1.34.0). The 1.3 m flood (186202, direct beam
+186164, all other settings as `prepare_sensitivity.py`) was rebuilt three ways. The
+1.3 m water was then re-reduced per wavelength (H2O and D2O, 1 Å and 2.5 Å bands):
+
+| case | flood | reduction | water at 20° | water at 30° |
+|---|---|---|---|---|
+| production (control) | SA on, nominal geometry | SA on | +5.3 – 6.3 % | +11.8 – 13.4 % |
+| flood "as measured" | **SA off** | SA on | **+14.6 – 15.7 %** | **+36 – 38 %** |
+| geometry-matched flood | SA on, **reduction geometry** | SA on | **+0.4 – 1.3 %** | **+0.9 – 2.5 %** |
+| no solid angle anywhere | **SA off** | **SA off** | **+0.4 – 1.3 %** | **+0.8 – 2.4 %** |
+
+(Ranges span H2O/D2O and the two bands; the median over all 35 λ slices per
+curve, each slice normalised to its own 3–6° level.)
+
+![Water vs angle with the four flood / solid-angle choices](assets/water/water_floodtest.png)
+
+- **The control reproduces production:** the rebuilt nominal flood matches the
+  production file within 0.5 % out to 26°.
+- **The geometry-matched flood removes the rise.** Flood-to-flood, S_redgeom /
+  S_nominal equals the predicted mismatch curve to ±0.002 at every angle. In the
+  water, the +5–6 % at 20° drops to ≤ 1.3 %.
+- **"SA off in both" gives the same answer as the geometry-matched flood** (to
+  0.1 %). This is the fully consistent version of "use the flood as measured".
+- **SA off in the flood alone, with SA on in the reduction, is wrong.** The flood
+  keeps Ω_true, the reduction divides by a computed Ω again, and a full 1/Ω is left
+  on the data. The rise nearly triples.
+- **What's left** (≤ 1.3 % at 20°, ≤ 2.5 % at 30°, a little larger for D2O and the
+  2.5 Å band) is small: the onset of D2O's structure-factor rise, and the
+  θ-dependent transmission and back-tube effects listed in §6.
+
+**Have we always done this? Yes, since the drtsans era.** Every flood script in the
+machine-physics folders — 2020B, 2021A, 2021B, 2022A (×3), 2022B (×2), 2023A,
+2024B, 2025A, 2025B, 2026A, 2026B and `tools/sensitivity/` — sets
+`SOLID_ANGLE_CORRECTION = True`. **None** passes sample/detector offsets or scale
+components to the preparer, so every flood since 2020B was built with the nominal
+geometry. Whether that caused an error in a given year depends on the offsets that
+year's reductions used; the 2022 water shows the same +5–6 % at 20°. The same
+offsets are a much smaller fraction of 2.5 m and 4 m, and the angles are smaller,
+so the effect is mainly a 1.3 m problem. Before 2020B there are no flood scripts
+in the folders to check.
+
+**Recommendation:** build the sensitivity files with the reduction geometry: the
+cycle's samoffset, detoffset and AgBe scaleComponents. It is a drop-in file
+change, and users keep the default `useSolidAngleCorrection: true`. drtsans's
+preparer has no offset setter; `make_test_floods.py` adds one by overriding
+`_prepare_data_opts`, which should be reported upstream. "SA off in both" works
+equally well, but every user's reduction would have to change. **Not applied yet**:
+the production floods and `instrument_configuration/` are unchanged.
 
 ## Verdict
 
 1. **Water's "strange upturn" at high Q is instrumental.** Within every wavelength,
    intensity rises toward large angles (~+5–6 % at 20°, ~+13–15 % at 30° at 1.3 m),
    the same in 2022 and 2026, for H2O and D2O.
-2. **drtsans applies the solid-angle correction once, not twice.** Most of the rise
-   comes from a **flood built with the nominal geometry** while the reduction uses the
-   AgBe-calibrated one (predicted +4.9 % at 20°, +11 % at 30°). A residual of
-   ~+1 % at 20° / +3–4 % at 30° is still unexplained.
+2. **drtsans applies the solid-angle correction once, not twice.** The rise comes
+   from a **flood built with the nominal geometry** while the reduction uses the
+   AgBe-calibrated one. **A flood rebuilt with the reduction geometry removes it**
+   (water flat to ≤ 1.3 % at 20°, ≤ 2.5 % at 30°); so does solid angle off in both
+   flood and reduction. Off in the flood only makes it ~3× worse. Every flood since
+   2020B was built this way.
 3. How it shows up in a combined I(Q) depends on the **band-edge flux
    normalisation**. It can appear as an upturn (2022 D2O 2.5 Å, 1.28×; any data
    with a mismatched flux file), as a bump before the edge (all configurations), or
@@ -231,9 +295,9 @@ Audit script and numbers: `2026B_mp/reduction/solid_angle_audit/sa_test.py`,
    the 1 Å band (D2O 1.70× plateau), at the same Q in 2022 and 2026 once 2022's Q
    is AgBe-rescaled.
 
-**Follow-ups:** rebuild the 1.3 m flood with the reduction geometry and re-check
-the water slices (expect the rise to drop to the ~1–4 % residual); check the 2022
-flood's geometry; the 4 m monochromatic water series (needs empty-beam runs matched to
+**Follow-ups:** adopt geometry-matched floods in `prepare_sensitivity.py` (and
+decide whether to republish the 2026B floods); report the missing offset setter to
+the drtsans team; the 4 m monochromatic water series (needs empty-beam runs matched to
 its attenuators); the IPTS-36254 vanadium series, a λ-independent elastic flat
 scatterer that would confirm the angular factor without any water physics; and a
 fix for the band-edge slice (drop the first 0.1 Å bin or tighten the TOF cut).
@@ -243,5 +307,7 @@ fix for the band-edge slice (drop the first 0.1 Å bin or tighten the TOF cut).
 6 samples, empty-beam cross-check, per-λ profiles);
 `reduce_water_2022.py` → `2022A_mp/reduction/reduced_water/` (31/31 ok: 5 sets,
 flux swap, per-λ profiles); `solid_angle_audit/sa_test.py` → the solid-angle
-on/off test and the flood-mismatch prediction; `analyze_water.py` → the figures and
-`doc/water_assets/water_metrics.json`.
+on/off test and the flood-mismatch prediction; `flood_geometry_test/make_test_floods.py`
+→ the three test floods, `reduce_water_floodtest.py` → 16/16 per-λ reductions,
+`compare_floodtest.py` → the §7 figure and `water_floodtest.json`;
+`analyze_water.py` → the other figures and `doc/water_assets/water_metrics.json`.

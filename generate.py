@@ -445,6 +445,7 @@ def collect_plots(cycle_dir, cycle_id):
                        and d != "beam_spectra"   # has its own monoWL3 tab
                        and d != "reduced_water"  # has its own Water tab
                        and d != "solid_angle_audit"
+                       and d != "flood_geometry_test"
                        and d != "flux"           # pipeline scaffold; curated below
                        and not PRESERVED_RE.search(d)]   # preserved *.OLD_* dirs
         for f in filenames:
