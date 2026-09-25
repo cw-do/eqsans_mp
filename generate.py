@@ -1084,6 +1084,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w3src, f), os.path.join(w3dest, f))
 
+    # Water-4 study (why self-flooded water is not flat): doc/water4.md, doc/water4_assets/ -> assets/water4/.
+    water4_md = None
+    w4p = os.path.join(DOC_DIR, "water4.md")
+    if os.path.isfile(w4p):
+        try:
+            with open(w4p, errors="replace") as fh:
+                water4_md = fh.read()
+        except OSError:
+            water4_md = None
+    w4src = os.path.join(DOC_DIR, "water4_assets")
+    if water4_md and os.path.isdir(w4src):
+        w4dest = os.path.join(ASSETS_DIR, "water4")
+        os.makedirs(w4dest, exist_ok=True)
+        for f in os.listdir(w4src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(w4src, f), os.path.join(w4dest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -1096,6 +1113,7 @@ def main():
         "water_md": water_md,
         "water2_md": water2_md,
         "water3_md": water3_md,
+        "water4_md": water4_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
