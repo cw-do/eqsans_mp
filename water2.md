@@ -413,6 +413,66 @@ The rebuilt 1.3 m flood equals the test flood of §4 — the one that made H2O, 
 PMMA flat at 20° — to ±0.012 % (1st–99th percentile of pixels). So §4's results hold
 for it unchanged. Validation: `2026B_mp/sensitivity_selfabs/validate_selfabs.py`.
 
+## 10. Current floods, and two questions answered
+
+**Which flood is where (2026B):**
+
+| file | geometry | flood self-absorption correction | status |
+|---|---|---|---|
+| `2026B_mp/Sensitivity_patched_thinPMMA_*.nxs` | reduction (AgBe) | **no** | **in use** since 2026-09-24 |
+| `2026B_mp/sensitivity_selfabs/Sensitivity_patched_thinPMMA_*.nxs` | reduction (AgBe) | yes, T_f = 0.630 | built 2026-09-25, **for review — not in use yet** |
+| `2026B_mp/Sensitivity_patched_thinPMMA_*.OLD_nominal_geometry.nxs` | nominal | no | the August originals, kept |
+
+Each flood's `.geometry.json` records which geometry and correction it was built with.
+With the floods in use, 1.3 m data still carry the +1.5 % at 20° / +3.6 % at 30° rise
+from the flood's own self-absorption.
+
+**Is the sensitivity correction wavelength-dependent? No.** A flood file holds **one number
+per pixel** (49 152 × 1 bin), and drtsans divides every wavelength bin of that pixel by the
+same number (`sensitivity.py`, a plain `Divide`). The *flood run* is wavelength-dependent,
+though: it is measured in one band (2.5 Å for our floods), not flux-normalised, and then
+**summed over its wavelengths** (the preparer's `Integration`). So each pixel's number is a
+band-weighted average of:
+
+1. the pixel's detection efficiency at those wavelengths, including front/back tube
+   shadowing at oblique angles;
+2. what the flood sample scatters into that pixel: at angle 2θ the band covers
+   Q = 4π sin θ / λ over a range, so a PMMA flood averages in PMMA's structure there.
+
+It is exact only where a pixel's true response does not change with wavelength. That is
+why the λ-dependent horizontal residual (§5) remains at the shortest wavelengths, and why
+the **flood's band** matters: a 5 Å flood carries less of PMMA's high-Q structure but
+averages the efficiency over 5 Å instead of the short wavelengths 1.3 m data mostly use.
+The "wavelength-resolved flood" in §5 is only an emulation in this analysis; drtsans cannot
+apply one for EQSANS.
+
+**Is correcting the flood for its own self-absorption physically right? Yes, as long as
+samples are θ-corrected in reduction (the drtsans default).**
+
+- **What the flood should hold:** each pixel's efficiency, so dividing by it leaves only
+  sample physics.
+- **What the measured flood actually holds:** efficiency × solid angle × PMMA scattering ×
+  PMMA's own self-absorption. Solid angle is divided out; self-absorption is not.
+- **Why that matters:** the self-absorption loss is a property of the flood *sample*, not of
+  the pixels. Left in, it makes large-angle pixels look less efficient than they are.
+- **The fix:** correct the flood with the same drtsans function applied to samples, so flood
+  and sample are treated alike. Water used as its own flood rises +2 % / +4.5 % at 20° / 30°
+  without this, and is flat with it (§1).
+
+Where the correction is approximate:
+- **Single scattering, flat slab, normal incidence.** Thin PMMA is mostly an incoherent
+  *scatterer*, so some of the "lost" neutrons are multiply scattered rather than removed;
+  the formula slightly over-counts the loss.
+- **T_f is borrowed from the Sept PMMA.** It is the same sheet as the August flood, but
+  ±0.07 in T_f moves the result by about ±0.8 % at 30° (±0.3 % at 20°).
+- **It assumes the flood is square to the beam.** A tilted mount breaks this — possibly
+  related to the top–bottom asymmetry (§7).
+- **One T for the whole band** (small here).
+
+The only other self-consistent choice — correcting neither floods nor samples — leaves every
+sample whose transmission differs from the flood's with its own angular loss, so it is worse
+in general.
+
 **Provenance.** 2026-09-25, drtsans `1.34.0`, `2026B_mp/reduction/water2/`:
 - `make_floods_w2.py` → floods from Sept H2O (188982, 188966) and PMMA (188981).
 - `make_selfabs_flood.py` → the self-absorption-corrected production flood.
