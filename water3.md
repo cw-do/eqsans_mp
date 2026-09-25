@@ -46,6 +46,9 @@ unlike thin PMMA (Water 2, §7). This page:
   and the I(Q, λ) slices overlap to 0.4–1 %. However, the fit removes most of H2O's own
   signal as "b(λ)". The absolute level drops from ~2.6 cm⁻¹ to 0.87–1.95 cm⁻¹ and differs
   between configurations, so incoh-on data is only good for **shape**, not absolute scale.
+- **Flood band at 1.3 m (§8).** With the cell subtracted, the 2.5 Å-band and 1 Å-band water
+  floods are within about 1 % for I(Q); each is best on its own band. Per tube they differ:
+  the front/back tube-layer balance shifts by ~±1.5 % with the detected wavelength.
 - **AgBe is unaffected** by the flood or the incoh fit: q1 = 0.1059 / 0.1064 / 0.1071 /
   0.1071 Å⁻¹ in every case.
 
@@ -376,3 +379,107 @@ The same could be done inside `prepare_sensitivity.py` as a "subtract background
 - `compare_floods_w3.py` → `w3_flood_ratio*.png/.json`.
 - `analyze_w3.py` → `w3_iq_incoh*.png`, `w3_iqlambda_*.png`, `w3_residual.png`,
   `w3_metrics.json` (log `logs/analyze_w3.out`).
+
+---
+
+## 8. Which flood band at 1.3 m — 2.5 Å or 1 Å? (2026-09-25)
+
+The calibration block has H2O at 1.3 m in both bands, so there are two water floods:
+- **2.5 Å band:** run 188982;
+- **1 Å band:** run 188966.
+
+Each banjo-subtracted flood was applied to **both** 1.3 m data bands, for H2O and D2O, with
+the incoh fit off and on. That required 12 more reductions: the 2.5 Å data with the 1 Å
+floods.
+
+Two things limit what each comparison can show:
+- **H2O is self-referential when the flood band = the data band** (the flood run is the
+  sample run), so those two cases are flat by construction. The fair H2O test is the
+  **cross pair**: 1 Å data with the 2.5 Å flood, and 2.5 Å data with the 1 Å flood.
+- **D2O is independent in all four combinations.** Its own S(Q) onset near 0.8–0.9 Å⁻¹
+  adds a small rise at the 1.3 m corners, though.
+
+**Short answer.**
+- **For I(Q), the two banjo-subtracted floods are nearly equivalent.** Each is best on its
+  own band. Using the other band's flood costs about 0.5–1 % at 30°, with opposite signs:
+  - 1 Å data with the 2.5 Å flood reads low;
+  - 2.5 Å data with the 1 Å flood reads high.
+- **D2O slightly prefers the 2.5 Å flood** on both data bands, by 0.3–0.5 % at 30°. D2O's own
+  rise makes this a weak preference.
+- **"2.5 Å is better" is clearly true only for floods that still contain the cell.** The 1 Å
+  as-measured flood is −3.0 % at 30° on 1 Å data, against −1.8 % for the 2.5 Å one, because
+  the quartz's high-Q structure falls inside the 1 Å band's detector range. Subtracting the
+  cell removes most of that difference.
+- **Per tube, the flood is not band-independent** (see the tube-level section below).
+  Within a tube, the 1 Å and 2.5 Å floods agree to counting noise. Between the front and
+  back tube layers they differ by about ±1.5 %. This cancels in I(Q), because every Q ring
+  crosses both layers, but it matters for 2D, sector or per-pixel work.
+- **Suggestion:** use the flood from the same band as the data. The calibration block
+  already measures H2O in both bands. If only one flood is available, either is within about
+  1 % for I(Q). It must be banjo-subtracted.
+
+**Per-pixel residual (incoh off)**, in % at 20° / 25° / 30°, then top − bottom. Banjo-subtracted floods:
+
+| data | 2.5 Å flood | 1 Å flood |
+|---|---|---|
+| H2O, 1 Å data | −0.5 / −0.7 / −0.8, tb −0.4 | 0.0 / 0.0 / −0.2, tb +0.1 ᵃ |
+| H2O, 2.5 Å data | +0.2 / +0.2 / +0.2, tb +0.2 ᵃ | +0.6 / +0.9 / +0.8, tb +0.7 |
+| D2O, 1 Å data | +0.3 / +0.3 / +0.4, tb +0.1 | +0.6 / +0.9 / +0.9, tb +0.5 |
+| D2O, 2.5 Å data | +0.5 / +0.7 / +1.3, tb +1.1 | +0.9 / +1.5 / +1.8, tb +1.4 |
+
+ᵃ self-referential. As-measured floods (cell included), 30°:
+
+| data | 2.5 Å flood | 1 Å flood |
+|---|---|---|
+| H2O, 1 Å data | −1.8 % | −3.0 % ᵃ |
+| H2O, 2.5 Å data | −0.9 % ᵃ | −2.0 % |
+
+![per-pixel residual, 2.5 Å vs 1 Å flood, both data bands](assets/water3/w3_band_residual.png)
+
+**Combined I(Q) and I(Q, λ), incoh fit on.** Banjo-subtracted floods, H2O, I(Q) / plateau:
+
+| data | flood | I(0.8) | I(1.0) | edge | I(Q, λ) spread | high-Q/plateau of the slices |
+|---|---|---|---|---|---|---|
+| 1 Å | 2.5 Å | 0.987 | 0.973 | 0.988 | 0.8 % | 0.984 |
+| 1 Å | 1 Å ᵃ | 1.003 | 0.992 | 1.008 | 0.8 % | 1.005 |
+| 2.5 Å | 2.5 Å ᵃ | 0.997 | 0.992 | 0.992 | 0.4 % | 1.004 |
+| 2.5 Å | 1 Å | 1.006 | 1.002 | 1.003 | 0.5 % | 1.015 |
+
+- **The flood band does not change how well the λ slices agree.** The spreads are identical
+  (D2O: 3.7 / 3.7 % at 1 Å, 1.5 / 1.5 % at 2.5 Å). It only tilts the high-Q shape that all
+  slices share, by ±1–2 %: the cross cases are 0.984 and 1.015.
+- **With the incoh fit off, the combined I(Q) is unchanged** (≤ 0.6 % between floods). The
+  λ-level droop (§4) dominates.
+
+![combined I(Q), 2.5 Å vs 1 Å flood, incoh off and on](assets/water3/w3_band_iq.png)
+
+![I(Q, λ) after b(λ), 2 data bands × 2 floods](assets/water3/w3_band_iqlambda.png)
+
+**Tube level: the relative sensitivity does depend on the neutron wavelength.** Dividing the
+1 Å flood by the 2.5 Å flood (same water, same day) cancels everything except the band:
+- **Within a tube:** they agree to counting noise (1.1 % per pixel, as expected from two
+  ~0.8 % floods).
+- **Between tubes:** they differ in blocks of four, ±1.5 %.
+
+Those blocks are the **front and back layers** of each 8-pack: tubes 0–3 at z ≈ 1.051 m,
+tubes 4–7 at z ≈ 1.060 m. In the 1 Å flood the back layer is relatively higher. At short λ
+the front tubes absorb less of the beam and pass more to the back tubes, so the front/back
+ratio changes with λ, about 3 % peak-to-peak between these two bands.
+
+![per-tube median of flood ratios](assets/water3/w3_band_tubes.png)
+
+The same front/back pattern (±2 %) appears between the 2.5 Å water flood and the PMMA flood,
+**although both were measured in the 2.5 Å band**. What matters is the wavelength of the
+neutrons that **reach the detector**, not the incident band. H2O scatters inelastically and
+upscatters cold neutrons to shorter wavelength, so a water flood "looks" like a shorter-λ
+flood to the tubes. (That comparison also spans a month, Aug PMMA vs Sept water, so some
+tube drift cannot be excluded.)
+
+So the pixel-to-pixel correction is λ-independent **along each tube**, but the front/back
+layer balance is not. For I(Q) this averages out: ≤ 0.5 % in the tables above.
+
+**Provenance (§8).** 2026-09-25, drtsans `1.34.0`, `2026B_mp/reduction/water3/`:
+- `reduce_w3.py waterbs1A 1p3m_2.5A` and `reduce_w3.py water1A 1p3m_2.5A` → 12 more
+  reductions. The 1 Å-band floods are now allowed on both 1.3 m bands.
+- `band_w3.py` → `w3_band_residual.png`, `w3_band_iq.png`, `w3_band_iqlambda.png`,
+  `w3_band_tubes.png`, `w3_band_metrics.json` (log `logs/band_w3.out`).
