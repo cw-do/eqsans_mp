@@ -1,0 +1,34 @@
+{
+ "1.3 m \u00b7 2.5 \u00c5": {
+  "bb_counts_s": 17098.07305629649,
+  "dark_counts_s": 2.8530028098713975,
+  "h2o_counts_s": 1176790.9958302968,
+  "banjo_counts_s": 136889.43919893412,
+  "bb_over_h2o_total": 0.014529405065878135,
+  "residual_over_water_median_pct": 0.5310261085390258,
+  "residual_over_water_top_pct": 1.2232907223709222,
+  "residual_over_water_bottom_pct": 0.4243508325419174,
+  "residual_over_water_at_2theta_pct": {
+   "5": 0.4169452661410583,
+   "10": 0.4517845966584933,
+   "20": 0.611644456531568,
+   "30": 0.5271652299521999
+  }
+ },
+ "1.3 m \u00b7 1 \u00c5": {
+  "bb_counts_s": 22301.35373816018,
+  "dark_counts_s": 2.8530028098713975,
+  "h2o_counts_s": 1394824.027678733,
+  "banjo_counts_s": 183267.64158454398,
+  "bb_over_h2o_total": 0.01598865039289157,
+  "residual_over_water_median_pct": 0.519792970643964,
+  "residual_over_water_top_pct": 1.131153054952388,
+  "residual_over_water_bottom_pct": 0.43292799026685913,
+  "residual_over_water_at_2theta_pct": {
+   "5": 0.4089180697656168,
+   "10": 0.4441226102134693,
+   "20": 0.5952783362131963,
+   "30": 0.5257431958501171
+  }
+ }
+}

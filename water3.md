@@ -15,6 +15,19 @@ unlike thin PMMA (Water 2, §7). This page:
 - reduces H2O, D2O and AgBe with each flood, with `fitInelasticIncoh` off and on;
 - keeps I(Q, λ) for the incoh-on runs.
 
+> **Blocked-beam subtraction — where it was used on this page.**
+> - **Sensitivity preparation: never.** `prepare_sensitivity.py` / drtsans's flood preparer
+>   has no blocked-beam option, and runs with no dark current either (`DARK_CURRENT_RUNS = None`).
+>   This applies to every PMMA flood and the as-measured water floods (`Sensitivity_H2O_*`).
+> - **Reductions §1–§8: none.** All reductions (`reduce_w3.py` without `--bb`) have
+>   `blockedBeamRunNumber = None`; the dark current (186198) is subtracted. The same holds for
+>   the Water and Water 2 pages, except the Water 2 vanadium test (Cd run 167914).
+> - **Banjo-subtracted water floods (`Sensitivity_H2Obs_*`, §1–§8):** blocked beam **not**
+>   subtracted. Subtracting the banjo removes most of it, but not all (§9).
+> - **§9 only:** the new floods `Sensitivity_H2Obsbb_*` have the blocked beam subtracted
+>   (188984 at 2.5 Å, 188968 at 1 Å). §9 reductions marked "BB in reduction" set
+>   `blockedBeamRunNumber` to the same run.
+
 **Short answer.**
 - **The banjo-subtracted water flood is the flattest flood tested.**
   - **H2O 1.3 m 1 Å, reduced with the 2.5 Å-band flood** (an independent check): at 30° the
@@ -49,6 +62,11 @@ unlike thin PMMA (Water 2, §7). This page:
 - **Flood band at 1.3 m (§8).** With the cell subtracted, the 2.5 Å-band and 1 Å-band water
   floods are within about 1 % for I(Q); each is best on its own band. Per tube they differ:
   the front/back tube-layer balance shifts by ~±1.5 % with the detected wavelength.
+- **Blocked beam at 1.3 m (§9).** The blocked beam is 1.5 % of the water counts and is
+  concentrated at the top of the detector. The PMMA flood carries it (3.5 % at the top,
+  1.25 % at the bottom), which makes every sample read ~2.3 % low at the top: a large part
+  of the PMMA flood's top–bottom asymmetry. Flood and reduction must be consistent: subtract
+  it in both or neither.
 - **AgBe is unaffected** by the flood or the incoh fit: q1 = 0.1059 / 0.1064 / 0.1071 /
   0.1071 Å⁻¹ in every case.
 
@@ -483,3 +501,139 @@ layer balance is not. For I(Q) this averages out: ≤ 0.5 % in the tables above.
   reductions. The 1 Å-band floods are now allowed on both 1.3 m bands.
 - `band_w3.py` → `w3_band_residual.png`, `w3_band_iq.png`, `w3_band_iqlambda.png`,
   `w3_band_tubes.png`, `w3_band_metrics.json` (log `logs/band_w3.out`).
+
+---
+
+## 9. Blocked-beam subtraction at 1.3 m (2026-09-25)
+
+Each 1.3 m block has a blocked-beam run (`S-blockedbeam`: **188984** at 2.5 Å, **188968** at
+1 Å; 718 s, same proton charge as the samples). In drtsans it is `blockedBeamRunNumber`. It
+is subtracted from the sample and the background, after the dark current.
+
+**What the blocked beam looks like.** Raw counts, dark subtracted (`bb_image_w3.py`):
+- **Size:** 17 000 counts/s at 2.5 Å (22 000 at 1 Å). That is 1.5 % of the H2O rate and
+  12 % of the empty banjo's.
+- **Shape:** not flat. It ramps up over the top third of the detector (pixels ~170–250),
+  has a band at beam height (pixel ~130), and shows the front/back tube striping.
+
+![blocked beam image, and what is left of it in the water](assets/water3/w3_bb_image.png)
+
+**Why the banjo subtraction does not remove it.** Without it, the blocked beam sits in the
+H2O run and in the banjo run alike. The reduction divides the sample by its transmission
+(T′ = 0.57) before subtracting the banjo (T = 1), so **BB · (1/T′ − 1) ≈ 0.75 BB stays in the
+water**:
+- **top rows:** 1.1–1.2 % of the water signal;
+- **bottom rows:** 0.4 %;
+- **middle:** about 0.5 %.
+
+**How much of it the PMMA flood carries.** The flood preparer cannot subtract a blocked
+beam. Scaling the Sept blocked beam by proton charge to the Aug PMMA flood run (186202, same
+1.3 m 2.5 Å configuration), it is **1.7 % of the flood's counts: 3.5 % at the top rows,
+1.25 % at the bottom.**
+- The flood is therefore **2.3 % too high at the top relative to the bottom**, so every
+  sample reduced with it reads that much low at the top.
+- That is a large part of the −3.3 to −3.8 % top−bottom that H2O shows with the PMMA flood
+  (§3).
+- The as-measured water flood carries +1.7 % the same way.
+- The estimate assumes the blocked-beam rate per proton was the same in August, and that it
+  is not attenuated by the sample.
+
+**New floods: banjo AND blocked beam subtracted.** The H2O runs were reduced with the PMMA
+flood and the blocked beam (`reduce_w3.py pmma <cfg> --bb --only=H2O:off`). The flood was
+then built as in §1 (`make_water_bs_floods.py --bb`):
+`2026B_mp/reduction/water3/floods/Sensitivity_H2Obsbb_1o3m_188982.nxs` (2.5 Å) and
+`…/Sensitivity_H2Obsbb_1o3m_1A_188966.nxs` (1 Å).
+
+Compared with the banjo-only floods, the new floods are **0.8 % lower at the top than at the
+bottom**, and 0.2–0.3 % lower at 20–30°.
+
+**Reductions (50 more, 1.3 m, H2O / D2O / AgBe, incoh fit off and on).** The flood band
+matches the data band. The four cases:
+
+| case | flood | blocked beam subtracted in the reduction |
+|---|---|---|
+| A | banjo subtracted (`H2Obs`) | no (§1–§8) |
+| B | banjo subtracted (`H2Obs`) | **yes** |
+| C | banjo + blocked beam subtracted (`H2Obsbb`) | no |
+| D | banjo + blocked beam subtracted (`H2Obsbb`) | **yes** |
+| X | the other band's `H2Obsbb` flood (cross test) | **yes** |
+
+For H2O with a matched flood, A and D are flat by construction (self-referential). **C − D is
+exactly what blocked-beam subtraction in the reduction does to water, with the new flood.**
+D2O and the cross-band H2O (X) are the independent tests.
+
+**Your test: the new flood, H2O reduced with and without blocked-beam subtraction (C vs D).**
+
+| H2O, 1.3 m | per pixel 20° / 30° | top − bottom | incoh ON: I(0.8) / I(1.0) / edge | I(Q, λ) spread · high-Q/plateau | plateau, incoh off |
+|---|---|---|---|---|---|
+| 1 Å, C (no BB in reduction) | +0.3 / 0.0 % | **+0.8 %** | 1.013 / 1.003 / 1.017 | 0.9 % · 1.015 | 2.519 |
+| 1 Å, D (BB in reduction) | 0.0 / −0.2 % | +0.1 % | 1.004 / 0.993 / 1.011 | 0.8 % · 1.005 | 2.509 |
+| 2.5 Å, C (no BB in reduction) | +0.5 / +0.4 % | **+1.0 %** | 1.003 / 0.997 / 0.996 | 0.5 % · 1.009 | 2.651 |
+| 2.5 Å, D (BB in reduction) | +0.2 / +0.1 % | +0.2 % | 0.997 / 0.992 / 0.992 | 0.4 % · 1.004 | 2.639 |
+
+**Yes, the results differ.**
+- Without blocked-beam subtraction in the reduction, H2O keeps the blocked beam's shape: the
+  top rows sit **+0.8 to +1.0 %** high, and the incoh-on I(Q) rises by 0.5–1 % at high Q.
+- With it, H2O is flat, as it must be with a consistent flood.
+- The absolute water level drops by **0.4 %** (the blocked beam's share).
+- The I(Q, λ) slices agree equally well either way (spread 0.4–0.9 %). The blocked beam
+  changes the shape common to all λ, not the λ agreement.
+
+![I(Q, λ) after b(λ), new flood, without / with blocked beam in the reduction](assets/water3/w3_bb_iqlambda.png)
+
+**The rule: flood and reduction must match.**
+- **Consistent:** A (blocked beam subtracted in neither) and D (in both).
+- **Mixed, and wrong:**
+  - B (old flood, blocked beam in the reduction): H2O top − bottom −0.6 to −0.7 %;
+  - C (new flood, no blocked beam in the reduction): +0.8 to +1.0 %.
+
+![vertical profile of the per-pixel residual, cases A–D and cross band](assets/water3/w3_bb_vertical.png)
+
+**Independent tests.**
+
+| | D2O 1 Å: 30° / top−bottom | D2O 2.5 Å: 30° / top−bottom | H2O cross band (X), 30° / top−bottom |
+|---|---|---|---|
+| A (no BB anywhere) | +0.9 / +0.5 % | +1.3 / +1.1 % | −0.8 / −0.4 % (1 Å data), +0.8 / +0.7 % (2.5 Å data) |
+| D (BB in flood and reduction) | +0.8 / **+0.1 %** | +1.0 / **+0.7 %** | −0.8 / −0.3 %, +0.9 / +0.6 % |
+
+- **D2O improves.** Its top−bottom drops by 0.4 % in both bands, and its high-angle excess by
+  0.1–0.3 %.
+- **The cross-band H2O difference (§8) is unchanged** (X vs X0). The flood-band effect is not
+  the blocked beam.
+- **AgBe q1 is unchanged.**
+- **D2O at the 1 Å band edge** (Q > 2.5 Å⁻¹, incoh off) changes by +4.5 % (edge / plateau
+  0.725 → 0.770). There the D2O signal is tiny, and the blocked beam is a real fraction of it.
+
+![per-pixel residual vs 2θ, cases A–D and cross band](assets/water3/w3_bb_residual.png)
+
+![combined I(Q), incoh fit on, cases A–D and cross band](assets/water3/w3_bb_iq.png)
+
+**What this means.**
+- **The blocked beam is part of the vertical deviation at 1.3 m, and a big part for the PMMA
+  flood.** It is top-heavy, it is 1–2 % of flood-level counts, and the flood preparer cannot
+  remove it.
+- **Best consistent choice here: D.** Use the banjo + blocked-beam-subtracted water flood,
+  and subtract the blocked beam in every reduction. That gives the flattest D2O, and removes
+  the blocked beam's 0.4 % from the absolute level.
+- **For PMMA floods,** the preparer would need a blocked-beam subtraction, which drtsans does
+  not offer. One option to test is passing the blocked-beam run as the flood's "dark current".
+  It is scaled by duration, so this only works if the proton rate is the same. Measuring a
+  blocked beam in the same block as every flood is needed either way. The Aug PMMA flood has
+  none.
+- **Not changed:** the `2026B_mp/` floods (PMMA, and the `H2Obs` copies) and the default
+  configuration. The `H2Obsbb` floods are in `reduction/water3/floods/` only.
+
+**Provenance (§9).** 2026-09-25, drtsans `1.34.0`, `2026B_mp/reduction/water3/`:
+- `reduce_w3.py` gained `--bb` (sets `blockedBeamRunNumber` = the block's S-blockedbeam) and
+  `--only=`. Output goes to `reduced_<set>_bb_incoh*`. New flood sets `waterbsbb` and
+  `waterbsbb1A`.
+- `reduce_w3.py pmma 1p3m_{2.5A,1A} --bb --only=H2O:off` → `make_water_bs_floods.py --bb` →
+  `floods/Sensitivity_H2Obsbb_*` (sidecar records the blocked-beam run).
+- 48 reductions:
+  - `waterbsbb` and `waterbsbb1A --bb` on both 1.3 m configs;
+  - `waterbs 1p3m_2.5A --bb` and `waterbs1A 1p3m_1A --bb`;
+  - `waterbsbb 1p3m_2.5A` and `waterbsbb1A 1p3m_1A` without `--bb`.
+- `bb_image_w3.py` → `w3_bb_image.png/.json`. The blocked-beam share in the floods →
+  `w3_bb_in_floods.json`.
+- `bb_w3.py` → `w3_bb_residual.png`, `w3_bb_vertical.png`, `w3_bb_iq.png`,
+  `w3_bb_iqlambda.png`, `w3_bb_metrics.json` (log `logs/bb_w3.out`).

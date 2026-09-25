@@ -6,6 +6,8 @@
 `2026B_mp/reduction/flood_geometry_test/` (flood fix test), `2026B_mp/prepare_sensitivity.py`
 (rebuilt floods, swapped into `2026B_mp/` on 2026-09-24)
 
+> **Blocked-beam subtraction:** not used. Every reduction on this page (2026 and 2022) has `blockedBeamRunNumber = None`; the dark current is subtracted (186198 for 2026, the 2022 cycle's own for 2022). No flood (sensitivity) file subtracts a blocked beam or a dark current (the drtsans flood preparer has no blocked-beam option). See **Water 3 §9** for its effect at 1.3 m.
+
 **Short answer.** Flat-scattering water does show a high-Q upturn, but it is **not
 water physics**. In every wavelength slice, the intensity rises with scattering
 angle: +5–6 % at 20°, +13–15 % at 30°, ~+20 % in the detector corners. The rise is

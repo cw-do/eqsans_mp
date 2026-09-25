@@ -1154,7 +1154,7 @@ function renderWater3(){
   head.append(el("h2","","Water 3 — water as the flood"));
   head.append(el("span","badge latest","H2O sensitivity · 1.3 / 2.5 / 4 m"));
   wrap.append(head);
-  wrap.append(el("div","sub","Sensitivity files made from H2O (as measured, and with the banjo cell subtracted), compared with the PMMA flood on H2O, D2O and AgBe, with the inelastic-incoherent fit off and on, including I(Q, λ)."));
+  wrap.append(el("div","sub","Sensitivity files made from H2O (as measured, and with the banjo cell subtracted), compared with the PMMA flood on H2O, D2O and AgBe, with the inelastic-incoherent fit off and on, including I(Q, λ); 2.5 Å vs 1 Å flood band (§8); blocked-beam subtraction at 1.3 m (§9)."));
   if(D.water3_md){
     const r = el("div","readme monowl");
     r.innerHTML = mdToHtml(D.water3_md);

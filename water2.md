@@ -6,6 +6,8 @@ block (IPTS-37618, 188953–188984), 1 Å and 2.5 Å bands · **scripts:**
 `reduce_w2.py` (54 reductions), `compare_floods_w2.py`, `analyze_w2.py`,
 `analyze_w2_lambda.py`
 
+> **Blocked-beam subtraction:** not used. Every reduction on this page has `blockedBeamRunNumber = None` (dark current 186198 subtracted), except the vanadium test (§7), which subtracts the 2025B Cd run 167914. No flood (sensitivity) file subtracts a blocked beam or a dark current (the drtsans flood preparer has no blocked-beam option). See **Water 3 §9** for its effect at 1.3 m.
+
 The **Water (high-Q)** tab fixed most of the 1.3 m upturn: the flood's solid-angle
 geometry now matches the reduction's. A slight rise remained, and water showed an
 upturn **even when water itself was used as the flood**, which should be flat by
