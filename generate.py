@@ -253,8 +253,10 @@ def find_sensitivity(cycle_dir):
                         e["built"] = g.get("date")
                 except (OSError, ValueError):
                     pass
+            if "h2obs" in low:                            # Water 3: H2O flood, banjo subtracted
+                e["variant"] = "water_bs"
             out.append(e)
-    out.sort(key=lambda e: (e["distance"] or 99, not e.get("recommended"), e["name"]))
+    out.sort(key=lambda e: (e["distance"] or 99, e.get("variant") == "water_bs", not e.get("recommended"), e["name"]))
     return out
 
 

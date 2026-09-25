@@ -53,10 +53,14 @@ unlike thin PMMA (Water 2, §7). This page:
 
 ## 1. The floods
 
-**Where the files are.** All eight water floods are in one folder (review only, **not**
-copied into `2026B_mp/`):
+**Where the files are.**
+- **Banjo-subtracted floods (`Sensitivity_H2Obs_*`)**: copied on 2026-09-25 into the cycle
+  folder as an **alternative** to the PMMA floods. The PMMA floods stay the default.
+  `/SNS/EQSANS/shared/NeXusFiles/EQSANS/2026B_mp/`
+- **All eight water floods** (originals, used by the reductions on this page):
+  `/SNS/EQSANS/shared/NeXusFiles/EQSANS/2026B_mp/reduction/water3/floods/`
 
-`/SNS/EQSANS/shared/NeXusFiles/EQSANS/2026B_mp/reduction/water3/floods/`
+The copies are byte-identical (md5 checked).
 
 | config | flood run (S-H2O) | beam centre | water, as measured (cell included) | **water, banjo subtracted** (recommended) |
 |---|---|---|---|---|
@@ -66,7 +70,7 @@ copied into `2026B_mp/`):
 | 4 m, 2.5 Å | 189014 | 189002 | `Sensitivity_H2O_4m_189014.nxs` | `Sensitivity_H2Obs_4m_189014.nxs` |
 
 "bs" = banjo subtracted. Each file has a `.geometry.json` sidecar with its recipe. Use them
-like any sensitivity file (`eq._sensitivityfilename = ".../water3/floods/Sensitivity_H2Obs_…"`).
+like any sensitivity file (`eq._sensitivityfilename = "/SNS/EQSANS/shared/NeXusFiles/EQSANS/2026B_mp/Sensitivity_H2Obs_…"`).
 
 Flood self-absorption transmission T_f for the as-measured floods (water + cell vs empty
 beam): 0.570 / 0.628 / 0.574 / 0.576 × 0.902 = 0.514 / 0.566 / 0.518 / 0.520 (same row

@@ -388,7 +388,9 @@ function reductionConfig(c){
   const pairs = [];
   if(c.dark_current.length) pairs.push(["DARK_CURRENT", c.dark_current[0].path]);
   // Prefer floods rebuilt with the reduction geometry when a cycle has them.
-  const sens = c.sensitivity.some(f=>f.recommended) ? c.sensitivity.filter(f=>f.recommended) : c.sensitivity;
+  // Alternative floods (Water 3 H2O, banjo subtracted) are listed on the page but not put in the config.
+  const sens0 = c.sensitivity.filter(f=>f.variant!=="water_bs");
+  const sens = sens0.some(f=>f.recommended) ? sens0.filter(f=>f.recommended) : sens0;
   if(sens.some(f=>f.variant==="redgeom")) out.push("# floods built with the AgBe reduction geometry (see Water (high-Q) tab)");
   const toks = sens.map(distToken);
   const dup = new Set(toks.filter((t,i)=>toks.indexOf(t)!==i));
@@ -474,7 +476,8 @@ function renderSummary(c){
     c.sensitivity.forEach(f => {
       const onlyNew = !c.sensitivity.some(x=>x.variant==="nominal");
       const tag = distLabel(f.distance) + (f.variant==="redgeom" ? (onlyNew ? " · reduction geometry" : " · recommended")
-                 : f.variant==="nominal" ? " · original (nominal geom.)" : "");
+                 : f.variant==="nominal" ? " · original (nominal geom.)"
+                 : f.variant==="water_bs" ? (/_1A_/.test(f.name) ? " 1 Å band" : "")+" · alternative: H2O flood, banjo subtracted (Water 3)" : "");
       const row = fileRow(f, tag);
       if(f.variant==="redgeom") row.classList.add("recommended");
       if(f.variant==="nominal") row.classList.add("superseded");
