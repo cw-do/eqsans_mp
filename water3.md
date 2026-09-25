@@ -23,6 +23,16 @@ unlike thin PMMA (Water 2, §7). This page:
   - At 2.5 m and 4 m the top–bottom asymmetry is gone.
   - Most of the PMMA flood's high-angle dip and top–bottom asymmetry therefore came from the
     flood, not from the math.
+- **The high-angle dip is PMMA's own structure.** The PMMA flood is a free-standing thin
+  sheet: no cell, so there is no background to subtract. Water with the cell removed is the
+  flattest scatterer we have. Relative to it, the PMMA flood is 1.5 % higher at 30° and
+  ~2.5 % higher at 33–35° (1.3 m), i.e. at Q ≈ 0.7–1.3 Å⁻¹. PMMA is an amorphous,
+  carbon-rich polymer with a broad intermolecular halo near 1 Å⁻¹. That excess in the
+  flood divides every sample down at high angle. It agrees with Water 2 §7, where PMMA ÷
+  vanadium rises +2.5 % at 0.6 Å⁻¹ and +4 % at 1.0 Å⁻¹.
+- **The top–bottom part has a different cause.** Isotropic sample structure cannot make the
+  top and bottom of the detector differ. That part cancels because the water flood is
+  measured in the same banjo and holder as the samples, and the PMMA sheet is not (§1).
 - **Quartz matters.** A water flood that still contains the cell sits 1–2 % lower at 30–35°
   (1.3 m) than the same flood with the cell removed. The cell's scattering has high-Q excess.
 - **Combined I(Q) with the incoh fit off still droops** for H2O at 1.3 m: I(1.0)/plateau is
@@ -80,9 +90,17 @@ The preparer cannot subtract a background, so this flood is built from the H2O
 
 ![water ÷ PMMA flood vs 2θ, by direction; dashed = banjo-subtracted water ÷ PMMA](assets/water3/w3_flood_ratio.png)
 
+The PMMA flood (`2026B_mp/sensitivity_selfabs/`) is a thin PMMA sheet mounted on its own,
+with no cell. The flood run is PMMA alone, and nothing needs subtracting. The background
+question only arises for the water floods, whose water sits in a quartz banjo.
+
 Each ratio is normalised to its 3–6° level.
 - **Radially, the as-measured water flood ≈ the PMMA flood**, within ±0.5 % out to 30° at
-  1.3 m.
+  1.3 m. This is a coincidence of two excesses: the quartz cell in the water flood roughly
+  matches PMMA's own high-Q scattering.
+- **With the cell removed (dashed), water is below PMMA at high angle**: −0.4 % at 25°,
+  −1.5 % at 30°, ~−2.5 % at 33–35° (1.3 m). This is the PMMA's structure (amorphous-polymer
+  halo near 1 Å⁻¹), seen directly.
 - **Vertically they differ.** The water flood's top − bottom is −2.6 / −1.4 / −0.6 % at
   1.3 / 2.5 / 4 m (−3.5 / −2.0 / −0.8 % banjo-subtracted). The water floods, being measured in
   the same banjo and holder as the samples, carry the same vertical pattern the samples do.
@@ -273,6 +291,12 @@ Reading the panels:
 - **H2O works as a flood.** Built from the same banjo samples, it removes most of the PMMA
   flood's high-angle dip and its top–bottom asymmetry. The H2O 1 Å independent test at 30°
   goes −2.5 → −0.8 %.
+- **PMMA scatters more near 1 Å⁻¹; that is the dip.** The PMMA flood is a bare sheet with no
+  background, so the 1.5–2.5 % it has above cell-free water at 30–35° is its own structure.
+  PMMA is a carbon-rich amorphous polymer with a broad halo near 1 Å⁻¹. It is the same
+  excess Water 2 found against vanadium. At 2.5 m and 4 m, cell-free water ÷ PMMA stays within
+  ±0.1 % out to 15° (2.5 m) and 5° (4 m), so a thin PMMA flood is fine there. At 1.3 m its
+  high-angle pixels (2θ > ~25°) carry this structure.
 - **Subtract the cell.** The banjo's quartz has high-Q structure. Left in the flood, it costs
   1–2 % at 30–35° (1.3 m) and up to ~3 % in the 1 Å band. The preparer cannot subtract a
   background, so the banjo-subtracted flood here is built from a reduction. That is a
