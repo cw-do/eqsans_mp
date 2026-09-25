@@ -53,12 +53,24 @@ unlike thin PMMA (Water 2, §7). This page:
 
 ## 1. The floods
 
-| name | flood run (S-H2O) | beam centre | T_f (water + cell vs empty) | file (`water3/floods/`) |
+**Where the files are.** All eight water floods are in one folder (review only, **not**
+copied into `2026B_mp/`):
+
+`/SNS/EQSANS/shared/NeXusFiles/EQSANS/2026B_mp/reduction/water3/floods/`
+
+| config | flood run (S-H2O) | beam centre | water, as measured (cell included) | **water, banjo subtracted** (recommended) |
 |---|---|---|---|---|
-| 1.3 m, 2.5 Å | 188982 | 188970 | 0.570 × 0.902 = 0.514 | `Sensitivity_H2O_1o3m_188982.nxs` |
-| 2.5 m, 2.5 Å | 188998 | 188986 | 0.574 × 0.902 = 0.518 | `Sensitivity_H2O_2o5m_188998.nxs` |
-| 4 m, 2.5 Å | 189014 | 189002 | 0.576 × 0.902 = 0.520 | `Sensitivity_H2O_4m_189014.nxs` |
-| 1.3 m, 1 Å | 188966 | 188954 | 0.628 × 0.902 = 0.566 | `Sensitivity_H2O_1o3m_1A_188966.nxs` |
+| 1.3 m, 2.5 Å | 188982 | 188970 | `Sensitivity_H2O_1o3m_188982.nxs` | `Sensitivity_H2Obs_1o3m_188982.nxs` |
+| 1.3 m, 1 Å | 188966 | 188954 | `Sensitivity_H2O_1o3m_1A_188966.nxs` | `Sensitivity_H2Obs_1o3m_1A_188966.nxs` |
+| 2.5 m, 2.5 Å | 188998 | 188986 | `Sensitivity_H2O_2o5m_188998.nxs` | `Sensitivity_H2Obs_2o5m_188998.nxs` |
+| 4 m, 2.5 Å | 189014 | 189002 | `Sensitivity_H2O_4m_189014.nxs` | `Sensitivity_H2Obs_4m_189014.nxs` |
+
+"bs" = banjo subtracted. Each file has a `.geometry.json` sidecar with its recipe. Use them
+like any sensitivity file (`eq._sensitivityfilename = ".../water3/floods/Sensitivity_H2Obs_…"`).
+
+Flood self-absorption transmission T_f for the as-measured floods (water + cell vs empty
+beam): 0.570 / 0.628 / 0.574 / 0.576 × 0.902 = 0.514 / 0.566 / 0.518 / 0.520 (same row
+order).
 
 **Water flood, as measured** (`make_water_floods.py`). It uses exactly the production recipe:
 - `tools/sensitivity/prepare_sensitivity.py`, imported, not copied;
