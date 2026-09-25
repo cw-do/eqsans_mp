@@ -489,6 +489,7 @@ def collect_plots(cycle_dir, cycle_id):
                        and d != "flood_geometry_test"
                        and d != "water2"         # has its own Water 2 tab
                        and d != REDGEOM_SUBDIR   # its plot is on the Water tab
+                       and d != "sensitivity_selfabs"   # its plot is on the Water 2 tab
                        and d != "flux"           # pipeline scaffold; curated below
                        and not PRESERVED_RE.search(d)]   # preserved *.OLD_* dirs
         for f in filenames:

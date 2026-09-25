@@ -25,7 +25,13 @@ and that loss comes back as a rise in every reduced sample:
 at 20° (−0.8 % … +0.2 %). What is left is a ±1–2 % *direction-dependent* pattern:
 - **horizontal:** a wavelength-dependent detector effect;
 - **vertical:** tied to the banjo cell / holder.
-Neither is the sample position, which is ruled out.
+
+Neither is the sample position, which is ruled out. Beyond ~25° a further ~2 % dip
+remains. **Vanadium shows it too**, so it is not water physics; PMMA not being flat in Q
+explains only part of it (§7). **Suggestion (§8):** keep thin-PMMA floods, now corrected
+for their own self-absorption in `prepare_sensitivity.py` (§9), and measure vanadium in the
+same cycle next time. drtsans's inelastic-incoherent correction makes the dip worse, not
+better.
 
 All numbers below are for **per-pixel, per-wavelength** data. Each 0.1 Å wavelength
 bin of each pixel is taken from the reduction's `_processed.nxs`, normalised to its
@@ -137,11 +143,8 @@ T_f = 0.630. The correction raises the flood by 0.4 % at 10°, 1.5 % at 20° and
 
 Before this fix the same data rose +0.7–1.6 % at 20°, and H2O / D2O +1.5–3.4 % at 30°.
 
-**Not resolved: beyond ~25° all three samples dip by 2–4 %** in this figure (H2O about
-−2 % at 30°, PMMA about −4 %). Out there only the detector **corners** remain, and after
-the Q < 0.9 Å⁻¹ cut only long wavelengths at Q ≈ 0.8–0.9 Å⁻¹. The dip mixes each sample's
-own structure at that Q with whatever the corner pixels do, and this study cannot
-separate them. So "flat" on this page means flat to 20–25°.
+**Beyond ~25° all three samples dip by 2–4 %** in this figure (H2O about −2 % at 30°,
+PMMA about −4 %). §7 investigates this dip; its cause is only partly pinned down.
 
 ## 5. What is left: ±1–2 %, depending on direction
 
@@ -194,11 +197,11 @@ In order of size:
    configuration. A 1 Å-band flood for 1 Å data would already remove most of it.
 
 With (1) alone, H2O is flat to ≤ 0.8 % at 20° in the all-pixel average, and within
-about ±2 % in any direction, up to ~25°. The 2–4 % dip in the corners beyond 25° (§4) is
-still open.
+about ±2 % in any direction, up to ~25°. The ~2 % dip beyond 25° (§7) is
+only partly explained.
 
-**Not changed:** the production floods in `2026B_mp/` are unchanged by this page.
-The self-absorption-corrected flood is a test file in `water2/floods/`.
+**Not changed yet:** the production floods in `2026B_mp/`. The corrected floods are
+in `2026B_mp/sensitivity_selfabs/` for review (§9).
 
 **Caveats:**
 - The banjo-referenced transmissions used here (no empty-beam run in the Sept
@@ -206,6 +209,140 @@ The self-absorption-corrected flood is a test file in `water2/floods/`.
   reduction used 0.699 where the true value is 0.630; the analysis corrects that.
 - The vertical-wedge result rests on one block of data and on the holder
   hypothesis, which has not been checked physically.
+
+## 7. The dip beyond ~25° (2026-09-25)
+
+**Is it the sample's Q-structure or an angle effect?** The same Q is seen at different
+angles by different wavelengths. Each wavelength is normalised at the same low-Q
+plateau (Q 0.10–0.20 Å⁻¹). Then, for narrow Q windows, intensity is plotted against the
+angle at which that Q is seen:
+- a flat line per Q window means **sample structure**;
+- all windows bending together means an **angle effect**.
+
+![Fixed-Q windows versus angle](assets/water2/w2_dip_q_vs_angle.png)
+
+- **H2O: all six Q windows collapse onto one falling curve.** −2 % at 30°, −3 % at 35°.
+  It is an **angle** effect, the same at every wavelength. It is not water's structure,
+  which is flat to Q ≈ 1.1 Å⁻¹.
+- **PMMA:** the same gentle angular fall, plus its own structure (windows at higher Q
+  sit higher).
+- **D2O:** too weak and noisy to separate; it dips less.
+
+**Vanadium test.** On 2025-08-21 (IPTS-36254, cycle 2025B) **7.7 mm vanadium** and
+**2.3 mm PMMA** were measured at 1.3 m / 2.5 Å on the same day:
+
+| sample | run | its transmission run |
+|---|---|---|
+| vanadium | 167898 | 167895 |
+| PMMA | 167897 | 167894 |
+| empty | 167896 | 167893 |
+| Cd (blocked beam) | 167914 | — |
+
+The scattering runs are titled "T-" but are 48 min with the beamstop in. Vanadium
+scatters almost purely elastically and isotropically, with no structure below
+Q ≈ 2.9 Å⁻¹. It is a free-standing plate, with no cell.
+
+Both were reduced identically: a 2025B flood built with the current recipe (reduction
+geometry + flood self-absorption), θ-correction on, empty-beam and blocked-beam
+subtraction.
+
+![Vanadium: alone, fixed-Q, PMMA ÷ V, and the flood-structure prediction](assets/water2/w2_vanadium.png)
+
+- **(a) Vanadium dips too:** −0.9 % at 20°, −1.6 % at 30°, and horizontally ≈ vertically.
+  So the dip is **not water physics, not hydrogen inelasticity, and not the banjo cell**.
+  It is common to every sample reduced with the PMMA flood. **(d)** H2O (2026B) follows
+  vanadium closely.
+- **(c) PMMA is not a flat scatterer.** Relative to vanadium it rises with Q: +2.5 % by
+  Q ≈ 0.6, +4 % by 1.0, +9 % by 1.2 Å⁻¹, toward its amorphous peak. A PMMA flood is PMMA
+  summed over wavelength, so at a large-angle pixel it carries that higher-Q excess.
+  Dividing by it lowers every sample there. **The sign is right, but a simple estimate
+  (dashed in d) is 2–3× too big:** −2.4 % at 20° and −4.3 % at 30°, against the measured
+  −0.9 % and −1.6 %. So PMMA's structure is at most part of the story. Multiple scattering
+  and detector response at oblique incidence remain candidates.
+- **A water flood would not remove it.** After the self-absorption correction, water and
+  PMMA floods have the same angular shape (§2: H2O ÷ PMMA follows the pure self-absorption
+  curve). D2O comes out the same with either flood.
+- **Referencing to vanadium** (dividing the 2026B results by vanadium's angular curve;
+  indicative only, across cycles) flattens H2O in the 1 Å band (0.0 % at 20°, −0.7 % at
+  30°). It over-corrects H2O in the 2.5 Å band (+0.9 %) and D2O (+1.0 to +1.7 %). At the
+  ±1 % level several effects compete, and a cross-cycle vanadium reference can't settle it.
+
+**drtsans's inelastic-incoherent correction** (`fitInelasticIncoh`) does not help. It
+subtracts a constant b(λ) per wavelength, referenced to the lowest slice — here the
+band-edge slice, which is normalised too low. Subtracting a constant from a slice with a
+multiplicative angular error amplifies that error by about level ÷ (level − b) ≈ 1.5×:
+
+![Before vs after the inelastic-incoherent correction](assets/water2/w2_incoh_effect.png)
+
+| 30° | H2O 1 Å | H2O 2.5 Å | D2O 2.5 Å | PMMA 1 Å | PMMA 2.5 Å |
+|---|---|---|---|---|---|
+| before b(λ) | −2.6 % | −1.7 % | −1.3 % | −3.5 % | −3.6 % |
+| after b(λ) | **−7.7 %** | **−3.1 %** | **−2.4 %** | **−9.4 %** | **−6.6 %** |
+
+It is meant for a coherent signal on an incoherent background. It is not an instrument
+correction, and it cannot be applied to a flood: a flood is one number per pixel, with
+no Q or λ axis.
+
+**Where this leaves the dip:**
+- about −1 % at 20° and −2 % at 30° at 1.3 m;
+- common to all samples, vanadium included;
+- from the flood material and/or the instrument;
+- partly explained by PMMA not being flat in Q, not fully.
+
+## 8. Suggestions
+
+1. **Keep thin PMMA as the flood material; don't switch to water.** Once each flood is
+   corrected for its own self-absorption, water and PMMA give the same angular shape.
+   Water adds container scattering and vertical clipping (§5), stronger self-absorption
+   and multiple scattering, more inelasticity, and liquid handling.
+2. **Correct floods for their own self-absorption** — done in `prepare_sensitivity.py`
+   (§9). It removes the largest piece (+1.5 % at 20° / +3.6 % at 30°).
+3. **Don't use the inelastic-incoherent correction to flatten standards.** It amplifies
+   angular residuals (§7). Use it only where a coherent signal sits on an incoherent
+   background.
+4. **Next machine-physics beamtime:**
+   - a **vanadium** run at 1.3 m (48 min was enough) in the same cycle as the floods — the
+     reference that is truly flat; with it, a smooth vanadium-derived angular correction
+     can be tested against the PMMA flood;
+   - a **T-PMMA** transmission with every flood;
+   - **water in the same banjo cell and holder** as the samples, for the vertical clipping;
+   - a **flood in the 1 Å band** if short-wavelength 1.3 m data matter;
+   - an **empty-beam run in each block**.
+
+## 9. Built into `prepare_sensitivity.py`; 2026B floods rebuilt (2026-09-25)
+
+`prepare_sensitivity.py` (the 2026B copy and the `tools/sensitivity/` master) now
+corrects the flood for its own self-absorption. It fills the hook drtsans leaves
+unimplemented for EQSANS (`_apply_transmission_correction`) with **the same drtsans
+function reductions apply to samples** — `apply_transmission_correction(ws,
+trans_value = T_f, theta_dependent = True)`. At that point the flood workspace
+carries the reduction geometry, so flood and sample are corrected identically.
+
+- **The transmission** is `FLOOD_TRANSMISSION = {4m, 2.5m, 1.3m: 0.630}`: the
+  Sept-23 thin PMMA, measured as 0.699 vs the empty banjo × 0.902 banjo vs empty
+  beam. The August flood PMMA and the Sept PMMA agree pixel for pixel, so it is the
+  same sheet.
+- **Each flood's `.geometry.json`** now also records `flood_self_absorption` (T and
+  its source).
+- **Options:** `--no-selfabs` turns it off. `--nominal` floods (pass 1 of a new
+  cycle) are left uncorrected.
+- **The previous script** is kept as
+  `2026B_mp/legacy/prepare_sensitivity_2026B_no_selfabs.py`.
+
+The three 2026B floods were rebuilt into **`2026B_mp/sensitivity_selfabs/`** for
+review. **The files in `2026B_mp/` are not replaced yet.**
+
+![Effect of the self-absorption-corrected floods on reduced I](assets/water2/flood_selfabs_vs_production.png)
+
+| distance | 10° | 20° | 30° | edge | matches T_f^((sec 2θ−1)/2) to |
+|---|---|---|---|---|---|
+| 1.3 m | −0.3 % | −1.4 % | −3.5 % | −5.0 % at 35° | 1 × 10⁻⁴ |
+| 2.5 m | −0.3 % | — | — | −1.2 % at 18.5° | 3 × 10⁻⁷ |
+| 4 m | −0.3 % | — | — | −0.4 % at 11.5° | 1 × 10⁻⁶ |
+
+The rebuilt 1.3 m flood equals the test flood of §4 — the one that made H2O, D2O and
+PMMA flat at 20° — to ±0.012 % (1st–99th percentile of pixels). So §4's results hold
+for it unchanged. Validation: `2026B_mp/sensitivity_selfabs/validate_selfabs.py`.
 
 **Provenance.** 2026-09-25, drtsans `1.34.0`, `2026B_mp/reduction/water2/`:
 - `make_floods_w2.py` → floods from Sept H2O (188982, 188966) and PMMA (188981).
@@ -215,3 +352,9 @@ The self-absorption-corrected flood is a test file in `water2/floods/`.
 - `compare_floods_w2.py` → flood ratios.
 - `analyze_w2.py` → model vs measurement and the corrected flood.
 - `analyze_w2_lambda.py` → wavelength / direction split and the λ-resolved flood.
+- `analyze_w2_dip.py` → fixed-Q windows vs angle.
+- `make_flood_2025B.py`, `reduce_vanadium.py`, `analyze_vanadium.py` → the vanadium test
+  (IPTS-36254 runs 167893–167914), `vref_emulation.py` → the vanadium-referenced numbers.
+- `incoh_effect.py` → before / after the inelastic-incoherent correction.
+- `2026B_mp/prepare_sensitivity.py` → `2026B_mp/sensitivity_selfabs/` (§9),
+  `validate_selfabs.py` → its figure and numbers.

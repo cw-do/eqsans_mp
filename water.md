@@ -37,9 +37,9 @@ Water shows up there only as the *flood* for old sensitivity files (2013A, 2013B
 |---|---|---|---|---|
 | **37618** | 2026B | **188953–189016** (2026-09-23) | broadband standards block: `H2O_1mm`, `D2O_1mm` + PeltierWindow, banjo, porsil, AgBe, PMMA, blocked beam at **1.3 m 1 Å**, **1.3 m 2.5 Å**, 2.5 m 2.5 Å, 4 m 2.5 Å (`MCON16 = 0`) | **all four configs reduced** |
 | 37618 | 2026B | 187505–187584 (2026-08-29 → 31) | **monochromatic** (`MCON16 = 1`) H2O / D2O at **4 m only**: λ 0.5–10 Å, dλ/λ 5/10/15 %, room temp + 65 °C, transmission through attenuators (d25mm, d15mm, d5mm, d25Cd) | not reduced — no 1.3 m setting, and no empty-beam run was taken |
-| 36254 | 2026A | — | no water (has a vanadium 2-hour series) | — |
-| 34965 | 2025B | 160708, 160709 | `S-80sps_10k_5wt_d2o_100N_80C` — a user polymer in D2O (22 s, 777 s), not a water standard | excluded |
-| 33626 | 2025A | — | no water | — |
+| 36254 | 2025B | — | no water (has vanadium: 7.7 mm at 1.3 m 2.5 Å on 2025-08-21, and a 4 m 2-hour series) | — (vanadium used on the **Water 2** tab) |
+| 34965 | 2025A | 160708, 160709 | `S-80sps_10k_5wt_d2o_100N_80C` — a user polymer in D2O (22 s, 777 s), not a water standard | excluded |
+| 33626 | 2024B | — | no water | — |
 | 31849 | 2023A | — | no water | — |
 | 30047 | 2022B | — | no water (13 runs) | — |
 | **28942** | 2022A | 72 runs, three campaigns | 2022-01-04 H2O only (4 m 2.5/10/12 Å, 2.5 m 2.5/1.5 Å, **1.3 m 2.5/1 Å**, 9 m 15 Å); 2022-05-19 H2O + D2O (4 m, 2.5 m, **1.3 m 2.5 Å**); 2022-05-20 → 22 H2O + D2O (4 m, 2.5 m, **1.3 m 2.5/1 Å**, 8 m, 9 m) | **the five 1.3 m sets reduced** |
@@ -387,8 +387,7 @@ mismatch and would need the same rebuild.
 
 **Follow-ups:** rebuild earlier cycles' floods if their data will be
 re-reduced; report the missing offset setter to the drtsans team; the 4 m monochromatic water series (needs empty-beam runs matched to
-its attenuators); the IPTS-36254 vanadium series, a λ-independent elastic flat
-scatterer that would confirm the angular factor without any water physics; and a
+its attenuators); the IPTS-36254 vanadium (used on the Water 2 tab); and a
 fix for the band-edge slice (drop the first 0.1 Å bin or tighten the TOF cut).
 
 **Provenance.** 2026-09-24, drtsans `1.34.0`:
