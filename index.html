@@ -243,6 +243,7 @@
       <button data-view="monowl4">monoWL4</button>
       <button data-view="monowl5">monoWL5</button>
       <button data-view="water">Water (high-Q)</button>
+      <button data-view="water2">Water 2</button>
       <button data-view="atten">Atten (trans)</button>
     </div>
   </nav>
@@ -1125,6 +1126,24 @@ function renderWater(){
   return wrap;
 }
 
+function renderWater2(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Water 2 — the remaining upturn"));
+  head.append(el("span","badge latest","1.3 m · per pixel, per λ"));
+  wrap.append(head);
+  wrap.append(el("div","sub","After the flood-geometry fix, water still rose slightly at high Q — even with water itself as the flood. Where the rest comes from, and what it takes to make H2O flat."));
+  if(D.water2_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.water2_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No Water 2 documentation found. Add doc/water2.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderAtten(c){
   const wrap = el("div");
   wrap.append(el("div","sectitle","Attenuation for transmission (monochromatic)"));
@@ -1210,6 +1229,7 @@ function render(){
   if(view==="monowl4"){ main.append(renderMonowl4()); return; }
   if(view==="monowl5"){ main.append(renderMonowl5()); return; }
   if(view==="water"){ main.append(renderWater()); return; }
+  if(view==="water2"){ main.append(renderWater2()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }
@@ -1263,7 +1283,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});

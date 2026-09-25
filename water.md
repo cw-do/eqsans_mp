@@ -357,6 +357,12 @@ keeps the build logs and `validate_floods.py`. `check_sensitivity.py` (2026B and
 **Not changed:** `instrument_configuration/`. Earlier cycles' floods have the same
 mismatch and would need the same rebuild.
 
+> **Follow-up (2026-09-25) — see the Water 2 tab.** The slight rise that remained
+> (and the upturn seen even with water as the flood) is the flood's own
+> self-absorption: drtsans corrects every sample for it but cannot correct an EQSANS
+> flood. A flood corrected for its own self-absorption makes H2O, D2O and PMMA flat
+> at 20°.
+
 ## Verdict
 
 1. **Water's "strange upturn" at high Q is instrumental.** Within every wavelength,

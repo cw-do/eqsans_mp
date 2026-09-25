@@ -487,6 +487,7 @@ def collect_plots(cycle_dir, cycle_id):
                        and d != "reduced_water"  # has its own Water tab
                        and d != "solid_angle_audit"
                        and d != "flood_geometry_test"
+                       and d != "water2"         # has its own Water 2 tab
                        and d != REDGEOM_SUBDIR   # its plot is on the Water tab
                        and d != "flux"           # pipeline scaffold; curated below
                        and not PRESERVED_RE.search(d)]   # preserved *.OLD_* dirs
@@ -1044,6 +1045,24 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(wsrc, f), os.path.join(wdest, f))
 
+    # Water-2 study (residual water upturn after the flood-geometry fix):
+    # doc/water2.md, figures in doc/water2_assets/ -> assets/water2/.
+    water2_md = None
+    w2p = os.path.join(DOC_DIR, "water2.md")
+    if os.path.isfile(w2p):
+        try:
+            with open(w2p, errors="replace") as fh:
+                water2_md = fh.read()
+        except OSError:
+            water2_md = None
+    w2src = os.path.join(DOC_DIR, "water2_assets")
+    if water2_md and os.path.isdir(w2src):
+        w2dest = os.path.join(ASSETS_DIR, "water2")
+        os.makedirs(w2dest, exist_ok=True)
+        for f in os.listdir(w2src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(w2src, f), os.path.join(w2dest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -1054,6 +1073,7 @@ def main():
         "monowl4_md": monowl4_md,
         "monowl5_md": monowl5_md,
         "water_md": water_md,
+        "water2_md": water2_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")
