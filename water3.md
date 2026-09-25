@@ -38,7 +38,10 @@ unlike thin PMMA (Water 2, §7). This page:
 - **Combined I(Q) with the incoh fit off still droops** for H2O at 1.3 m: I(1.0)/plateau is
   0.80 (2.5 Å) and 0.90 (1 Å), whatever the flood. This droop is in **wavelength**, not angle.
   The I(Q, λ) slices of H2O differ in level by ~9.5 %, and high Q comes only from the
-  short-λ slices, which are the low ones. A λ-independent flood cannot fix that.
+  short-λ slices, which are the low ones. Each slice is flat in Q, so the offset is one
+  factor per λ, common to every pixel. It is a **λ-normalisation** issue (flux spectrum,
+  overall efficiency, H2O inelastic), not pixel-to-pixel sensitivity. The flood is the wrong
+  place to fix it.
 - **With the incoh fit on, H2O is flat** (waterbs flood: I(1.0)/plateau 0.99 in both bands),
   and the I(Q, λ) slices overlap to 0.4–1 %. However, the fit removes most of H2O's own
   signal as "b(λ)". The absolute level drops from ~2.6 cm⁻¹ to 0.87–1.95 cm⁻¹ and differs
@@ -208,12 +211,25 @@ comes only from the shortest λ. The I(Q, λ) slices of H2O are not at the same 
 "before" panels): the short-λ slices sit up to ~30 % below the long-λ ones (slice spread ~9.5 %). So the combined
 curve falls wherever only short λ contribute.
 
-This is a λ-dependent intensity, which could come from two things:
-- H2O's inelastic scattering, whose apparent cross-section depends on incident λ;
-- a λ-dependent detector efficiency.
+Within each slice, the level is flat in Q, i.e. the same at small and large angle. So the
+offset is **one factor per wavelength, common to every pixel**. It is not a pixel-to-pixel
+(sensitivity) effect. The flood only has to give the *relative* efficiency of each pixel,
+and that is essentially the same at every λ. A global λ factor belongs in the wavelength
+normalisation instead. Candidates:
+- the flux spectrum (`bl6_flux_2026B_aug_rebinned.txt`) versus what the detector actually
+  sees;
+- the detector's overall efficiency versus λ, if the flux file does not include it;
+- H2O's inelastic scattering, whose apparent cross-section depends on incident λ.
 
-**A λ-independent flood cannot correct it.** This is the same wavelength effect noted in
-Water 2.
+This is the same wavelength effect noted in Water 2.
+
+**Pixel-relative λ dependence is small.**
+- At 1.3 m, oblique incidence and front/back-tube shadowing make large-angle pixels slightly
+  λ-dependent relative to central ones: Water 2 §5 measured +0.3 … +1.9 % at 20°, horizontal
+  only.
+- In §3 here, a 1 Å-band vs a 2.5 Å-band flood differ by ≤ 1 %.
+
+Both are second-order and limited to the 1.3 m high-angle pixels.
 
 ---
 
@@ -302,8 +318,10 @@ Reading the panels:
   background, so the banjo-subtracted flood here is built from a reduction. That is a
   two-step recipe, not a drop-in replacement.
 - **The combined-I(Q) droop at 1.3 m is not a flood problem.** It is the λ-dependent level of
-  the I(Q, λ) slices (§4, §6). It needs a λ-dependent correction, either the incoh fit
-  (shape only) or a wavelength-resolved efficiency or flood. The flood choice moves it by
+  the I(Q, λ) slices (§4, §6): one factor per λ, common to all pixels. It belongs in the
+  wavelength normalisation (flux spectrum / overall efficiency), not in the sensitivity.
+  Pixel-to-pixel sensitivity is essentially λ-independent (≤ 1–2 %, 1.3 m high angle only).
+  The incoh fit hides the effect but only gives shape. The flood choice moves it by
   < 1 %.
 - **The incoh fit makes H2O flat but is not absolute.** It also shifts D2O's plateau. Use it
   for shape and background-level checks, not for absolute calibration.
