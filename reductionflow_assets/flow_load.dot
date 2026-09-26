@@ -1,0 +1,19 @@
+digraph G { 
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.42];
+  node  [fontname="Helvetica", fontsize=12, shape=box, style="rounded,filled", fillcolor="#f4f3ef", color="#8f8d85", penwidth=1.1, margin="0.18,0.08"];
+  edge  [fontname="Helvetica", fontsize=10.5, color="#5b5a55", arrowsize=0.75];
+ rankdir=TB;
+  f [label="event file of one run\n(neutron events: pixel id + time of flight)", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  g [label="geometry\nsample–detector distance = detectorZ (log) + detectorOffset − sampleOffset\nscaleComponents (x, y, z pixel scaling) · optional pixel calibration", fillcolor="#fdf0e2", color="#d59a55"];
+  t [label="time-of-flight corrections\nframe (which pulse the neutron came from, incl. frame skipping)\npath to each pixel · moderator emission-time delay", fillcolor="#fdf0e2", color="#d59a55"];
+  c [label="beam centre\ncentre of mass of the beam-centre run (direct beam)\n→ detector shifted so the beam is at (0, 0)", fillcolor="#fdf0e2", color="#d59a55"];
+  b [label="wavelength band(s)\nfrom the chopper phases/speeds in the logs\n(1 band at 60 Hz; 2 bands with frame skipping at 30 Hz)", fillcolor="#fdf0e2", color="#d59a55"];
+  clip [label="clip the band edges\ncutTOFmin / cutTOFmax (µs) removed at each end of the frame", fillcolor="#fdf0e2", color="#d59a55"];
+  h [label="histogram in wavelength\nwavelengthStep (0.1 Å) → workspace: counts(pixel, λ)\n+ initial uncertainties √N", fillcolor="#fdf0e2", color="#d59a55"];
+  o [label="raw run (counts per pixel × λ bin)", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  oth [label="all OTHER runs of the reduction\n(background, transmission, empty, blocked beam)\nare loaded in the SAMPLE's band\n(must match within 0.1 Å); the dark run is loaded on its own", shape=box, style="filled,dashed", fillcolor="#ffffff", color="#d59a55", fontsize=10.5];
+  cfg [label="config: sampleOffset, detectorOffset, scaleComponents,\nusePixelCalibration, beamCenter.runNumber, cutTOFmin, cutTOFmax,\nwavelengthStep, wavelengthStepType", shape=box, style="filled", fillcolor="#fffbe6", color="#d8c66a", fontsize=10];
+  f -> g -> t -> c -> b -> clip -> h -> o;
+  h -> oth [style=dashed, arrowhead=none];
+  cfg -> g [style=dotted, arrowhead=none];
+}

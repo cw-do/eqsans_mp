@@ -1135,6 +1135,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w6src, f), os.path.join(w6dest, f))
 
+    # Reduction-flow page: doc/reductionflow.md, doc/reductionflow_assets/*.png -> assets/reductionflow/.
+    reductionflow_md = None
+    rfp = os.path.join(DOC_DIR, "reductionflow.md")
+    if os.path.isfile(rfp):
+        try:
+            with open(rfp, errors="replace") as fh:
+                reductionflow_md = fh.read()
+        except OSError:
+            reductionflow_md = None
+    rfsrc = os.path.join(DOC_DIR, "reductionflow_assets")
+    if reductionflow_md and os.path.isdir(rfsrc):
+        rfdest = os.path.join(ASSETS_DIR, "reductionflow")
+        os.makedirs(rfdest, exist_ok=True)
+        for f in os.listdir(rfsrc):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(rfsrc, f), os.path.join(rfdest, f))
+
     # Blocked-beam study: doc/blockedbeam.md, doc/blockedbeam_assets/ -> assets/blockedbeam/.
     blockedbeam_md = None
     bbp = os.path.join(DOC_DIR, "blockedbeam.md")
@@ -1168,6 +1185,7 @@ def main():
         "water5_md": water5_md,
         "water6_md": water6_md,
         "blockedbeam_md": blockedbeam_md,
+        "reductionflow_md": reductionflow_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")

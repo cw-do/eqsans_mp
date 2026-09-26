@@ -242,6 +242,7 @@
       <button data-view="monowl3">monoWL3</button>
       <button data-view="monowl4">monoWL4</button>
       <button data-view="monowl5">monoWL5</button>
+      <button data-view="reductionflow">Reduction flow</button>
       <button data-view="water">Water (high-Q)</button>
       <button data-view="water2">Water 2</button>
       <button data-view="water3">Water 3</button>
@@ -1242,6 +1243,24 @@ function renderBlockedBeam(){
   return wrap;
 }
 
+function renderReductionFlow(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Reduction flow — how drtsans reduces EQSANS data"));
+  head.append(el("span","badge latest","drtsans 1.34.0 · EQSANS"));
+  wrap.append(head);
+  wrap.append(el("div","sub","Step by step, from event files to I(Q): loading and wavelength conversion, the per-run correction chain, transmission, background subtraction and scaling, Q conversion, per-λ corrections and binning, the flood preparation, and what our studies found about each step."));
+  if(D.reductionflow_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.reductionflow_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No reduction-flow documentation found. Add doc/reductionflow.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderAtten(c){
   const wrap = el("div");
   wrap.append(el("div","sectitle","Attenuation for transmission (monochromatic)"));
@@ -1333,6 +1352,7 @@ function render(){
   if(view==="water5"){ main.append(renderWater5()); return; }
   if(view==="water6"){ main.append(renderWater6()); return; }
   if(view==="blockedbeam"){ main.append(renderBlockedBeam()); return; }
+  if(view==="reductionflow"){ main.append(renderReductionFlow()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }
@@ -1386,7 +1406,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});

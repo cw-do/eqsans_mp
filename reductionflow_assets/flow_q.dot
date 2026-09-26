@@ -1,0 +1,14 @@
+digraph G { 
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.42];
+  node  [fontname="Helvetica", fontsize=12, shape=box, style="rounded,filled", fillcolor="#f4f3ef", color="#8f8d85", penwidth=1.1, margin="0.18,0.08"];
+  edge  [fontname="Helvetica", fontsize=10.5, color="#5b5a55", arrowsize=0.75];
+ rankdir=TB;
+  pn [label="processed I(pixel, λ)", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  q [label="Q for every pixel × λ bin: Q = 4π sin θ / λ   (1D |Q| and 2D Qx, Qy)\n+ resolution σQ (apertures, pixel size, λ spread, moderator time)", fillcolor="#fbeaea", color="#cf7070"];
+  fr [label="split by frame\n(frame skipping: the two bands are kept apart)", fillcolor="#fbeaea", color="#cf7070"];
+  el [label="[optional] elastic-reference normalization k(λ)\neach λ slice × k(λ) from a reference run, so all slices share one scale", fillcolor="#fbeaea", color="#cf7070"];
+  inc [label="[optional] inelastic-incoherent correction b(λ)   (fitInelasticIncoh)\nbin each λ slice → subtract a constant b(λ) so each slice matches the reference slice\n(selectMinIncoh: reference = slice with the smallest b; Q range: incohfit_qmin/qmax/factor)", fillcolor="#fbeaea", color="#cf7070"];
+  bin [label="final binning of all (pixel, λ) points together\n1D: scalar / wedge / annular · log or linear · numQBins or LogQBinsPerDecade · Qmin, Qmax\n2D: numQxQyBins · useErrorWeighting (1/σ² weights)", fillcolor="#fbeaea", color="#cf7070"];
+  o [label="_Iq.dat (1D)  ·  _Iqxqy.dat / .h5 (2D)  ·  plots\ninfo/…/IQ_<λ>_before/after_b_correction.dat   (outputWavelengthDependentProfile)\n_reduction_log.hdf · .json (all parameters)", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  pn -> q -> fr -> el -> inc -> bin -> o;
+}

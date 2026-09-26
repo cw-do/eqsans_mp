@@ -1,0 +1,19 @@
+digraph G { 
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.42];
+  node  [fontname="Helvetica", fontsize=12, shape=box, style="rounded,filled", fillcolor="#f4f3ef", color="#8f8d85", penwidth=1.1, margin="0.18,0.08"];
+  edge  [fontname="Helvetica", fontsize=10.5, color="#5b5a55", arrowsize=0.75];
+ rankdir=TB;
+  json [label="reduction JSON\n(sample / background / transmission / empty / beam-centre runs,\nfiles, and all switches)", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  runs [label="event NeXus files\n(EQSANS_*.nxs.h5)", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  files [label="calibration files\ndark current · flux spectrum · sensitivity (flood) · mask", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  L [label="1  LOAD every run\ngeometry · beam centre · time of flight → wavelength (0.1 Å bins)", fillcolor="#fdf0e2", color="#d59a55"];
+  P [label="2  PROCESS each run, per pixel × per λ\ndark → ÷ flux → − blocked beam → mask → ÷ solid angle → ÷ sensitivity", fillcolor="#eaf6ef", color="#5fae83"];
+  T [label="3  TRANSMISSION\nsample (and background) vs empty beam, within a radius → T(λ), fitted", fillcolor="#eaf6ef", color="#5fae83"];
+  C [label="4  COMBINE and SCALE\n÷ T(λ, 2θ) → sample − background → ÷ thickness → × absolute scale", fillcolor="#f3ecfa", color="#9b7ac4"];
+  Q [label="5  Q, per-λ CORRECTIONS, BINNING\nQ and resolution per pixel × λ → frames → [k(λ) elastic ref.] → [b(λ) incoherent] → bin 1D / 2D", fillcolor="#fbeaea", color="#cf7070"];
+  O [label="outputs\n_Iq.dat · _Iqxqy.dat/.h5 · _processed.nxs · _trans.txt · I(Q, λ) profiles · reduction log", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  json -> L; runs -> L; files -> P; L -> P; L -> T; T -> C [label=" T(λ)"]; P -> C [label=" I(pixel, λ)"]; C -> Q; Q -> O;
+  files -> T [style=dashed, label=" flux, sensitivity"];
+  C -> O [style=dashed, label=" _processed.nxs"];
+  T -> O [style=dashed, label=" _trans.txt"];
+}

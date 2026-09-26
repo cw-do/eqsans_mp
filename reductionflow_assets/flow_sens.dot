@@ -1,0 +1,17 @@
+digraph G { 
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.42];
+  node  [fontname="Helvetica", fontsize=12, shape=box, style="rounded,filled", fillcolor="#f4f3ef", color="#8f8d85", penwidth=1.1, margin="0.18,0.08"];
+  edge  [fontname="Helvetica", fontsize=10.5, color="#5b5a55", arrowsize=0.75];
+ rankdir=TB;
+  fl [label="flood run(s)\n(thin PMMA, or water in a cell)", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  db [label="direct-beam run\n(to find the beam centre)", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  c [label="beam centre (centre of mass)", fillcolor="#fdf0e2", color="#d59a55"];
+  ld [label="load flood: geometry (offsets, scaleComponents)\ncounts SUMMED over the whole band (no λ bins, no flux division)", fillcolor="#fdf0e2", color="#d59a55"];
+  m [label="mask (mask file, bad pixels)\n÷ solid angle", fillcolor="#eaf6ef", color="#5fae83"];
+  bs [label="mask a circle around the beam centre\n(radius, e.g. 40 mm)", fillcolor="#eaf6ef", color="#5fae83"];
+  tr [label="[BIOSANS only] flood self-absorption (transmission) correction\nnot available for EQSANS in drtsans", shape=box, style="filled,dashed", fillcolor="#ffffff", color="#9a9a9a", fontsize=10.5];
+  pat [label="patch the masked centre: polynomial (order 2) along each tube", fillcolor="#eaf6ef", color="#5fae83"];
+  thr [label="thresholds: pixels outside [min, max] × mean → masked (NaN)\nnormalise to mean 1", fillcolor="#eaf6ef", color="#5fae83"];
+  o [label="Sensitivity_*.nxs\none number per pixel", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  db -> c -> ld; fl -> ld -> m -> bs -> tr -> pat -> thr -> o;
+}

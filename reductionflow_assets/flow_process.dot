@@ -1,0 +1,24 @@
+digraph G { 
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.42];
+  node  [fontname="Helvetica", fontsize=12, shape=box, style="rounded,filled", fillcolor="#f4f3ef", color="#8f8d85", penwidth=1.1, margin="0.18,0.08"];
+  edge  [fontname="Helvetica", fontsize=10.5, color="#5b5a55", arrowsize=0.75];
+ rankdir=TB; compound=true;
+  subgraph cluster_run { label="prepare_data_workspaces — the SAME chain for the sample and for the background run"; fontsize=12; color="#5fae83"; style="rounded";
+    r [label="raw run: counts(pixel, λ)", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+    d [label="① − dark current\n(dark run scaled by run time and by the TOF window)", fillcolor="#eaf6ef", color="#5fae83"];
+    n [label="② ÷ flux(λ) × proton charge   (normalization = \"Total charge\")\n(or ÷ monitor × flux-to-monitor ratio, or ÷ time)", fillcolor="#eaf6ef", color="#5fae83"];
+    bb [label="③ − blocked beam\n(blocked-beam run, itself dark-subtracted and ÷ flux × charge;\nsubtracted per pixel and per λ)", fillcolor="#eaf6ef", color="#5fae83"];
+    m [label="④ mask\n(mask file + default mask; optional: back tubes, bank/tube/pixel)", fillcolor="#eaf6ef", color="#5fae83"];
+    sa [label="⑤ ÷ solid angle of each pixel\n(from the geometry after offsets and scaling)", fillcolor="#eaf6ef", color="#5fae83"];
+    s [label="⑥ ÷ sensitivity (flood file)\nONE value per pixel, the same for every λ", fillcolor="#eaf6ef", color="#5fae83"];
+    r -> d -> n -> bb -> m -> sa -> s;
+  }
+  tr [label="⑦ ÷ transmission\nθ-dependent: T(λ)^((1 + sec 2θ)/2)   (useThetaDepTransCorrection)\nor ÷ T(λ); T from stage 3 or a fixed value", fillcolor="#f3ecfa", color="#9b7ac4"];
+  sub [label="⑧ sample − background\n(background went through ①–⑦ with its own transmission)", fillcolor="#f3ecfa", color="#9b7ac4"];
+  th [label="⑨ ÷ sample thickness (cm)", fillcolor="#f3ecfa", color="#9b7ac4"];
+  ab [label="⑩ × absolute scale (StandardAbsoluteScale)", fillcolor="#f3ecfa", color="#9b7ac4"];
+  pn [label="processed: I(pixel, λ) in cm⁻¹  →  saved as _processed.nxs", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  s -> tr [ltail=cluster_run];
+  tr -> sub -> th -> ab -> pn;
+  cfg [label="config: darkFileName, normalization, beamFluxFileName (or fluxMonitorRatioFile),\nblockedBeamRunNumber, maskFileName, useDefaultMask, useMaskBackTubes,\nuseSolidAngleCorrection, sensitivityFileName, useThetaDepTransCorrection,\nsample.thickness, StandardAbsoluteScale", shape=box, style="filled", fillcolor="#fffbe6", color="#d8c66a", fontsize=10];
+}

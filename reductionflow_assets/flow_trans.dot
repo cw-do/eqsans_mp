@@ -1,0 +1,18 @@
+digraph G { 
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.42];
+  node  [fontname="Helvetica", fontsize=12, shape=box, style="rounded,filled", fillcolor="#f4f3ef", color="#8f8d85", penwidth=1.1, margin="0.18,0.08"];
+  edge  [fontname="Helvetica", fontsize=10.5, color="#5b5a55", arrowsize=0.75];
+ rankdir=LR;
+  ts [label="sample transmission run\n(direct beam through the sample,\nattenuated, beamstop out)", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  te [label="empty-beam transmission run\n(emptyTransmission)", shape=note, fillcolor="#e8f0fb", color="#6f93c6"];
+  p1 [label="÷ flux × charge\n÷ sensitivity\n(no solid angle)", fillcolor="#eaf6ef", color="#5fae83"];
+  p2 [label="÷ flux × charge\n÷ sensitivity\n(no solid angle)", fillcolor="#eaf6ef", color="#5fae83"];
+  r [label="sum counts within\nmmRadiusForTransmission\nof the beam centre, per λ", fillcolor="#eaf6ef", color="#5fae83"];
+  rat [label="raw T(λ) =\nsample ÷ empty", fillcolor="#eaf6ef", color="#5fae83"];
+  fit [label="fit T(λ) per band\n(linear in λ)", fillcolor="#eaf6ef", color="#5fae83"];
+  o1 [label="_raw_trans.txt", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  o2 [label="_trans.txt  → used in ⑦", shape=folder, fillcolor="#f4f3ef", color="#8f8d85"];
+  ts -> p1 -> r; te -> p2 -> r; r -> rat -> fit -> o2; rat -> o1;
+  note [label="the background (e.g. empty cell) can have its own transmission run,\nor a fixed value (background.transmission.value)", shape=box, style="filled,dashed", fillcolor="#ffffff", color="#5fae83", fontsize=10.5];
+  fit -> note [style=invis];
+}
