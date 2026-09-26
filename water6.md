@@ -53,9 +53,12 @@ How it is measured from the H2O run:
 ![the tube-end model from H2O 2026B, both bands](assets/water6/w6_endmodel.png)
 
 **The model:**
-- **Nearest the ends** it reaches −4 to −12 % at the short-λ end of each band and +3 to +7 % at
-  the long-λ end.
-- **Beyond ~25–30 pixels** from the end it fades to about ±0.3 %.
+- **2.5 Å band, 11 pixels from the end:** −4 % (bottom) / −3.2 % (top) at 2.9 Å, rising to
+  about +2.4 % at 5.7 Å. At 14 pixels about −1.7 → +1 %. From 18 pixels on it stays within
+  about ±0.7 %.
+- **1 Å band: not linear in λ.** 11 pixels from the bottom end it is +7.8 % at 1.5 Å, −4.8 % at
+  2.6 Å and +2.5 % at 4.3 Å; at the top end +2.6 / −3.0 / +2.6 %.
+- **Beyond ~24–30 pixels** it fades to within about ±0.5 %.
 
 The two bands' models should agree where their wavelengths overlap (2.6–4.3 Å). They do to
 about 1.9 % rms in the last 10 rows, against 0.8 % rms for the model itself there. That is
