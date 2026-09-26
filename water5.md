@@ -2,12 +2,55 @@
 
 **Date:** 2026-09-25 · **drtsans:** stable `1.34.0` · **data:** 1.3 m, IPTS-37618 (2026B: H2O,
 D2O, PMMA) and IPTS-36254 (2025B: PMMA, vanadium) · **scripts:**
-`2026B_mp/reduction/water3/water5/` (`proof_w5.py`, `result_w5.py`), using the Water 4 tools in
+`2026B_mp/reduction/water3/water5/` (`simple_w5.py`, `proof_w5.py`, `result_w5.py`), using the Water 4 tools in
 `water3/water4/` (`tail_w4.py`: drtsans's own binning / incoh-fit tail; `run_tail_end.sh`)
 
 **Question.** Does the sensitivity of the pixels along a vertical 3He tube change with
 wavelength, most of all at high angle? If so, a flood with one value per pixel cannot be
 exact.
+
+## The simple picture: one tube set, several wavelengths
+
+Take the same tubes: those within 25 cm of the beam horizontally, about 90 tubes, median over
+them. Plot the intensity along the tube (pixel 0 = bottom end, 255 = top end) for 6 wavelength
+groups. Each curve is divided by its own level in the tube middle, then by the average of all
+wavelengths.
+
+**If the pixel sensitivity did not depend on wavelength, every curve would lie on zero.**
+
+![intensity along the tube for 6 wavelength groups: H2O 2.5 Å band, H2O 1 Å band, V 2025B](assets/water5/w5_simple.png)
+
+- **In the body of the tube** the curves lie on top of each other within about ±0.3 %.
+- **Near both ends they split:**
+  - **H2O, 2.5 Å band:** the short-λ curve (≈3.1 Å) drops to −3 % and the long-λ curves rise
+    to +1.5 %.
+  - **H2O, 1 Å band:** the 2.7 Å group drops to −4.7 % and −2.7 % at the two ends.
+
+  Nothing in the sample can do that: at a given pixel all wavelengths see the same tube,
+  angle and flood.
+
+**How many pixels are affected?** The shortest-minus-longest-wavelength curve against distance
+from the tube end. The band shows the noise level (±3σ) in the tube middle:
+
+![shortest-λ minus longest-λ, vs pixels from the tube end](assets/water5/w5_simple_reach.png)
+
+| H2O, 2.5 Å band | difference at 11–12 px from the end | at 18–20 px | back within noise |
+|---|---|---|---|
+| bottom end | −3.6 to −4.7 % | −1.7 % | **~20–22 pixels** from the end |
+| top end | −2.6 to −3.5 % | −2.0 % | **~25–28 pixels** from the end |
+
+- **1 Å band:** the 2.7 Å group shows the same end effect, reaching about 20 pixels.
+- **The shortest group (≈1.7 Å) is not a tube effect.** It has a slow +2 % tail at the bottom
+  end over 20–40 pixels. At those pixels and that wavelength Q ≈ 1.4–1.7 Å⁻¹, where water's
+  structure factor rises.
+- **Vanadium (2025B)** is too noisy in this view (±0.6 %) to add much. The detailed
+  comparison (§2) shows the same end effect in V and PMMA.
+
+**So:** about 20 pixels are affected at the bottom end of the tubes and about 25 at the top.
+Today 11 are masked. A mask of **20 pixels at the bottom and 25 at the top** (or 24 at both
+ends as a single number) removes it.
+
+---
 
 **Answer: yes.** Three detector effects, the same in every sample tested:
 
@@ -28,7 +71,8 @@ only where these effects are zero.
 
 **So: yes, EQSANS needs a λ-dependent sensitivity**, in two places:
 - **At the tube ends**, for any reduction, because they are the high angles at 1.3 m. Until
-  there is one, **mask 20 pixels at each tube end** (11 today).
+  there is one, **mask the tube ends**: about 20 pixels at the bottom and 25 at the top, or
+  24 at both (11 today).
 - **Across the whole detector** for 2D / anisotropic work (effects 2 and 3).
 
 **H2O with 20 pixels masked at each tube end** (single λ slices, 2.5 Å band):
@@ -100,10 +144,11 @@ consistent with the end region of a charge-division tube.
 
 ![AgBe: apparent vertical (along the tube) and horizontal position errors](assets/water5/w5_agbe_pos.png)
 
-**Is 20 pixels enough?** The tube-end slope falls from +1.2 to +3.2 %/Å at 11–13 px to +0.2 to
-+0.3 %/Å at 20–23 px and about 0 beyond 24 px. **20 pixels removes nearly all of it.** 24 is
-the conservative choice, but in H2O it gives no further gain (§3), and it costs another
-3 % of pixels.
+**Is 20 pixels enough?** Averaged over both ends, the tube-end slope falls from +1.2 to +3.2 %/Å
+at 11–13 px to +0.2 to +0.3 %/Å at 20–23 px and about 0 beyond 24 px. The simple picture
+above shows the top end reaching a little further (~25 px) than the bottom (~20 px).
+**20 px removes most of it; 24 px (or 20 bottom / 25 top) is the safe choice.** It costs
+another 3 % of pixels. In H2O, 24 px gives a small further gain in the 2.5 Å band (§3).
 
 ## 3. H2O (and D2O) with 20 pixels masked at each tube end
 
@@ -177,10 +222,11 @@ sensitivity (below) would tell them apart.
    patterns in H2O, PMMA and vanadium, from two cycles and two floods: tube ends, front /
    back layers, and a bottom-to-top gradient in the front layer.
 2. **For azimuthally averaged I(Q) only the tube ends matter.** At 1.3 m they are the highest
-   vertical angles, which is why the problem looked like a "high-angle" problem. Masking
-   **20 pixels at each tube end** (today 11) removes most of it: the 2.5 Å slices are a third
-   flatter, the extreme-angle spikes are gone, and the combined H2O is flat to 0.11 %.
-   20 px is a safe choice; 24 px gives no further gain.
+   vertical angles, which is why the problem looked like a "high-angle" problem. About 20
+   pixels are affected at the bottom end and 25 at the top (the simple picture). Masking
+   **20 pixels at each end** (today 11) already removes most of it: the 2.5 Å slices are a
+   third flatter, the extreme-angle spikes are gone, and the combined H2O is flat to 0.11 %.
+   **24 px (or 20 bottom / 25 top)** is the safe choice.
 3. **For 2D, sector or anisotropic work a λ-dependent sensitivity is needed across the
    detector.** The front / back layer effect alone is 1–2 %/Å (2.5 Å band) and ~5 %/Å
    (1 Å band).
@@ -194,9 +240,9 @@ sensitivity (below) would tell them apart.
    water flood (Water 4 §12) avoids the latter.
 
 **Recommendations:**
-- **Now:** mask **20 pixels at each tube end** in reductions at every distance (a detector
-  property). That means a new mask file: today's `mask_4m.nxs` masks 11. **Not changed yet,
-  your decision.**
+- **Now:** mask the tube ends in reductions at every distance (a detector property): **24 px
+  at both ends**, or 20 bottom / 25 top. That means a new mask file: today's `mask_4m.nxs`
+  masks 11. **Not changed yet, your decision.**
 - **Next beam time:**
   - **Vanadium** (4–6 h per configuration, same cycle), in the bands used, with empty-beam,
     blocked-beam and transmission runs. From it, build and test a **λ-dependent sensitivity**
@@ -206,6 +252,8 @@ sensitivity (below) would tell them apart.
   proper fix; raise it with the developers.
 
 **Provenance.** 2026-09-25, drtsans `1.34.0`:
+- `water5/simple_w5.py` → `w5_simple.png`, `w5_simple_reach.png`, `w5_simple.json` (the simple
+  picture).
 - `water5/proof_w5.py` → `w5_slope_maps.png`, `w5_slope_profile.png`,
   `w5_sens_vs_lambda.png`, `w5_proof.json`.
 - `water4/run_tail_end.sh` → `water4/out_end/end{20,24}/` (H2O and D2O, both bands; tail with
