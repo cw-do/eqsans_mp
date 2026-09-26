@@ -552,7 +552,7 @@ I(Q) is not used to judge it, because averaging over λ can create shapes that n
 |---|---|---|---|
 | 1 | The b(λ) fit (`selectMinIncoh`) takes the **band-edge slice** as reference. It amplifies each slice's shape by up to 2–3.4× and sets the absolute level from that slice. | Exact: after = before × c(λ)/c_ref, correlation 1.000 (§3) | Fixed by 2 |
 | 2 | **The band-edge λ bins are bad:** up to 2× in level, ±2 % in shape. | Fixed-Q test, slice levels (§4) | `cutTOFmin` / `cutTOFmax` **1650 / 3150 µs** at 1.3 m (default 500 / 2000), in the flood and the data |
-| 3 | **Tube ends:** vertical positions drift by 4–6 mm (≈ 1 pixel) near the ends, and the last ~15–18 pixels respond differently with λ. | AgBe at 4 / 2.5 / 1.3 m; same-angle end-vs-middle Δ: 1.7 / 0.9 % vs 0.3 % (§11) | Mask **~19 pixels at each tube end** in the data (rows 0–18, 237–255; today 0–10, 245–255). This halves the per-slice deviation in the 2.5 Å band. |
+| 3 | **Tube ends:** vertical positions drift by 4–6 mm (≈ 1 pixel) near the ends, and the last ~15–18 pixels are **more sensitive to wavelength**: relative to the tube middle their response rises with λ, by +1.5 to +4 %/Å at 12 pixels from the end. It is the same in PMMA and vanadium (2025B) as in H2O (2026B), so it is the detector. | AgBe at 4 / 2.5 / 1.3 m; same-angle end-vs-middle Δ: 1.7 / 0.9 % vs 0.3 % (§11); PMMA / V 2025B (§13) | Mask **~19 pixels at each tube end** in the data (rows 0–18, 237–255; today 0–10, 245–255). This halves the per-slice deviation in the 2.5 Å band. |
 | 4 | **Blocked beam:** 1.5 % of the water counts, top-heavy. Not removed by the banjo subtraction. | Water 3 §9 | Subtract it in the flood **and** the data, measured **in each run's band** |
 | 5 | **Banjo quartz in a water flood** adds high-Q structure. | Water 3 §1–3 | Build the water flood with the banjo subtracted |
 | 6 | A water-specific **angle × λ fan** remains (±0.3–0.5 % at the largest angles). | Not shared by PMMA (§10); fixed-Q trend (§5) | **Not corrected.** It depends on the sample's energy transfer, and assuming it would be speculation. |
@@ -591,3 +591,58 @@ also present.
 **Not changed:** production floods and settings. The water floods remain in
 `2026B_mp/reduction/water3/floods/` (the banjo-subtracted `H2Obs` copies are in `2026B_mp/`
 as alternatives).
+
+---
+
+## 13. Are the tube ends more sensitive to wavelength? Yes — a detector property (2026-09-25)
+
+The same end-vs-middle comparison as §11 (pixels at the tube ends vs pixels at the **same
+2θ** in the middle of the tubes, flood-free Δ, band-edge bins excluded) was applied to three
+samples:
+- **Vanadium (2025B):** elastic, incoherent, no structure, little inelastic scattering.
+- **PMMA (2025B):** a solid.
+- **H2O (2026B).**
+
+The two 2025B runs are from IPTS-36254 (1.3 m, 2.5 Å band). They were reduced in Water 2 with
+their own 2025B flood and the Cd blocked beam 167914 (`tubeend_v_w4.py`).
+
+| same 2θ (24–26°, \|y\| 47–53 cm) | tube ends: rms over λ / λ-slope | tube middle: rms / λ-slope |
+|---|---|---|
+| PMMA 2025B | 1.21 % / **+1.26 %/Å** | 0.38 % / −0.23 %/Å |
+| H2O 2026B | 0.90 % / **+0.91 %/Å** | 0.24 % / +0.11 %/Å |
+| V 2025B | 1.54 % / +0.11 %/Å | 0.85 % / −0.38 %/Å (weak scatterer, noisy) |
+
+| λ-slope of the tube-end rows ÷ middle (bottom / top end) | 12 px from the end | 15 px | 18 px | 21–24 px |
+|---|---|---|---|---|
+| PMMA 2025B | +4.4 / +2.3 %/Å | +1.6 / +1.0 | +0.5 / +0.6 | ≈ 0–0.4 |
+| H2O 2026B | +1.7 / +1.4 %/Å | +0.9 / +1.0 | 0.0 / +0.6 | ≈ 0–0.6 |
+| V 2025B | +1.5 / +0.4 %/Å | +0.6 / 0.0 | +0.5 / +0.2 | ≈ 0 |
+
+![tube ends vs tube middle at the same angle: V, PMMA (2025B), H2O (2026B)](assets/water4/w4d_tubeend_v.png)
+
+- **The tube-end pixels read relatively low at short λ and high at long λ:** −1 to −2 % at
+  about 3 Å and +1 to +1.5 % at 5–5.5 Å, against the tube middle at the same angle. The effect
+  fades by about 18–20 pixels (8 cm) from the end.
+- **It is the same sign and a similar size** for a solid (PMMA), an elastic incoherent
+  scatterer (V) and water, a year apart, with different floods. So it is **the tubes**, not
+  the sample and not the flood.
+- **A flood is one number per pixel, averaged over the band,** so it cannot follow this. In a
+  single λ slice, the tube ends, which are the highest angles in the vertical direction, come
+  out low at short λ and high at long λ. That is the high-angle droop / rise seen in the
+  individual slices (§10–§11).
+- **The mechanism is not determined here.** It is consistent with the end region of a
+  charge-division tube (distorted field, reduced gas gain, the position non-linearity of §11),
+  where detection or positioning depends on where along the neutron's path it is absorbed,
+  i.e. on λ.
+
+**Consequence:**
+- **Mask about 19–20 pixels at each tube end in data reductions** (rows 0–18 and 237–255;
+  11 today).
+- **This applies to every sample and every flood** (PMMA or water), because it is the
+  detector.
+
+Once the ends are masked, the remaining λ-dependence in the body of the detector is small
+(±0.3 %) and, per §10, not shared by PMMA.
+
+**Provenance (§13).** 2026-09-25: `water4/tubeend_v_w4.py` → `w4d_tubeend_v.png`,
+`w4d_tubeend_v.json` (V and PMMA from `water2/reduced_vanadium/`, H2O from the fixes 1+2 set).
