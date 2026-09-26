@@ -1101,6 +1101,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w4src, f), os.path.join(w4dest, f))
 
+    # Water-5 study (lambda-dependent pixel sensitivity; tube ends): doc/water5.md, doc/water5_assets/ -> assets/water5/.
+    water5_md = None
+    w5p = os.path.join(DOC_DIR, "water5.md")
+    if os.path.isfile(w5p):
+        try:
+            with open(w5p, errors="replace") as fh:
+                water5_md = fh.read()
+        except OSError:
+            water5_md = None
+    w5src = os.path.join(DOC_DIR, "water5_assets")
+    if water5_md and os.path.isdir(w5src):
+        w5dest = os.path.join(ASSETS_DIR, "water5")
+        os.makedirs(w5dest, exist_ok=True)
+        for f in os.listdir(w5src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(w5src, f), os.path.join(w5dest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -1114,6 +1131,7 @@ def main():
         "water2_md": water2_md,
         "water3_md": water3_md,
         "water4_md": water4_md,
+        "water5_md": water5_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")

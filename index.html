@@ -246,6 +246,7 @@
       <button data-view="water2">Water 2</button>
       <button data-view="water3">Water 3</button>
       <button data-view="water4">Water 4</button>
+      <button data-view="water5">Water 5</button>
       <button data-view="atten">Atten (trans)</button>
     </div>
   </nav>
@@ -1185,6 +1186,24 @@ function renderWater4(){
   return wrap;
 }
 
+function renderWater5(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Water 5 — the pixel sensitivity depends on wavelength"));
+  head.append(el("span","badge latest","detector · tube ends · λ-dependent sensitivity"));
+  wrap.append(head);
+  wrap.append(el("div","sub","Proof that the sensitivity of the pixels along the 3He tubes changes with wavelength (tube ends, front/back layers, a vertical gradient), the same in H2O, PMMA and vanadium from two cycles; H2O with 20 pixels masked at each tube end; conclusions."));
+  if(D.water5_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.water5_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No Water 5 documentation found. Add doc/water5.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderAtten(c){
   const wrap = el("div");
   wrap.append(el("div","sectitle","Attenuation for transmission (monochromatic)"));
@@ -1273,6 +1292,7 @@ function render(){
   if(view==="water2"){ main.append(renderWater2()); return; }
   if(view==="water3"){ main.append(renderWater3()); return; }
   if(view==="water4"){ main.append(renderWater4()); return; }
+  if(view==="water5"){ main.append(renderWater5()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }
@@ -1326,7 +1346,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});
