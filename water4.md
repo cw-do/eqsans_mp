@@ -415,3 +415,116 @@ energy transfer, so it is **not corrected** here.
   - `leak_w4.py` → `w4b_leak.png/.json`;
   - `fanshare_w4.py` → `w4b_fanshare.png/.json`;
   - combined metrics → `w4b_combined.json`.
+
+---
+
+## 11. Tube ends: vertical positions, and masking more of the ends (2026-09-25)
+
+**Why the tube ends.** Along a 3He tube the vertical position comes from charge division. It
+can be non-linear or drift, especially near the ends of the tube. Horizontal positions are
+the tubes' physical positions and cannot drift. The earlier "high-angle" problem at 1.3 m
+sits where the tube ends are (±45–53 cm, 2θ ≈ 22–26° at the central tubes). Rows 0–10 and
+245–255 are masked today.
+
+Everything in this section is judged on **individual I(Q, λ) slices only**. The combined I(Q)
+can create shapes that no single slice has. The fixes 1 + 2 set is used (own-band floods
+`H2Obsbbcut`, `cutTOFmin` / `cutTOFmax` 1650 / 3150 µs, blocked beam in flood and reduction).
+**Extra rows are masked in the data reduction only** (drtsans-style detector masking in the
+tail); the flood is unchanged.
+
+**1. AgBe says the vertical positions are off near the tube ends** (`agbe_pos_w4.py`). The
+AgBe peaks are fitted in assigned Q in two ways:
+- per group of 8 rows along the central tubes (radius ≈ |y|);
+- per group of 8 tubes along the central rows (radius ≈ |x|).
+
+At 4 m, 2.5 m and 1.3 m alike, the vertical error grows toward both ends of the tubes, to about
+**4–6 mm (≈ 1–1.4 pixels) at ±450–520 mm**, relative to about 1–2 mm at ±250 mm. It is the same
+in millimetres at every distance, so it is a property of the tubes, not of the geometry (a tilt
+or distance error would scale with 1/L). Horizontally, the error varies smoothly by 1–2 mm
+(beam centre / scale).
+
+![AgBe: apparent vertical and horizontal position errors](assets/water4/w4c_agbe_pos.png)
+
+**2. The tube ends also respond differently with λ** (`tubeend_w4.py`, `rowend_w4.py`). A
+position error alone would not change a flat sample's intensity. So the flood-free
+λ-dependence Δ was compared between pixels at the **same scattering angle**:
+- tube-end pixels in the central tubes;
+- pixels in the middle of the tubes (central rows, far tubes).
+
+| H2O, same 2θ | tube ends, Δ rms over λ | tube middle, Δ rms over λ |
+|---|---|---|
+| 1 Å band, \|y\| 30–40 cm (2θ 16–20°) | 0.24 % | 0.18 % |
+| 1 Å band, \|y\| 40–47 cm (21–23°) | 0.43 % | 0.26 % |
+| 1 Å band, **\|y\| 47–53 cm (24–26°)** | **1.73 %** | 0.29 % |
+| 2.5 Å band, **\|y\| 47–53 cm** | **0.90 %** | 0.24 % |
+
+In the structure-free end/middle ratio, D2O rises too toward the ends: 0.8 → 1.0 → 1.7 %
+(2.5 Å band) and 1.4 → 1.5 → 2.6 % (1 Å band). So it is the detector, not water.
+
+Row by row, H2O's anomaly lies within **~15–18 pixels (7–8 cm) of the tube end**. In the 1 Å
+band the bottom end stays mildly elevated to about 30 pixels. D2O is too noisy at this
+row-by-row level.
+
+![λ-dependence at the tube ends vs the tube middle, same angle](assets/water4/w4c_tubeend.png)
+
+![tube-end anomaly vs distance from the tube end](assets/water4/w4c_rowend.png)
+
+**3. Masking 8 more rows at each end (19 pixels in total) removes most of it.** Each slice's
+shape, relative to its own plateau (`tb_w4.py`):
+
+| H2O, per slice | +0 rows (today) | +8 rows | +16 rows | +32 rows |
+|---|---|---|---|---|
+| 2.5 Å band: slice-end rms | 0.49 % | **0.31 %** | 0.29 % | 0.25 % |
+| 2.5 Å band: slice flatness (Q > 0.3) | 0.40 % | **0.26 %** | 0.22 % | 0.21 % |
+| 1 Å band: slice-end rms | 0.69 % | 0.69 % | 0.79 % | 0.81 % |
+| 1 Å band: slice flatness (Q > 0.3) | 0.50 % | **0.39 %** | 0.35 % | 0.39 % |
+
+- **In the 2.5 Å band** the mid-λ droop (λ 3.0–3.6 Å, −1.1 % at 30–35°) halves to −0.5 to
+  −0.7 %. The long-λ rise (5.1–5.4 Å, +1–1.5 %) shrinks to +0.3–0.5 %.
+- **In the 1 Å band** the mid-λ droop (λ 2.5–2.8 Å) also halves. What is left sits at the
+  extreme corners (> 32°), where few pixels remain.
+- **More than +8–16 rows gains little** and costs the corners.
+- **The slice-to-slice agreement is unchanged** (H2O 0.23–0.33 %, D2O 0.9–1.4 %). The
+  masking fixes each slice's *shape* at large angle, not the λ-to-λ levels.
+
+![H2O 2.5 Å band, single-λ slices vs 2θ, extra rows masked](assets/water4/w4c_tb_slices_H2O_2.5A.png)
+
+![H2O 1 Å band, single-λ slices vs 2θ, extra rows masked](assets/water4/w4c_tb_slices_H2O_1A.png)
+
+![each slice's high-angle end vs λ, per mask](assets/water4/w4c_tb_summary.png)
+
+(An earlier version of this test set the masked pixels to NaN. drtsans then drops every Q bin
+that contains one, which cut each slice at about 21° and looked like a big improvement. The
+numbers above use proper detector masking, and the unmasked baseline reproduces drtsans
+exactly.)
+
+**So what should the water sensitivity be?** Everything tested points to this recipe:
+1. **H2O 1 mm in the banjo, with the banjo cell AND the blocked beam subtracted.** Built from
+   a reduction, `make_water_bs_floods.py --bb --cut`; the plain preparer keeps the quartz cell
+   in the flood.
+2. **Solid angle with the reduction geometry, and the θ-dependent (self-absorption)
+   correction.** Both come with the water's own reduction.
+3. **Wider TOF cuts**, `cutTOFmin` 1650 / `cutTOFmax` 3150 µs at 1.3 m, in the flood and in
+   the data.
+4. **The flood from the same band as the data** (1 Å flood for 1 Å data).
+5. **The tube ends masked in the data reduction:** about 19 pixels from each end (rows 0–18
+   and 237–255) instead of 11. The flood's end pixels then do not matter.
+6. **The blocked beam subtracted in the data reduction too** (consistent with the flood).
+
+**Still open:**
+- **Tested only on water and D2O at 1.3 m.** It should be validated on AgBe / PMMA and at
+  2.5 m and 4 m (the tube-end position error is there at every distance).
+- **Water's own angle × λ behaviour stays in the flood, averaged over the band.** PMMA does not
+  share it (§10); expect ≤ ±0.5 % at the largest angles for non-water samples.
+- **The 1 Å band's bottom tube ends** may want ~30 pixels.
+- **The production flood (`prepare_sensitivity.py`) has no banjo or blocked-beam subtraction.**
+  Building this water flood routinely would need that step added, or the reduction-based
+  build used as here.
+
+**Provenance (§11).** 2026-09-25, drtsans `1.34.0`, `2026B_mp/reduction/water3/water4/`:
+- `tail_w4.py` now masks pixels (`MaskDetectors`) whose correction is NaN at every λ.
+- `run_tail_tb.sh` → `out_tb/tb{0,8,16,32}/` (the tb0 baseline is checked bit-exact against
+  drtsans).
+- `tb_w4.py` → `w4c_tb_*.png`, `w4c_tb.json`; slice-to-slice spreads → `w4c_tb_spread.json`.
+- `agbe_pos_w4.py` → `w4c_agbe_pos.png/.json` (AgBe from `reduced_waterbs_incohoff/`).
+- `tubeend_w4.py` → `w4c_tubeend.png/.json`; `rowend_w4.py` → `w4c_rowend.png/.json`.
