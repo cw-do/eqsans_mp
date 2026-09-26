@@ -34,7 +34,8 @@ combined curve has small but systematic deviations.
    (the partly lit edges of the chopper window) are off by up to 2× in level and ±2 % in
    shape. They are the only slices that reach the highest Q, so they set the high-Q end.
 3. **The θ-dependent transmission correction uses the incident-λ transmission for the exit
-   path** (§5). For water, which scatters inelastically and heats cold neutrons, this puts an
+   path** (§5). *Diagnostic only, not applied as a fix* (§10): the outgoing energy of a general
+   sample at a given temperature can't be predicted. For water, which scatters inelastically and heats cold neutrons, this puts an
    angle × λ error in each slice. It is proven with a fixed-Q test that is free of the sample's
    S(Q). Making the exit path λ-independent flattens the λ-trend: +0.33 → −0.03 %/Å.
 4. **Above about 0.9 Å⁻¹, what is left is water's own S(Q)** (§7). About 4.6 % of H2O's
@@ -42,8 +43,13 @@ combined curve has small but systematic deviations.
    the 1 Å band sees it at 12–20° and the 2.5 Å band at 25–35°. It is real, and it should not
    be flattened.
 
-**Result.** With the band edges removed and the exit path made λ-independent, still using
-drtsans's own b(λ) fit and binning:
+**Result — recommended: fixes 1 and 2 only** (band edges out via wider TOF cuts, so the
+b(λ) reference is a normal slice). Self-flooded H2O is flat to **0.13 % rms (max 0.33–0.42 %)**
+over Q 0.1–0.9 Å⁻¹ in both bands. Single-λ slices, back tubes and the valley near 1 Å⁻¹ are in
+**§10**.
+
+For comparison only, removing the exit path's λ-dependence as well (the §5 diagnostic, not a
+recommendation) gives:
 - **self-flooded H2O is flat to 0.08–0.11 % rms, and within 0.36 % everywhere, over
   Q 0.1–0.9 Å⁻¹, in both bands;**
 - χ²/bin falls from 24 / 12 (default) to 4.3 / 2.3, i.e. 1.5–2 × the counting error;
@@ -256,9 +262,12 @@ b(λ) fit no longer does harm.
 
   Self-flooded H2O goes from 0.34 / 0.17 % rms to 0.11 / 0.12 % rms, the D2O slice spread
   halves, and the incoh-fit absolute level is no longer set by a band-edge slice.
+- **Use the flood from the same band as the data** (§10: the other band's flood triples the
+  valley near 1 Å⁻¹).
+- **Not recommended as a correction:** changing the θ correction's exit path. The outgoing
+  energy of a general sample can't be predicted, so it would be speculation; §5 only shows
+  that an angle × λ effect of this kind exists for water.
 - **drtsans, to raise with the developers:**
-  - **θ-dependent transmission correction:** an option for the exit-path transmission of
-    strongly inelastic samples (water), e.g. λ-independent. Worth another 2–4 × in χ² here.
   - **`selectMinIncoh`:** the minimum-b slice is almost always the band edge. A reference
     chosen away from the edges (or excluding them) avoids the amplification even when the TOF
     cuts are left at their defaults.
@@ -281,3 +290,128 @@ b(λ) fit no longer does harm.
   - `build_corr_w4.py`, `run_tail_w4.sh`, `run_tail_w4b.sh`: recipes R0–R5 in `out/`.
   - `final_w4.py`, `hero_w4.py`: figures, `w4_final.json`, `w4_flatness.json`,
     `w4_production.json`.
+
+---
+
+## 10. Part 2 — fixes 1 + 2 only: single-λ slices, back tubes, and the valley near 1 Å⁻¹ (2026-09-25)
+
+Only fixes 1 and 2 are applied here, **consistently in the flood and the reduction**:
+- the band edges are cut (`cutTOFmin` 1650 / `cutTOFmax` 3150 µs), so the b(λ) reference is a
+  normal slice;
+- the blocked beam is subtracted;
+- drtsans's θ-dependent transmission correction is used **unchanged** (no exit-path
+  assumption).
+
+New floods `Sensitivity_H2Obsbbcut_1o3m[_1A]_*` were built from H2O reduced with the same
+cuts. **Back tubes are not masked in the floods** (all 44 928 pixels valid).
+
+The data reductions (H2O, D2O, incoh fit on) come in four variants: own-band or other-band
+flood, each with and without back tubes masked in the reduction (`useMaskBackTubes`). That is
+32 reductions.
+
+> **Back tubes:** none of the earlier Water 1–4 reductions masked them (`useMaskBackTubes =
+> False` in all 252). Here masking is tested **in the data reduction only**.
+
+**Single-λ slices** are the clearest view. Each panel is one λ bin: I(Q, λ) before b(λ),
+divided by its own plateau. If every slice were flat, the reduction would be perfect.
+
+![H2O 1 Å band, single-λ slices, four variants](assets/water4/w4b_slices_H2O_1A.png)
+
+![H2O 2.5 Å band, single-λ slices, four variants](assets/water4/w4b_slices_H2O_2.5A.png)
+
+With the own-band flood (solid blue):
+- **Mid-λ slices droop** at their high-Q end, i.e. their largest angles (~25–35°): by 1–2 % at
+  λ 2.4–3.0 Å in the 1 Å band.
+- **Long-λ slices rise** by 0.5–1 % there.
+- **The shortest slices are roughly flat.**
+
+**The combined curve's dip at Q 1.0–1.3 Å⁻¹ is made of those drooping mid-λ slices,** not of
+water's S(Q). It is over-compensation at high angle, as suspected: water should be flat there,
+then rise smoothly toward its ~2 Å⁻¹ peak.
+
+**Where it lies: constant angle, not constant Q.** In the (Q, λ) maps a feature of the
+sample's S(Q) is vertical (fixed Q), and a per-pixel feature follows the dotted constant-2θ
+curves. The H2O deviations follow the constant-angle curves.
+
+![H2O slice shape in the (Q, λ) plane, four variants](assets/water4/w4b_maps_H2O.png)
+
+Combined I(Q) (drtsans, incoh fit on):
+
+| H2O | Q 0.1–0.9 max / rms | χ²/bin | I(0.8) | I(1.0) | I(1.2) | I(1.5) | I(2.0) |
+|---|---|---|---|---|---|---|---|
+| 1 Å band, own-band flood | 0.33 / 0.13 % | 14 | 1.001 | 0.997 | **0.994** | 1.000 | 1.003 |
+| 1 Å band, own-band, back tubes masked | 0.35 / 0.14 % | 15 | 1.003 | 0.997 | 0.994 | 1.000 | 1.002 |
+| 1 Å band, **2.5 Å-band flood** | 0.89 / 0.24 % | 136 | 0.993 | 0.986 | **0.982** | 0.987 | 0.988 |
+| 1 Å band, 2.5 Å-band flood, back tubes masked | 0.80 / 0.21 % | 52 | 0.995 | 0.987 | 0.983 | 0.988 | 0.988 |
+| 2.5 Å band, own-band flood | 0.42 / 0.13 % | 11 | 0.998 | 0.994 | 0.988 | – | – |
+| 2.5 Å band, own-band, back tubes masked | 0.35 / 0.13 % | 6.5 | 0.999 | 0.994 | 0.987 | – | – |
+| 2.5 Å band, 1 Å-band flood | 0.74 / 0.33 % | 197 | 1.006 | 1.004 | 1.001 | – | – |
+
+- **Back-tube masking is not the fix.** It changes the combined curve by ≤ 0.1 %, and the
+  slices become *less* consistent across λ, because it removes half the counts. The spread
+  over λ at Q 0.8–1.2 grows 2.2 → 5.4 % (1 Å) and 1.5 → 1.8 % (2.5 Å).
+- **The flood must come from the same band as the data.** The 2.5 Å water flood on 1 Å data
+  triples the valley (−1.8 % at 1.2 Å⁻¹) and keeps the whole high-Q end 1.2 % low. That is
+  the band dependence of the flood's high-angle response (Water 3 §8). Here the flood really
+  does "force the high-angle intensity down".
+
+**Your point 4: does the water flood absorb water's own S(Q)?** A flood made from a scatterer
+that is not flat carries its I(Q) at every pixel. The standard remedy assumes nothing about
+energy transfer, only that the sample scatters as a function of Q. Divide the sample's own
+shape out: F = X · Σ_λ φ · P / S(Q). S(Q) is estimated from the data themselves and iterated to
+self-consistency (`leak_w4.py`; converged, flood change < 0.02 %).
+
+![water's self-consistent S(Q), and the S-aware ÷ plain flood vs angle](assets/water4/w4b_leak.png)
+
+- **The effect is small:** the 2.5 Å flood changes by at most 0.7 % at 35°, the 1 Å flood by
+  at most 0.4 %.
+- **It goes the wrong way:** the S-aware flood is *higher* at large angle, which would push
+  the samples further *down* there.
+
+So flood leakage of water's S(Q) is **not** what makes the valley.
+
+**Is the remaining angle × λ "fan" the detector or the sample?** Take away everything that
+depends on Q only (each slice ÷ the median over λ at the same Q). What is left, F(Q, λ) − 1, is
+the pure angle × λ part. It can be compared between samples at the same (Q, λ), and so at the
+same pixels, flood and detector (`fanshare_w4.py`).
+
+| other sample vs H2O | k (1 = same fan) | correlation |
+|---|---|---|
+| PMMA (solid, T ≈ 0.63), 1 Å / 2.5 Å band | −0.13 / −0.06 | −0.18 / −0.06 |
+| D2O (liquid, T ≈ 0.93), 1 Å / 2.5 Å band | 0.92 / 0.68 | 0.17 / 0.22 (noisy) |
+
+![angle × λ part of H2O, D2O and PMMA](assets/water4/w4b_fanshare.png)
+
+**PMMA does not share H2O's fan;** its own pattern is roughly the opposite. A detector or
+flood effect would be the same for every sample at the same pixels and λ, so **the fan
+belongs to the sample, liquid water**. D2O, also liquid water, leans the same way, but its
+weak signal makes that uncertain.
+
+That points to water's inelastic scattering. The neutrons that reach the detector do not have
+the incident energy, and their detection efficiency and path attenuation differ from what the
+reduction assumes. As noted, that cannot be quantified for a general sample without knowing the
+energy transfer, so it is **not corrected** here.
+
+**Summary of part 2.**
+- **Recommended:** fixes 1 and 2 (TOF edge cuts in flood and reduction; blocked beam in both),
+  with the **own-band** flood. Self-flooded H2O is flat to 0.13 % rms (Q 0.1–0.9), dips
+  −0.6 % (1 Å band) / −1.2 % (2.5 Å band) at Q 1.2 Å⁻¹, and rises smoothly to +0.3 % at 2 Å⁻¹
+  (1 Å band).
+- **Not the cause:** back tubes (masking doesn't help), and flood leakage of water's S(Q)
+  (≤ 0.7 %, opposite sign).
+- **The cause of the remaining valley:** an angle × λ fan of the individual slices, specific
+  to liquid water (not shared by PMMA), i.e. sample-side inelastic effects. A λ-independent
+  flood cannot remove it, and correcting it would need the sample's energy transfer.
+- **Avoid:** the other band's water flood (triples the valley).
+
+**Provenance (§10).** 2026-09-25, drtsans `1.34.0`, `2026B_mp/reduction/water3/`:
+- **Floods:** `reduce_w3.py pmma <cfg> --bb --cuttof=1650,3150 --only=H2O:off` →
+  `make_water_bs_floods.py --bb --cut` → `floods/Sensitivity_H2Obsbbcut_*`.
+- **Reductions:** `reduce_w3.py waterbsbbcut[1A] <cfg> --bb --cuttof=1650,3150 [--maskback]
+  --samples=H2O,D2O` (new option `--maskback`, data reduction only). Output:
+  `reduced_waterbsbbcut*_bb_cut1650-3150[_mb]_incoh*`.
+- **Analysis in `water4/`:**
+  - `slices_w4.py` → `w4b_slices_*.png`, `w4b_maps_*.png`, `w4b_slices.json`;
+  - `leak_w4.py` → `w4b_leak.png/.json`;
+  - `fanshare_w4.py` → `w4b_fanshare.png/.json`;
+  - combined metrics → `w4b_combined.json`.
