@@ -43,6 +43,8 @@ combined curve has small but systematic deviations.
    the 1 Å band sees it at 12–20° and the 2.5 Å band at 25–35°. It is real, and it should not
    be flattened.
 
+**Summary of the whole study and the recommendations: §12.**
+
 **Result — recommended: fixes 1 and 2 only** (band edges out via wider TOF cuts, so the
 b(λ) reference is a normal slice). Self-flooded H2O is flat to **0.13 % rms (max 0.33–0.42 %)**
 over Q 0.1–0.9 Å⁻¹ in both bands. Single-λ slices, back tubes and the valley near 1 Å⁻¹ are in
@@ -262,8 +264,8 @@ b(λ) fit no longer does harm.
 
   Self-flooded H2O goes from 0.34 / 0.17 % rms to 0.11 / 0.12 % rms, the D2O slice spread
   halves, and the incoh-fit absolute level is no longer set by a band-edge slice.
-- **Use the flood from the same band as the data** (§10: the other band's flood triples the
-  valley near 1 Å⁻¹).
+- **Flood band: see §12.** At 1.3 m, prefer a long-λ band (6 Å) for the water flood, so
+  water's structure factor stays out of it. The blocked beam must match each run's band.
 - **Not recommended as a correction:** changing the θ correction's exit path. The outgoing
   energy of a general sample can't be predicted, so it would be speculation; §5 only shows
   that an angle × λ effect of this kind exists for water.
@@ -350,10 +352,12 @@ Combined I(Q) (drtsans, incoh fit on):
 - **Back-tube masking is not the fix.** It changes the combined curve by ≤ 0.1 %, and the
   slices become *less* consistent across λ, because it removes half the counts. The spread
   over λ at Q 0.8–1.2 grows 2.2 → 5.4 % (1 Å) and 1.5 → 1.8 % (2.5 Å).
-- **The flood must come from the same band as the data.** The 2.5 Å water flood on 1 Å data
-  triples the valley (−1.8 % at 1.2 Å⁻¹) and keeps the whole high-Q end 1.2 % low. That is
-  the band dependence of the flood's high-angle response (Water 3 §8). Here the flood really
-  does "force the high-angle intensity down".
+- **The flood's band makes a ~1 % difference at high angle with these two bands.** In the
+  combined I(Q), the 2.5 Å water flood on 1 Å data gives −1.8 % at 1.2 Å⁻¹ and keeps the
+  high-Q end about 1.2 % low. That is the flood's band-dependent high-angle response (Water 3
+  §8). With only the 1 Å and 2.5 Å floods, the detector's band dependence can't be separated
+  from water structure in the flood. A 6 Å-band flood would keep water's structure out
+  (§12); whether its band difference matters is still to be measured.
 
 **Your point 4: does the water flood absorb water's own S(Q)?** A flood made from a scatterer
 that is not flat carries its I(Q) at every pixel. The standard remedy assumes nothing about
@@ -402,7 +406,8 @@ energy transfer, so it is **not corrected** here.
 - **The cause of the remaining valley:** an angle × λ fan of the individual slices, specific
   to liquid water (not shared by PMMA), i.e. sample-side inelastic effects. A λ-independent
   flood cannot remove it, and correcting it would need the sample's energy transfer.
-- **Avoid:** the other band's water flood (triples the valley).
+- **Flood band:** ~1 % effect at high angle between the 1 Å and 2.5 Å floods. A long-λ
+  (6 Å) flood is preferred for 1.3 m and still to be tested (§12).
 
 **Provenance (§10).** 2026-09-25, drtsans `1.34.0`, `2026B_mp/reduction/water3/`:
 - **Floods:** `reduce_w3.py pmma <cfg> --bb --cuttof=1650,3150 --only=H2O:off` →
@@ -506,10 +511,14 @@ exactly.)
    correction.** Both come with the water's own reduction.
 3. **Wider TOF cuts**, `cutTOFmin` 1650 / `cutTOFmax` 3150 µs at 1.3 m, in the flood and in
    the data.
-4. **The flood from the same band as the data** (1 Å flood for 1 Å data).
+4. **A long-λ band for the flood at 1.3 m (6 Å, to be measured).** A 1 Å-band water flood
+   reaches Q ≈ 2–3 Å⁻¹ at large angles, where water's structure factor comes in. A 6 Å flood
+   stays below about 0.65 Å⁻¹ on the whole detector (§12).
 5. **The tube ends masked in the data reduction:** about 19 pixels from each end (rows 0–18
    and 237–255) instead of 11. The flood's end pixels then do not matter.
-6. **The blocked beam subtracted in the data reduction too** (consistent with the flood).
+6. **The blocked beam subtracted in the data reduction too**, measured **in the same band as
+   each run** (flood and samples). The 1 Å-band blocked beam is ~30 % higher than the 2.5 Å one
+   (22 000 vs 17 000 counts/s).
 
 **Still open:**
 - **Tested only on water and D2O at 1.3 m.** It should be validated on AgBe / PMMA and at
@@ -528,3 +537,57 @@ exactly.)
 - `tb_w4.py` → `w4c_tb_*.png`, `w4c_tb.json`; slice-to-slice spreads → `w4c_tb_spread.json`.
 - `agbe_pos_w4.py` → `w4c_agbe_pos.png/.json` (AgBe from `reduced_waterbs_incohoff/`).
 - `tubeend_w4.py` → `w4c_tubeend.png/.json`; `rowend_w4.py` → `w4c_rowend.png/.json`.
+
+---
+
+## 12. Summary — what makes self-flooded water flat, and what to do (2026-09-25)
+
+**Question.** H2O reduced with a flood made from the same H2O should be flat, incoh fit on. Why
+were the I(Q, λ) slices not flat? The criterion is **every single-λ slice flat**. The combined
+I(Q) is not used to judge it, because averaging over λ can create shapes that no slice has.
+
+**What was wrong, and what fixes it**
+
+| # | finding | evidence | action |
+|---|---|---|---|
+| 1 | The b(λ) fit (`selectMinIncoh`) takes the **band-edge slice** as reference. It amplifies each slice's shape by up to 2–3.4× and sets the absolute level from that slice. | Exact: after = before × c(λ)/c_ref, correlation 1.000 (§3) | Fixed by 2 |
+| 2 | **The band-edge λ bins are bad:** up to 2× in level, ±2 % in shape. | Fixed-Q test, slice levels (§4) | `cutTOFmin` / `cutTOFmax` **1650 / 3150 µs** at 1.3 m (default 500 / 2000), in the flood and the data |
+| 3 | **Tube ends:** vertical positions drift by 4–6 mm (≈ 1 pixel) near the ends, and the last ~15–18 pixels respond differently with λ. | AgBe at 4 / 2.5 / 1.3 m; same-angle end-vs-middle Δ: 1.7 / 0.9 % vs 0.3 % (§11) | Mask **~19 pixels at each tube end** in the data (rows 0–18, 237–255; today 0–10, 245–255). This halves the per-slice deviation in the 2.5 Å band. |
+| 4 | **Blocked beam:** 1.5 % of the water counts, top-heavy. Not removed by the banjo subtraction. | Water 3 §9 | Subtract it in the flood **and** the data, measured **in each run's band** |
+| 5 | **Banjo quartz in a water flood** adds high-Q structure. | Water 3 §1–3 | Build the water flood with the banjo subtracted |
+| 6 | A water-specific **angle × λ fan** remains (±0.3–0.5 % at the largest angles). | Not shared by PMMA (§10); fixed-Q trend (§5) | **Not corrected.** It depends on the sample's energy transfer, and assuming it would be speculation. |
+| 7 | **Back tubes** | Masking them changes ≤ 0.1 %; slices get noisier (§10) | Keep them |
+| 8 | **The flood absorbing water's own S(Q)** | Self-consistent S-aware flood: ≤ 0.7 %, opposite sign (§10) | Not the cause |
+
+**Result (H2O at 1.3 m, own reduction, fixes 2 + 3, drtsans θ correction unchanged):** single-λ
+slices are flat to **0.26 % rms (2.5 Å band) and 0.39 % (1 Å band)** over Q > 0.3 Å⁻¹. They
+agree with each other to 0.2–0.3 %. What remains is concentrated at the extreme corners
+(> 32°) and in the water-specific fan (item 6).
+
+**Recommended water sensitivity (1.3 m):**
+1. **Sample:** H2O 1 mm in the banjo. Subtract **the empty banjo and the blocked beam**,
+   measured in the flood's band; build the flood from the water's reduction
+   (`make_water_bs_floods.py --bb --cut`).
+2. **Corrections:** solid angle with the reduction geometry, and the θ-dependent
+   (self-absorption) correction with the water's own transmission.
+3. **TOF cuts:** 1650 / 3150 µs, in the flood and the data.
+4. **Band: long λ (6 Å) for the flood.** At 1.3 m a 1 Å-band water flood reaches Q ≈ 2–3 Å⁻¹ at
+   large angles, where water's structure factor comes in. A 6 Å flood stays below about
+   0.65 Å⁻¹ everywhere (λ ≥ 6 Å at 2θ ≤ 36°), where water is flat. In our data the 1 Å and
+   2.5 Å floods differ by about 1 % at high angle. Whether a 6 Å flood's band difference
+   matters for short-λ data has to be measured.
+5. **Data reductions:** tube ends masked (~19 pixels), blocked beam in the same band as each
+   run, TOF cuts as above.
+
+**Next measurement (proposed, 1.3 m):**
+- H2O 1 mm, the empty banjo, their transmissions, and a **blocked beam in the 6 Å band**;
+- the blocked beam repeated in every band used;
+- AgBe and PMMA for validation.
+
+Then compare the 6 Å and 2.5 Å water floods on single-λ slices of H2O, D2O, AgBe and PMMA at
+1 Å and 2.5 Å, and apply the recipe at 2.5 m and 4 m, where the tube-end position error is
+also present.
+
+**Not changed:** production floods and settings. The water floods remain in
+`2026B_mp/reduction/water3/floods/` (the banjo-subtracted `H2Obs` copies are in `2026B_mp/`
+as alternatives).
