@@ -1118,6 +1118,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w5src, f), os.path.join(w5dest, f))
 
+    # Water-6 study (tube-end lambda-dependent sensitivity model): doc/water6.md, doc/water6_assets/ -> assets/water6/.
+    water6_md = None
+    w6p = os.path.join(DOC_DIR, "water6.md")
+    if os.path.isfile(w6p):
+        try:
+            with open(w6p, errors="replace") as fh:
+                water6_md = fh.read()
+        except OSError:
+            water6_md = None
+    w6src = os.path.join(DOC_DIR, "water6_assets")
+    if water6_md and os.path.isdir(w6src):
+        w6dest = os.path.join(ASSETS_DIR, "water6")
+        os.makedirs(w6dest, exist_ok=True)
+        for f in os.listdir(w6src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(w6src, f), os.path.join(w6dest, f))
+
     # Blocked-beam study: doc/blockedbeam.md, doc/blockedbeam_assets/ -> assets/blockedbeam/.
     blockedbeam_md = None
     bbp = os.path.join(DOC_DIR, "blockedbeam.md")
@@ -1149,6 +1166,7 @@ def main():
         "water3_md": water3_md,
         "water4_md": water4_md,
         "water5_md": water5_md,
+        "water6_md": water6_md,
         "blockedbeam_md": blockedbeam_md,
         "attenuation_md": attenuation_md,
     }
