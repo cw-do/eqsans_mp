@@ -4,7 +4,7 @@
 Aug 2026 and the 2026-09-23 block (H2O / D2O / PMMA / banjo / blocked beam, 1.3 / 2.5 / 4 m) ·
 **scripts:** `prepare_sensitivity.py` (tools master = `2026B_mp/` copy),
 `2026B_mp/reduction/water3/summary/` (`floodcmp_sum.py`, `pmmapeak_sum.py`, `recipe_sum.py`,
-`run_tail_sum.sh`), `reduce_w3.py` (flood sets `recipe` / `pmma`, `--winbkg`)
+`pmmadip_sum.py`, `run_tail_sum.sh`), `reduce_w3.py` (flood sets `recipe` / `pmma`, `--winbkg`)
 
 This page closes the flood study (Water 1–7, Blocked beam, Reduction flow). It says what we found
 in plain terms, which sensitivity files are in use now, and how future floods should be made.
@@ -190,6 +190,37 @@ PMMA (Water 3).
 A note on the longest-λ slices in both floods: they drop by a few % in their last few points (2θ
 beyond ~25°). This is a sample-vs-flood difference at the largest angles. The likely candidate is
 the exit-path / inelastic effect we chose not to model. It does not move the peak.
+
+### 5b. Is the dip just before the peak real? — No
+
+In Fig. 2 (bottom right), several slices go down near Q ≈ 0.8–0.95 Å⁻¹ and then up into the peak. Two
+tests on the 1 Å band (script `pmmadip_sum.py`):
+
+![Is the dip before the PMMA peak real?](assets/senssummary/sum_pmma_dip.png)
+
+*Fig. 2b — The PMMA slices of Fig. 2 (water flood, 1 Å band, 24 px tube ends masked). Red points: 2θ ≥ 27°,
+the end of each slice. **1:** vs Q; black = median of the slices using only 2θ < 27°. **2:** the same
+slices vs 2θ. **3:** PMMA ÷ H2O, slice by slice: same flood, same pixels, same λ, so the flood and the
+detector cancel exactly.*
+
+- **The dip belongs to the angle, not to Q.** Only the long-λ slices (3.5–4.3 Å) go down. They go down
+  only in their last points, at 2θ ≈ 27–35° (panel 2: every slice bends down at the same large angles).
+  At Q 0.8–0.9 Å⁻¹:
+  - points at 2θ ≥ 27° average **−0.7 %** (down to −3 % in single slices);
+  - points below 27° average **+0.5 %**, already climbing toward the peak.
+
+  A real structure would sit at the same Q in every slice, and it doesn't.
+- **It is not the flood or the detector either.** In PMMA ÷ H2O (panel 3) the flood and detector
+  cancel, yet the red points still drop (−1.0 % at Q 0.7–0.8). So it is a difference between the
+  PMMA sheet and water at the largest angles: the same slice-end drop noted in §5. We are not
+  modelling it.
+- **PMMA's real shape** (black line, low- and mid-angle points only) is flat to within ±0.4 % from
+  Q 0.4 to 0.85 Å⁻¹. It has a faint +0.4 % bump at 0.6 and −0.2 % at 0.77, which is at the ~0.3 %
+  limit of the method and so not resolvable. From 0.85 it rises smoothly into the peak: **+10 % at
+  Q ≈ 1.24 Å⁻¹**.
+- **Practical point:** in any slice, the last few points at 2θ ≳ 27° are the least reliable, for PMMA
+  more than for water. The 24 px tube-end mask does not remove them, because they are the detector
+  corners, not the tube ends.
 
 ---
 
