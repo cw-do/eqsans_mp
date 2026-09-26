@@ -182,7 +182,7 @@ correction (Water 1–2).
 | flood sample (⑥) | Thin PMMA has structure near 1 Å⁻¹. A water flood needs the quartz cell (and the blocked beam) subtracted. | Water 3 |
 | band edges (1: `cutTOFmin/max`) + b(λ) (5) | The first and last λ bins are bad. The b(λ) fit with `selectMinIncoh` then uses such a slice as its reference, which amplifies every slice's shape (up to 3×). At 1.3 m use 1650 / 3150 µs. | Water 4 |
 | θ-dependent transmission (⑦) | It uses the incident-λ transmission for the path out of the sample. For water (inelastic) that is an approximation (not corrected: the outgoing energy isn't known). | Water 4 §5 |
-| sensitivity (⑥) | **The pixel sensitivity depends on λ**, most at the **tube ends** (last ~20–25 pixels), and between the front / back tube layers. One number per pixel cannot follow it. Mask ~24 pixels at each end, or apply a λ-dependent tube-end model. | Water 5, Water 6 |
+| sensitivity (⑥) | **The pixel response depends on λ**: the front / back tube layers (3He shadowing) and the incidence angle (gas path length) are genuine wavelength effects. The **tube ends** (last ~20–25 px) depend on the **instantaneous count rate** (pile-up), which varies over the TOF frame. One number per pixel cannot follow either. Mask ~24 px at each end, or apply a rate-dependent tube-end correction. | Water 5, 6, 7 |
 | binning (5) | Judge a reduction by its **single I(Q, λ) slices**. The combined I(Q)'s shape also carries the per-λ step (b or k) of the averaging. | Water 4–6 |
 
 **Glossary.**

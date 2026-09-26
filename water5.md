@@ -5,6 +5,8 @@ D2O, PMMA) and IPTS-36254 (2025B: PMMA, vanadium) · **scripts:**
 `2026B_mp/reduction/water3/water5/` (`simple_w5.py`, `proof_w5.py`, `result_w5.py`), using the Water 4 tools in
 `water3/water4/` (`tail_w4.py`: drtsans's own binning / incoh-fit tail; `run_tail_end.sh`)
 
+> **Update (Water 7, 2026-09-26):** the tube-end part is a **count-rate** effect (most likely pile-up in the charge-division readout), not a pure wavelength effect. In broadband runs it follows the instantaneous count rate over the time frame with one coefficient for both bands, and it vanishes in low-rate monochromatic runs. The front/back-layer and incidence-angle parts are genuine wavelength effects. See the **Water 7** tab.
+
 **Question.** Does the sensitivity of the pixels along a vertical 3He tube change with
 wavelength, most of all at high angle? If so, a flood with one value per pixel cannot be
 exact.
