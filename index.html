@@ -243,6 +243,7 @@
       <button data-view="monowl4">monoWL4</button>
       <button data-view="monowl5">monoWL5</button>
       <button data-view="reductionflow">Reduction flow</button>
+      <button data-view="senssummary">Sensitivity summary</button>
       <button data-view="water">Water (high-Q)</button>
       <button data-view="water2">Water 2</button>
       <button data-view="water3">Water 3</button>
@@ -1226,6 +1227,24 @@ function renderWater6(){
   return wrap;
 }
 
+function renderSensSummary(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Sensitivity summary — what we found, what is deployed, what to do next"));
+  head.append(el("span","badge latest","conclusions · recipe"));
+  wrap.append(head);
+  wrap.append(el("div","sub","The water / PMMA flood study (Water 1–7, Blocked beam) in plain terms: the findings, the sensitivity deployed now, the recommended recipe for future floods, and the PMMA test with a water flood."));
+  if(D.senssummary_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.senssummary_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No sensitivity summary found. Add doc/senssummary.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderWater7(){
   const wrap = el("div");
   const head = el("div","cyclehead");
@@ -1371,6 +1390,7 @@ function render(){
   if(view==="water5"){ main.append(renderWater5()); return; }
   if(view==="water6"){ main.append(renderWater6()); return; }
   if(view==="water7"){ main.append(renderWater7()); return; }
+  if(view==="senssummary"){ main.append(renderSensSummary()); return; }
   if(view==="blockedbeam"){ main.append(renderBlockedBeam()); return; }
   if(view==="reductionflow"){ main.append(renderReductionFlow()); return; }
 
@@ -1426,7 +1446,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Water 7","water7",D.water7_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Sensitivity summary","senssummary",D.senssummary_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Water 7","water7",D.water7_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});

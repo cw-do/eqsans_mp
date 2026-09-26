@@ -1152,6 +1152,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w7src, f), os.path.join(w7dest, f))
 
+    # Sensitivity summary page (conclusions of the water / PMMA study): doc/senssummary.md, senssummary_assets -> assets/senssummary/.
+    senssummary_md = None
+    smp = os.path.join(DOC_DIR, "senssummary.md")
+    if os.path.isfile(smp):
+        try:
+            with open(smp, errors="replace") as fh:
+                senssummary_md = fh.read()
+        except OSError:
+            senssummary_md = None
+    smsrc = os.path.join(DOC_DIR, "senssummary_assets")
+    if senssummary_md and os.path.isdir(smsrc):
+        smdest = os.path.join(ASSETS_DIR, "senssummary")
+        os.makedirs(smdest, exist_ok=True)
+        for f in os.listdir(smsrc):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(smsrc, f), os.path.join(smdest, f))
+
     # Reduction-flow page: doc/reductionflow.md, doc/reductionflow_assets/*.png -> assets/reductionflow/.
     reductionflow_md = None
     rfp = os.path.join(DOC_DIR, "reductionflow.md")
@@ -1202,6 +1219,7 @@ def main():
         "water5_md": water5_md,
         "water6_md": water6_md,
         "water7_md": water7_md,
+        "senssummary_md": senssummary_md,
         "blockedbeam_md": blockedbeam_md,
         "reductionflow_md": reductionflow_md,
         "attenuation_md": attenuation_md,
