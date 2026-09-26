@@ -1,0 +1,70 @@
+{
+ "1.3 m \u00b7 1 \u00c5 band|H2O \u00f7 100": {
+  "run": 188966,
+  "total_rate_per_s": 1400483.5793318585
+ },
+ "1.3 m \u00b7 1 \u00c5 band|empty banjo \u00f7 10": {
+  "run": 188962,
+  "total_rate_per_s": 183364.9925810478
+ },
+ "1.3 m \u00b7 1 \u00c5 band|blocked beam": {
+  "run": 188968,
+  "total_rate_per_s": 22305.537345162033
+ },
+ "1.3 m \u00b7 2.5 \u00c5 band|H2O \u00f7 100": {
+  "run": 188982,
+  "total_rate_per_s": 1180932.3251680091
+ },
+ "1.3 m \u00b7 2.5 \u00c5 band|empty banjo \u00f7 10": {
+  "run": 188978,
+  "total_rate_per_s": 136948.65741361937
+ },
+ "1.3 m \u00b7 2.5 \u00c5 band|blocked beam": {
+  "run": 188984,
+  "total_rate_per_s": 17101.810623317026
+ },
+ "BB 1.3 m \u00b7 1 \u00c5|top rows 200-244": {
+  "rate_per_s": 6589.227275931241
+ },
+ "BB 1.3 m \u00b7 1 \u00c5|bottom rows 11-55": {
+  "rate_per_s": 2440.237428486883
+ },
+ "BB 1.3 m \u00b7 1 \u00c5": {
+  "run": 188968,
+  "total_rate_per_s": 22305.537345162033,
+  "prompt_fraction_first_2ms": 0.060084367859474776
+ },
+ "BB 1.3 m \u00b7 2.5 \u00c5|top rows 200-244": {
+  "rate_per_s": 5207.22055601038
+ },
+ "BB 1.3 m \u00b7 2.5 \u00c5|bottom rows 11-55": {
+  "rate_per_s": 1769.1395654464725
+ },
+ "BB 1.3 m \u00b7 2.5 \u00c5": {
+  "run": 188984,
+  "total_rate_per_s": 17101.810623317026,
+  "prompt_fraction_first_2ms": 0.0793535076953052
+ },
+ "BB 2.5 m \u00b7 2.5 \u00c5|top rows 200-244": {
+  "rate_per_s": 1036.18900243849
+ },
+ "BB 2.5 m \u00b7 2.5 \u00c5|bottom rows 11-55": {
+  "rate_per_s": 522.6355685606088
+ },
+ "BB 2.5 m \u00b7 2.5 \u00c5": {
+  "run": 189000,
+  "total_rate_per_s": 3665.644910633243,
+  "prompt_fraction_first_2ms": 0.08355215833817119
+ },
+ "BB 4 m \u00b7 2.5 \u00c5|top rows 200-244": {
+  "rate_per_s": 222.3233050557078
+ },
+ "BB 4 m \u00b7 2.5 \u00c5|bottom rows 11-55": {
+  "rate_per_s": 193.31792336698615
+ },
+ "BB 4 m \u00b7 2.5 \u00c5": {
+  "run": 189016,
+  "total_rate_per_s": 1111.1022602077378,
+  "prompt_fraction_first_2ms": 0.09223909607282717
+ }
+}

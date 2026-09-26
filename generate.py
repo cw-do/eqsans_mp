@@ -1118,6 +1118,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w5src, f), os.path.join(w5dest, f))
 
+    # Blocked-beam study: doc/blockedbeam.md, doc/blockedbeam_assets/ -> assets/blockedbeam/.
+    blockedbeam_md = None
+    bbp = os.path.join(DOC_DIR, "blockedbeam.md")
+    if os.path.isfile(bbp):
+        try:
+            with open(bbp, errors="replace") as fh:
+                blockedbeam_md = fh.read()
+        except OSError:
+            blockedbeam_md = None
+    bbsrc = os.path.join(DOC_DIR, "blockedbeam_assets")
+    if blockedbeam_md and os.path.isdir(bbsrc):
+        bbdest = os.path.join(ASSETS_DIR, "blockedbeam")
+        os.makedirs(bbdest, exist_ok=True)
+        for f in os.listdir(bbsrc):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(bbsrc, f), os.path.join(bbdest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -1132,6 +1149,7 @@ def main():
         "water3_md": water3_md,
         "water4_md": water4_md,
         "water5_md": water5_md,
+        "blockedbeam_md": blockedbeam_md,
         "attenuation_md": attenuation_md,
     }
     out = os.path.join(DOC_DIR, "data.js")

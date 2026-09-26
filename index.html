@@ -247,6 +247,7 @@
       <button data-view="water3">Water 3</button>
       <button data-view="water4">Water 4</button>
       <button data-view="water5">Water 5</button>
+      <button data-view="blockedbeam">Blocked beam</button>
       <button data-view="atten">Atten (trans)</button>
     </div>
   </nav>
@@ -1204,6 +1205,24 @@ function renderWater5(){
   return wrap;
 }
 
+function renderBlockedBeam(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Blocked beam — what it is, and does it depend on wavelength?"));
+  head.append(el("span","badge latest","1.3 / 2.5 / 4 m · 1 Å and 2.5 Å bands"));
+  wrap.append(head);
+  wrap.append(el("div","sub","The blocked-beam runs of the 2026-09-23 block: time-of-flight structure, wavelength dependence in drtsans units, the 1 Å vs 2.5 Å band at the same wavelength, where on the detector, and what it means for reductions."));
+  if(D.blockedbeam_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.blockedbeam_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No blocked-beam documentation found. Add doc/blockedbeam.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderAtten(c){
   const wrap = el("div");
   wrap.append(el("div","sectitle","Attenuation for transmission (monochromatic)"));
@@ -1293,6 +1312,7 @@ function render(){
   if(view==="water3"){ main.append(renderWater3()); return; }
   if(view==="water4"){ main.append(renderWater4()); return; }
   if(view==="water5"){ main.append(renderWater5()); return; }
+  if(view==="blockedbeam"){ main.append(renderBlockedBeam()); return; }
 
   const c = byId[current];
   if(!c){ main.append(el("div","empty","No cycle data. Run generate.py.")); return; }
@@ -1346,7 +1366,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});
