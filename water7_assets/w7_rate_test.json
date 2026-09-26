@@ -1,0 +1,62 @@
+{
+ "bottom|front": {
+  "alpha_pct_per_10k": -0.6874501270663311,
+  "1A": {
+   "D2O_signal_rms_pct": 1.4998846931785526,
+   "misfit_rate_hypothesis_pct": 1.6071775632330823,
+   "misfit_wavelength_hypothesis_pct": 2.7880358056549577,
+   "rate_ratio_H2O_over_D2O": 4.204054963824004
+  },
+  "2.5A": {
+   "D2O_signal_rms_pct": 1.4157581744764831,
+   "misfit_rate_hypothesis_pct": 1.5635411096453646,
+   "misfit_wavelength_hypothesis_pct": 2.5860583198502938,
+   "rate_ratio_H2O_over_D2O": 4.500853588070975
+  }
+ },
+ "bottom|back": {
+  "alpha_pct_per_10k": -0.6522555505071121,
+  "1A": {
+   "D2O_signal_rms_pct": 4.655729632965882,
+   "misfit_rate_hypothesis_pct": 4.4774697065844755,
+   "misfit_wavelength_hypothesis_pct": 2.304296501324146,
+   "rate_ratio_H2O_over_D2O": 4.204054963824004
+  },
+  "2.5A": {
+   "D2O_signal_rms_pct": 3.1199543449134346,
+   "misfit_rate_hypothesis_pct": 3.2957872343549286,
+   "misfit_wavelength_hypothesis_pct": 3.133595210510897,
+   "rate_ratio_H2O_over_D2O": 4.500853588070975
+  }
+ },
+ "top|front": {
+  "alpha_pct_per_10k": -0.3998524150026932,
+  "1A": {
+   "D2O_signal_rms_pct": 3.141626993128986,
+   "misfit_rate_hypothesis_pct": 3.1744512068591404,
+   "misfit_wavelength_hypothesis_pct": 2.1704599106196287,
+   "rate_ratio_H2O_over_D2O": 4.204054963824004
+  },
+  "2.5A": {
+   "D2O_signal_rms_pct": 1.4552318609052495,
+   "misfit_rate_hypothesis_pct": 1.3298940373830888,
+   "misfit_wavelength_hypothesis_pct": 1.4981409714089098,
+   "rate_ratio_H2O_over_D2O": 4.500853588070975
+  }
+ },
+ "top|back": {
+  "alpha_pct_per_10k": -0.4264968581481576,
+  "1A": {
+   "D2O_signal_rms_pct": 3.741678484622303,
+   "misfit_rate_hypothesis_pct": 3.5900691122243296,
+   "misfit_wavelength_hypothesis_pct": 2.45988065063451,
+   "rate_ratio_H2O_over_D2O": 4.204054963824004
+  },
+  "2.5A": {
+   "D2O_signal_rms_pct": 1.3744777274091302,
+   "misfit_rate_hypothesis_pct": 1.365315357696359,
+   "misfit_wavelength_hypothesis_pct": 1.4030191027210352,
+   "rate_ratio_H2O_over_D2O": 4.500853588070975
+  }
+ }
+}

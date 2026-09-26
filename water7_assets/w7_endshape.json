@@ -1,0 +1,62 @@
+{
+ "bot|front": {
+  "h (gas path)": {
+   "amplitude": 0.07667494021299252,
+   "rms_misfit_pct": 3.2265860686744805
+  },
+  "exp(-\u03ba\u03bb) (front-tube transparency)": {
+   "amplitude": 0.15760652968333821,
+   "rms_misfit_pct": 3.1846704134320087
+  },
+  "linear \u03bb": {
+   "amplitude": 0.01205287306851314,
+   "rms_misfit_pct": 3.0974351805825
+  },
+  "rms_of_signal_pct": 3.2574540583636744
+ },
+ "bot|back": {
+  "h (gas path)": {
+   "amplitude": -0.06849269525829334,
+   "rms_misfit_pct": 1.5138653231526076
+  },
+  "exp(-\u03ba\u03bb) (front-tube transparency)": {
+   "amplitude": -0.06921291571972964,
+   "rms_misfit_pct": 1.536578818683283
+  },
+  "linear \u03bb": {
+   "amplitude": 0.010883103681914376,
+   "rms_misfit_pct": 1.2737369832437406
+  },
+  "rms_of_signal_pct": 1.565726515947773
+ },
+ "top|front": {
+  "h (gas path)": {
+   "amplitude": -0.06315725799315279,
+   "rms_misfit_pct": 1.5885185811481022
+  },
+  "exp(-\u03ba\u03bb) (front-tube transparency)": {
+   "amplitude": -0.05752870925360389,
+   "rms_misfit_pct": 1.611433404218697
+  },
+  "linear \u03bb": {
+   "amplitude": 0.01169061491107757,
+   "rms_misfit_pct": 1.3047973175513947
+  },
+  "rms_of_signal_pct": 1.630702112245851
+ },
+ "top|back": {
+  "h (gas path)": {
+   "amplitude": -0.13726205375429873,
+   "rms_misfit_pct": 0.7149440754738763
+  },
+  "exp(-\u03ba\u03bb) (front-tube transparency)": {
+   "amplitude": -0.17661900415695064,
+   "rms_misfit_pct": 0.7508289564724485
+  },
+  "linear \u03bb": {
+   "amplitude": 0.010515311780526936,
+   "rms_misfit_pct": 0.6152811409387917
+  },
+  "rms_of_signal_pct": 1.0735796920987095
+ }
+}

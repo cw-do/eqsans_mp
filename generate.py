@@ -1135,6 +1135,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w6src, f), os.path.join(w6dest, f))
 
+    # Water-7 study (lambda-dependent detector model fitted to the flood): doc/water7.md, water7_assets -> assets/water7/.
+    water7_md = None
+    w7p = os.path.join(DOC_DIR, "water7.md")
+    if os.path.isfile(w7p):
+        try:
+            with open(w7p, errors="replace") as fh:
+                water7_md = fh.read()
+        except OSError:
+            water7_md = None
+    w7src = os.path.join(DOC_DIR, "water7_assets")
+    if water7_md and os.path.isdir(w7src):
+        w7dest = os.path.join(ASSETS_DIR, "water7")
+        os.makedirs(w7dest, exist_ok=True)
+        for f in os.listdir(w7src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(w7src, f), os.path.join(w7dest, f))
+
     # Reduction-flow page: doc/reductionflow.md, doc/reductionflow_assets/*.png -> assets/reductionflow/.
     reductionflow_md = None
     rfp = os.path.join(DOC_DIR, "reductionflow.md")
@@ -1184,6 +1201,7 @@ def main():
         "water4_md": water4_md,
         "water5_md": water5_md,
         "water6_md": water6_md,
+        "water7_md": water7_md,
         "blockedbeam_md": blockedbeam_md,
         "reductionflow_md": reductionflow_md,
         "attenuation_md": attenuation_md,

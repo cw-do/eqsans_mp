@@ -1,0 +1,50 @@
+{
+ "vertical_tube_ends": [
+  {
+   "radius_cm": [
+    34.0,
+    38.0
+   ],
+   "2theta": 9.016006273215659,
+   "d_order3_minus_order2_mrad": -0.2972355024312423,
+   "order2": -0.07997096350464972,
+   "order3": -0.377206465935892,
+   "order4": null
+  },
+  {
+   "radius_cm": [
+    38.0,
+    42.0
+   ],
+   "2theta": 10.007556205619657,
+   "d_order3_minus_order2_mrad": -1.773837562582481,
+   "order2": 0.8680471788221344,
+   "order3": -0.9057903837603465,
+   "order4": null
+  }
+ ],
+ "horizontal_control": [
+  {
+   "radius_cm": [
+    34.0,
+    38.0
+   ],
+   "2theta": 9.090302390424528,
+   "d_order3_minus_order2_mrad": -0.5634483652053599,
+   "order2": 2.30879049665314,
+   "order3": 1.7453421314477802,
+   "order4": null
+  },
+  {
+   "radius_cm": [
+    38.0,
+    42.0
+   ],
+   "2theta": 10.075405335946272,
+   "d_order3_minus_order2_mrad": -0.6008591668504037,
+   "order2": 1.8623967609250058,
+   "order3": 1.261537594074602,
+   "order4": null
+  }
+ ]
+}

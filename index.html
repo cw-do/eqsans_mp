@@ -249,6 +249,7 @@
       <button data-view="water4">Water 4</button>
       <button data-view="water5">Water 5</button>
       <button data-view="water6">Water 6</button>
+      <button data-view="water7">Water 7</button>
       <button data-view="blockedbeam">Blocked beam</button>
       <button data-view="atten">Atten (trans)</button>
     </div>
@@ -1225,6 +1226,24 @@ function renderWater6(){
   return wrap;
 }
 
+function renderWater7(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Water 7 — a wavelength-dependent detector model fitted to the flood"));
+  head.append(el("span","badge latest","detector model · physics · count rate"));
+  wrap.append(head);
+  wrap.append(el("div","sub","ε(pixel, λ) = s(pixel) × M(pixel, λ): a detector model fitted to the H2O flood, the flood ÷ M flat, the physics of each term (tube-layer shadowing, gas path length, and tube ends as a count-rate effect), transfer to other samples and I(Q, λ) slices."));
+  if(D.water7_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.water7_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No Water 7 documentation found. Add doc/water7.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderBlockedBeam(){
   const wrap = el("div");
   const head = el("div","cyclehead");
@@ -1351,6 +1370,7 @@ function render(){
   if(view==="water4"){ main.append(renderWater4()); return; }
   if(view==="water5"){ main.append(renderWater5()); return; }
   if(view==="water6"){ main.append(renderWater6()); return; }
+  if(view==="water7"){ main.append(renderWater7()); return; }
   if(view==="blockedbeam"){ main.append(renderBlockedBeam()); return; }
   if(view==="reductionflow"){ main.append(renderReductionFlow()); return; }
 
@@ -1406,7 +1426,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Water 7","water7",D.water7_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});
