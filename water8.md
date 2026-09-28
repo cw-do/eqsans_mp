@@ -2,8 +2,7 @@
 
 **Date:** 2026-09-28 · **drtsans:** stable `1.34.0` · **data:** 1.3 m, 1 Å band (IPTS-37618, 2026-09-23
 block): empty banjo cell S 188962 / T 188954, thin PMMA S 188965 / T 188957, PeltierWindow background
-S 188961 / T 188953 · **scripts:** `2026B_mp/reduction/water3/summary/banjo_w8.py`, `reduce_w3.py`
-(set `recipe`, `--winbkg`), `water4/tail_w4.py`
+S 188961 / T 188953 · **scripts:** `2026B_mp/reduction/water3/summary/banjo_w8.py`, `proof_w8.py`, `reduce_w3.py` (sets `recipe` / `none` = no sensitivity, `--winbkg`), `water4/tail_w4.py`
 
 Two of our flood choices carry the sample cell's or sheet's own structure into the flood: a **thin
 PMMA** flood carries PMMA's, and a **water-in-banjo** flood carries the empty banjo cell's (which is
@@ -42,6 +41,12 @@ flat **incoherent** background from its hydrogen, with a small coherent halo on 
 Weak-but-sharp vs strong-but-broad. The reduction of both is on the same absolute scale; only the middle
 and right panels are divided by their own baseline to compare shape.
 
+![Absolute I(Q), linear y](assets/water8/w8_fig1b_linear.png)
+
+*Fig. 1b — the same absolute I(Q) on a **linear** y-axis (Fig. 1 left is log). The banjo cell sits near
+the bottom (~0.1), a fraction of PMMA (~1.5). Its silica peak at 1.54 Å⁻¹ and PMMA's halo at 1.24 Å⁻¹
+are both visible as small bumps on their respective levels.*
+
 ## What it shows
 
 | feature | Q (Å⁻¹) | as 2θ, 1 Å band | height above baseline | what it is |
@@ -73,6 +78,46 @@ The reason for this comparison was to check whether the banjo cell could be behi
    residual banjo feature would land at 1.54 Å⁻¹, not 0.7.
 
 Wrong beam path *and* wrong Q. The PMMA 0.6 / 0.78 Å⁻¹ features are PMMA's own inter-chain structure.
+
+## Extra proof: reduce three ways, including no flood at all
+
+The comparison above uses the recipe flood, which *is* water-in-banjo. To rule out any feedback from the
+banjo through the flood, we reduced banjo and PMMA **three ways** at 1.3 m / 1 Å: with **no sensitivity
+correction at all**, with the recipe H₂O-banjo flood, and with PMMA's **own** flood (a completely
+different structure). The curves below are the median over wavelength slices (each normalised at Q
+0.35–0.5 Å⁻¹, θ < 33°) — robust to the extra pixel scatter you get without a flood.
+
+![No-flood proof](assets/water8/w8_noflood_proof.png)
+
+*Fig. 2 — Left: PMMA the three ways. Right: banjo, no-flood vs recipe.*
+
+**What the no-flood test does and doesn't show.** Dropping the flood sounds like the cleanest test, and
+for a **strong** feature it is: the banjo's silica peak sits at **1.54 Å⁻¹ with no flood at all**
+(×2.65), the same Q as with the flood — unambiguously intrinsic to the cell (Fig. 2 right).
+
+But for PMMA's **weak** features it backfires, and this is worth understanding. Without a flood the
+detector's own **radial efficiency** is uncorrected — pixels toward the tube ends / detector edges are
+less efficient than the centre. Within each wavelength slice, higher Q means larger angle means lower
+efficiency, so the no-flood PMMA curve **droops** toward high Q and shows a false −15 % "dip" near 0.78
+(Fig. 2 left, red). That is not structure — it is exactly the systematic the flood exists to remove.
+So "no flood" is *not* cleaner for weak features; it lets the detector's own response dominate. (An
+earlier note here guessed pixel sensitivity just averages out — the random part does, but this angular
+part does not.)
+
+**The clean proof is two different floods.** The recipe H₂O-banjo flood and PMMA's own flood share **no**
+structure — one is water in a quartz cell, the other is PMMA. Yet reduced with either, PMMA gives the
+**same** result (Fig. 2 left, blue vs green): the 1.24 Å⁻¹ halo at +8–10 %, the 0.6 peak at +0.5 %, both
+at the same Q. If the banjo (or any flood feature) were imprinting structure, swapping to the banjo-free
+PMMA flood would change it — it doesn't.
+
+| PMMA, consensus I(Q) ÷ baseline | at 0.6 | at 0.78 | at 1.24 |
+|---|---|---|---|
+| no flood (detector efficiency dominates) | 0.98 | 0.93 | 0.92 ↓ |
+| recipe H₂O-banjo flood | 1.005 | 1.000 | 1.095 |
+| PMMA's own flood | 1.000 | 0.990 | 1.082 |
+
+Together with the earlier points — banjo not in the PMMA beam, banjo smooth at 0.7, banjo's own peak at
+1.54 — this settles it: the banjo does not create PMMA's features.
 
 ## Why it matters for floods
 
