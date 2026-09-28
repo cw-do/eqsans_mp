@@ -104,6 +104,19 @@ So "no flood" is *not* cleaner for weak features; it lets the detector's own res
 earlier note here guessed pixel sensitivity just averages out — the random part does, but this angular
 part does not.)
 
+> **Why doesn't PMMA ÷ (PMMA's own flood) come out flat?** Because the flood is **not** PMMA's I(Q)
+> curve — it's **one number per pixel**, that pixel's counts summed over the **whole wavelength band**,
+> normalised to mean 1. It's a per-pixel efficiency map, not a per-Q spectrum. So (a) it is
+> wavelength-*integrated* while the data is analysed slice-by-slice at a single λ — a sharp per-slice
+> feature can't be divided out by a Q-smeared per-pixel number; a self-flood would only cancel structure
+> if it were taken at the *same single wavelength* as each slice. And (b) here the flood is the 2.5 Å
+> band while the data is 1 Å: at 2.5 Å the detector barely reaches the 1.24 Å⁻¹ halo, so the PMMA flood
+> carries almost none of it — measured, the PMMA flood ÷ the (smooth) water flood is flat to +1.7 % with
+> **no halo bump**. So the PMMA flood acts as a nearly featureless sensitivity map here, and the halo
+> passes through it (+8.2 % vs the water flood's +9.5 % — only ~1 % nibbled off, not flattened). This is
+> the same reason a structured sample is a poor flood: it can only leave smeared residuals, never a clean
+> self-cancellation.
+
 **The clean proof is two different floods.** The recipe H₂O-banjo flood and PMMA's own flood share **no**
 structure — one is water in a quartz cell, the other is PMMA. Yet reduced with either, PMMA gives the
 **same** result (Fig. 2 left, blue vs green): the 1.24 Å⁻¹ halo at +8–10 %, the 0.6 peak at +0.5 %, both
