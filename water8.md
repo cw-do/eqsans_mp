@@ -184,6 +184,33 @@ This is also a neat illustration of what a flood does and doesn't fix: it correc
 angular efficiency** (the droop, when matched to the data's distance), but it cannot move a **fixed-Q
 sample feature** — which is why the halo is immune to the flood choice while the droop is not.
 
+## Fig. 4 — the cleanest evidence: the 0.6 Å⁻¹ peak in the short-λ slices, at mid-detector
+
+All of the above wrestles with the high-Q droop. There's a simpler, more direct argument that sidesteps
+it entirely — **use only the short-wavelength slices, and look at low Q.** In the 1.47–2.07 Å slices,
+Q 0.6 Å⁻¹ falls at 2θ ≈ 8–11° (18–26 cm from the beam centre on a ~1 m detector) and Q 0.78 at 10–15° —
+the **middle of the detector**, far from the tube ends and edges where the efficiency droop lives. A
+feature there cannot be an edge or flood artifact. And we deliberately do **not** use the combined I(Q):
+combining mixes in the long-λ slices whose high-Q ends droop at the detector edge, which is what makes
+the combined curve misleading. Short slices only.
+
+![PMMA 0.6 peak in short slices](assets/water8/w8_fig4_shortslices.png)
+
+*Fig. 4 — Left: the individual short-λ slices (recipe flood), the 1.47 Å slice you'd read first in black.
+Right: the median of the short slices for all four floods. Shaded: Q 0.45–0.9 Å⁻¹, all at 2θ < 15°.*
+
+- PMMA has a **weak, broad peak at Q ≈ 0.5–0.6 Å⁻¹** (~+0.5–1 %) followed by a shallow minimum near
+  0.78 — the polymer inter-chain correlation. It sits at the same Q in the short slices.
+- **The decisive point:** at Q 0.6 (mid-detector) **all four floods agree — including no flood at all.**
+  There is no droop there, so the pixel-random part of the no-flood scatter averages out and every
+  reduction lands on the same weak bump. Contrast Q 1.24 (larger angle, near the droop), where the four
+  floods spread from +4 % to +11 % — same peak *position*, but the *amplitude* now depends on how well
+  the flood matches the data's geometry.
+- So the 0.6 Å⁻¹ peak is the strongest single piece of evidence: a fixed-Q feature, at a safe
+  mid-detector position, that survives with **no flood** and is identical across every flood. Nothing
+  in the instrument or the flood can produce it — it is PMMA's own structure. The 1.24 halo tells the
+  same story but has to be read through the droop; the 0.6 peak doesn't.
+
 ## Why it matters for floods
 
 - A **PMMA flood** stamps the 1.24 Å⁻¹ halo (and the 0.6 peak) onto every reduced curve — smeared over
