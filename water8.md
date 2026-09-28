@@ -89,7 +89,23 @@ different structure). The curves below are the median over wavelength slices (ea
 
 ![No-flood proof](assets/water8/w8_noflood_proof.png)
 
-*Fig. 2 — Left: PMMA the three ways. Right: banjo, no-flood vs recipe.*
+*Fig. 2 — median over slices. Left: PMMA the three ways. Right: banjo, no-flood vs recipe.*
+
+Since a combined or median curve can smooth over per-slice behaviour, here are the **actual I(Q, λ)
+slices** behind Fig. 2 (incoh fit on, each normalised at Q 0.35–0.5 Å⁻¹):
+
+![No-flood slices](assets/water8/w8_noflood_slices.png)
+
+*Fig. 2b — every line is one wavelength slice. This is the real test, and it separates the two things
+cleanly:*
+- ***A real feature sits at one Q in every slice.*** The PMMA 0.6 / 0.78 / 1.24 Å⁻¹ features and the
+  banjo 1.54 Å⁻¹ peak line up vertically across all slices, flood or no flood.
+- ***The no-flood PMMA droop moves with wavelength.*** In the top-left panel each slice bends down at its
+  own high-Q end — the short-λ (light) slices at high Q, the long-λ (dark) slices at low Q. That's the
+  signature of a **detector-angle** effect: the droop is pinned to the large-2θ detector edge (radial
+  efficiency), which maps to a *different* Q in each slice. A sample feature can't do that — it would
+  stay at one Q. So the −15 % "dip" the combined view showed is unmasked here as an angle artifact, not
+  structure.
 
 **What the no-flood test does and doesn't show.** Dropping the flood sounds like the cleanest test, and
 for a **strong** feature it is: the banjo's silica peak sits at **1.54 Å⁻¹ with no flood at all**
