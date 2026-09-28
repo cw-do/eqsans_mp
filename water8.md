@@ -148,6 +148,42 @@ PMMA flood would change it — it doesn't.
 Together with the earlier points — banjo not in the PMMA beam, banjo smooth at 0.7, banjo's own peak at
 1.54 — this settles it: the banjo does not create PMMA's features.
 
+## Fig. 3 — the strongest version: a 2.5 m PMMA flood on 1.3 m data
+
+One more, decisive test. Reduce the 1.3 m / 1 Å PMMA data with the **2.5 m** PMMA flood. This flood is
+"wrong" two ways: a different **distance** (a solid-angle/geometry mismatch, the Water 1 effect) and it's
+**structured** (PMMA). But the key point is the Q-reach: at 2.5 m the detector only spans 2θ ≤ 19°, so
+this flood covers only **Q ≤ 0.73 Å⁻¹** — the flat, monotonic part of PMMA. It contains **no 1.24 Å⁻¹
+halo whatsoever.** So if the halo still appears in the 1.3 m data reduced with it, the halo can only be
+the sample's.
+
+![2.5 m flood on 1.3 m data](assets/water8/w8_fig3_2p5m.png)
+
+*Fig. 3 — Left: PMMA at 1.3 m / 1 Å reduced four ways (median over slices). The 2.5 m flood (purple) and
+no-flood (red) both droop toward high Q — the wrong-distance / no-flood angular efficiency — but a bump
+still rides on top at 1.24. Right: the I(Q, λ) slices for the 2.5 m flood — each droops at its own
+high-Q end (the angle effect, moving with λ), yet the halo sits at 1.24 Å⁻¹ in every slice that reaches
+it.*
+
+Measured as a **local** bump (over a straight line through its shoulders at ~0.95 and ~1.6 Å⁻¹, which
+removes the smooth droop), the halo is present at the same Q and the same size in every case:
+
+| flood used | Q-reach of the flood | local 1.24 Å⁻¹ halo |
+|---|---|---|
+| recipe H₂O flood (1.3 m) | — (water, featureless) | +7.6 % |
+| PMMA flood (1.3 m) | ≤ 1.2 Å⁻¹ (grazes it, smeared) | +7.7 % |
+| **PMMA flood (2.5 m)** | **≤ 0.73 Å⁻¹ (never reaches it)** | **+9.3 %** |
+| no flood at all | — | +9.6 % |
+
+The halo appears at +7.6–9.6 % in **all four** — with a water flood, with a same-distance PMMA flood,
+with a 2.5 m PMMA flood that physically cannot see Q 1.24, and with no flood at all. No flood can imprint
+a feature it doesn't contain, so the 1.24 Å⁻¹ halo is unambiguously PMMA's. (The bump is a little larger
+without a matched flood because the droop lowers its shoulders; the *position* never moves.)
+
+This is also a neat illustration of what a flood does and doesn't fix: it corrects **pixel-to-pixel and
+angular efficiency** (the droop, when matched to the data's distance), but it cannot move a **fixed-Q
+sample feature** — which is why the halo is immune to the flood choice while the droop is not.
+
 ## Why it matters for floods
 
 - A **PMMA flood** stamps the 1.24 Å⁻¹ halo (and the 0.6 peak) onto every reduced curve — smeared over
