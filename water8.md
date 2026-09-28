@@ -22,8 +22,25 @@ compare shape (the absolute levels differ — PMMA scatters far more, being hydr
 
 ![Banjo cell vs PMMA structure](assets/water8/w8_banjo_pmma.png)
 
-*Fig. 1 — Left: combined I(Q), the two overlaid. Middle and right: single I(Q, λ) slices, showing each
-peak stays at one Q while the wavelength (and therefore the detector angle) moves.*
+*Fig. 1 — Left: combined I(Q) on an **absolute** log scale (as reduced) — PMMA is ~10× the banjo
+everywhere. Middle and right: single I(Q, λ) slices, each normalised to its own value at Q 0.35–0.5 Å⁻¹
+to show that the peak stays at one Q while the wavelength (and therefore the detector angle) moves.*
+
+## The banjo scatters much less than PMMA (absolute)
+
+In absolute intensity the banjo cell is far weaker than PMMA, everywhere:
+
+| Q (Å⁻¹) | 0.4 | 0.7 | 1.0 | 1.24 | 1.54 |
+|---|---|---|---|---|---|
+| **PMMA** I(Q) (1/cm) | 1.46 | 1.46 | 1.50 | 1.59 | 1.50 |
+| **banjo** I(Q) (1/cm) | 0.072 | 0.082 | 0.099 | 0.14 | 0.23 |
+
+So PMMA scatters 7–20× more than the empty banjo — as expected, since PMMA is hydrogen-rich. What makes
+the banjo's silica peak *look* dominant is only the shape normalisation in the slice panels: quartz is a
+**coherent** scatterer (low flat background, sharp peak → ×3 relative), while PMMA's ~1.5 level is mostly
+flat **incoherent** background from its hydrogen, with a small coherent halo on top (only +10 % relative).
+Weak-but-sharp vs strong-but-broad. The reduction of both is on the same absolute scale; only the middle
+and right panels are divided by their own baseline to compare shape.
 
 ## What it shows
 
@@ -41,6 +58,21 @@ peak stays at one Q while the wavelength (and therefore the detector angle) move
   artifact would track the angle, not Q. (Same test as the summary §5.)
 - **They don't overlap.** Banjo at 1.54, PMMA's halo at 1.24, PMMA's weak peak at 0.6 — three different
   places. So the banjo's structure cannot hide inside PMMA's, nor vice versa.
+
+## Did the banjo create the ~0.7 Å⁻¹ feature in PMMA? No
+
+The reason for this comparison was to check whether the banjo cell could be behind PMMA's weak peak at
+0.6 Å⁻¹ / dip at 0.78 Å⁻¹ (Water summary §5b). It cannot, for three independent reasons:
+
+1. **PMMA was not in the banjo.** The PMMA sheet (188965) is free-standing; its background is the
+   PeltierWindow (188961), not the banjo. The banjo cell was never in the PMMA beam path, so its
+   scattering cannot enter the PMMA measurement.
+2. **The banjo has no feature at 0.7.** Its I(Q) rises smoothly and monotonically through that region
+   (0.072 → 0.093 over Q 0.45–0.91) — no bump, no peak. Its only peak is the 1.54 Å⁻¹ silica FSDP.
+3. **Not through the flood either.** The recipe flood is water-in-banjo with the banjo subtracted; any
+   residual banjo feature would land at 1.54 Å⁻¹, not 0.7.
+
+Wrong beam path *and* wrong Q. The PMMA 0.6 / 0.78 Å⁻¹ features are PMMA's own inter-chain structure.
 
 ## Why it matters for floods
 
