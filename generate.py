@@ -1152,6 +1152,23 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(w7src, f), os.path.join(w7dest, f))
 
+    # Water-8 study (banjo cell vs PMMA structure): doc/water8.md, water8_assets -> assets/water8/.
+    water8_md = None
+    w8p = os.path.join(DOC_DIR, "water8.md")
+    if os.path.isfile(w8p):
+        try:
+            with open(w8p, errors="replace") as fh:
+                water8_md = fh.read()
+        except OSError:
+            water8_md = None
+    w8src = os.path.join(DOC_DIR, "water8_assets")
+    if water8_md and os.path.isdir(w8src):
+        w8dest = os.path.join(ASSETS_DIR, "water8")
+        os.makedirs(w8dest, exist_ok=True)
+        for f in os.listdir(w8src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(w8src, f), os.path.join(w8dest, f))
+
     # Sensitivity summary page (conclusions of the water / PMMA study): doc/senssummary.md, senssummary_assets -> assets/senssummary/.
     senssummary_md = None
     smp = os.path.join(DOC_DIR, "senssummary.md")
@@ -1219,6 +1236,7 @@ def main():
         "water5_md": water5_md,
         "water6_md": water6_md,
         "water7_md": water7_md,
+        "water8_md": water8_md,
         "senssummary_md": senssummary_md,
         "blockedbeam_md": blockedbeam_md,
         "reductionflow_md": reductionflow_md,
