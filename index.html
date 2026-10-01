@@ -397,9 +397,10 @@ function reductionConfig(c){
   if(c.dark_current.length) pairs.push(["DARK_CURRENT", c.dark_current[0].path]);
   // Prefer floods rebuilt with the reduction geometry when a cycle has them.
   // Alternative floods (Water 3 H2O, banjo subtracted) are listed on the page but not put in the config.
-  const sens0 = c.sensitivity.filter(f=>f.variant!=="water_bs");
+  const sens0 = c.sensitivity.filter(f=>f.variant!=="water_bs" && f.variant!=="water_recipe_1A" && f.variant!=="pmma_superseded");
   const sens = sens0.some(f=>f.recommended) ? sens0.filter(f=>f.recommended) : sens0;
-  if(sens.some(f=>f.variant==="redgeom")) out.push("# floods built with the AgBe reduction geometry (see Water (high-Q) tab)");
+  if(sens.some(f=>f.variant==="water_recipe")) out.push("# H2O floods: banjo + blocked beam subtracted, reduction geometry, self-absorption (see Sensitivity summary tab)");
+  else if(sens.some(f=>f.variant==="redgeom")) out.push("# floods built with the AgBe reduction geometry (see Water (high-Q) tab)");
   const toks = sens.map(distToken);
   const dup = new Set(toks.filter((t,i)=>toks.indexOf(t)!==i));
   sens.forEach(f => pairs.push([floodVar(f,dup), f.path]));
@@ -465,7 +466,15 @@ function renderSummary(c){
   // Sensitivity
   const sn = el("div");
   if(c.sensitivity.length){
-    if(c.sensitivity.some(f=>f.variant==="nominal")){
+    if(c.sensitivity.some(f=>f.variant==="water_recipe")){
+      const built = (c.sensitivity.find(f=>f.variant==="water_recipe"&&f.built)||{}).built || "";
+      sn.append(el("div","sensnote",
+        "Deployed (since 2026-10-01): the <b>H2O recipe floods</b> — water in the banjo cell with the "+
+        "<b>empty banjo and the blocked beam subtracted</b>, reduction (AgBe) geometry, solid angle, "+
+        "θ-dependent self-absorption, TOF cuts 1650/3150 µs, 15 px tube-end mask"+(built?", built "+esc(built.slice(0,10)):"")+
+        ". The thin-PMMA floods are kept alongside but <b>superseded</b> (PMMA has structure near 1 Å⁻¹). "+
+        "See the <b>Sensitivity summary</b> tab."));
+    } else if(c.sensitivity.some(f=>f.variant==="nominal")){
       sn.append(el("div","sensnote",
         "Use the <b>recommended</b> floods: rebuilt with the same geometry as the reductions "+
         "(AgBe samoffset / detoffset / scalecomp), so the solid angle divided out of the flood "+
@@ -483,12 +492,16 @@ function renderSummary(c){
     }
     c.sensitivity.forEach(f => {
       const onlyNew = !c.sensitivity.some(x=>x.variant==="nominal");
-      const tag = distLabel(f.distance) + (f.variant==="redgeom" ? (onlyNew ? " · reduction geometry" : " · recommended")
+      const tag = distLabel(f.distance) + (
+                   f.variant==="water_recipe" ? " · deployed: H2O flood (banjo + blocked beam subtracted, recipe)"
+                 : f.variant==="water_recipe_1A" ? " 1 Å band · alternative (H2O recipe)"
+                 : f.variant==="pmma_superseded" ? " · superseded: thin PMMA (has structure ~1 Å⁻¹)"
+                 : f.variant==="redgeom" ? (onlyNew ? " · reduction geometry" : " · recommended")
                  : f.variant==="nominal" ? " · original (nominal geom.)"
                  : f.variant==="water_bs" ? (/_1A_/.test(f.name) ? " 1 Å band" : "")+" · alternative: H2O flood, banjo subtracted (Water 3)" : "");
       const row = fileRow(f, tag);
-      if(f.variant==="redgeom") row.classList.add("recommended");
-      if(f.variant==="nominal") row.classList.add("superseded");
+      if(f.variant==="redgeom" || f.variant==="water_recipe") row.classList.add("recommended");
+      if(f.variant==="nominal" || f.variant==="pmma_superseded") row.classList.add("superseded");
       sn.append(row);
     });
     if(P.sensitivity) sn.append(provLine(P.sensitivity));

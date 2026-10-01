@@ -50,39 +50,47 @@ The basic recipe plus a tube-end mask does the job.
 
 ## 3. What is deployed now (2026B)
 
-The files users get from `2026B_mp/` today:
+**Swapped to the H2O recipe floods on 2026-10-01.** The files users should now use from `2026B_mp/`:
 
 | distance | file | built | flood sample |
 |---|---|---|---|
-| 4 m | `Sensitivity_patched_thinPMMA_4m_186200.nxs` | 2026-09-24 16:13 | thin PMMA sheet (bare), Aug 2026, 2.5 Å band |
-| 2.5 m | `Sensitivity_patched_thinPMMA_2o5m_186201.nxs` | 2026-09-24 16:10 | same |
-| 1.3 m | `Sensitivity_patched_thinPMMA_1o3m_186202.nxs` | 2026-09-24 16:12 | same |
+| 4 m | `Sensitivity_patched_H2O_4m_189014.nxs` | 2026-09-26 | H2O 1 mm in banjo, 2.5 Å band |
+| 2.5 m | `Sensitivity_patched_H2O_2o5m_188998.nxs` | 2026-09-26 | same |
+| 1.3 m | `Sensitivity_patched_H2O_1o3m_188982.nxs` | 2026-09-26 | same |
 
-What went into them, against the recipe:
+These carry the **full recipe** (§4): reduction (AgBe) geometry + solid angle, θ-dependent
+self-absorption, empty banjo subtracted, blocked beam (same band) subtracted, TOF cuts 1650/3150 µs,
+15 px tube-end mask. Each has a `<flood>.geometry.json` sidecar recording every setting. An alternative
+`Sensitivity_patched_H2O_1A_1o3m_188966.nxs` (1.3 m, 1 Å band) is provided for 1 Å-band work; the 2.5 Å
+flood above is the default for both 1.3 m bands.
 
-| step | deployed (2026-09-24) | recipe |
-|---|---|---|
-| reduction geometry (AgBe) + solid angle | **yes** | yes |
-| flood self-absorption (θ-dependent) | no | yes |
-| blocked beam subtracted | no (none measured with the Aug floods) | yes, same band |
-| cell / background subtracted | n/a (bare sheet) | yes (empty banjo) |
-| TOF cuts | drtsans default 500 / 2000 µs | 1650 / 3150 µs |
-| tube-end mask in the flood | 11 px (`1-11,246-256`) | 15 px (`1-15,242-256`) |
-| flood sample | thin PMMA (has a 1.2 Å⁻¹ peak) | H2O 1 mm in banjo |
+**Superseded** (kept in `2026B_mp/` for reference, no longer the default):
+- `Sensitivity_patched_thinPMMA_{4m_186200, 2o5m_186201, 1o3m_186202}.nxs` — the thin-PMMA floods
+  deployed 2026-09-24 (reduction geometry + solid angle only; PMMA has its own structure near 1.2 Å⁻¹,
+  Water 8). What they lacked vs the recipe:
 
-Other files in `2026B_mp/`, **none of them in use**:
+  | step | thin PMMA (2026-09-24) | H2O recipe (deployed now) |
+  |---|---|---|
+  | reduction geometry (AgBe) + solid angle | **yes** | yes |
+  | flood self-absorption (θ-dependent) | no | yes |
+  | blocked beam subtracted | no (none measured with the Aug floods) | yes, same band |
+  | cell / background subtracted | n/a (bare sheet) | yes (empty banjo) |
+  | TOF cuts | drtsans default 500 / 2000 µs | 1650 / 3150 µs |
+  | tube-end mask in the flood | 11 px (`1-11,246-256`) | 15 px (`1-15,242-256`) |
+  | flood sample | thin PMMA (1.2 Å⁻¹ peak) | H2O 1 mm in banjo |
+
+Other files in `2026B_mp/`, also not the default:
 - `*.OLD_nominal_geometry.nxs`: the original August builds, before the geometry fix.
-- `Sensitivity_H2Obs_*`: water floods with the banjo subtracted, hand-built (Water 3).
-- `sensitivity_selfabs/`: PMMA floods with the self-absorption fix, for review.
-- `sensitivity_recipe/`: this page's floods, built by the new `prepare_sensitivity.py` from the
-  Sept-23 runs (§4).
+- `Sensitivity_H2Obs_*`: water floods with only the banjo subtracted (no blocked beam), hand-built (Water 3).
+- `sensitivity_selfabs/`: PMMA floods with the self-absorption fix, review only.
+- `sensitivity_recipe/`: where `prepare_sensitivity.py` built the deployed H2O floods (the copies in the
+  root are identical).
 
-**The deployed files have not been swapped.** Swapping is a separate decision. Fig. 1 shows what
-it would change.
+Fig. 1 shows what the swap changed on reduced curves.
 
 ![Deployed vs recipe flood: effect on reduced curves](assets/senssummary/sum_floodcmp.png)
 
-*Fig. 1 — Swapping the deployed PMMA flood for the recipe water flood. This is the ratio of the
+*Fig. 1 — Swapping the thin-PMMA flood for the recipe water flood (now done). This is the ratio of the
 two floods averaged in 2θ rings (tube ends masked 24 px), normalised just outside the beam stop.
 At 1.3 m, reduced curves come down by ≈ 0.3–0.5 % at 15° and 1.6–1.8 % at 25–32°. At 2.5 m and 4 m
 the change is below 0.7 %. That drop is mostly the flood self-absorption and blocked beam that
@@ -137,8 +145,8 @@ flood is summed over λ. Other settings:
 The sidecar `<flood>.geometry.json` records every one of these (runs subtracted, T, cuts, mask,
 geometry, script, drtsans, date). Each `CONFIGS` entry names its `flood`, `direct`, `background`,
 `blocked_beam` and `transmission`:
-- `<dist>` labels are the deployed PMMA configurations;
-- `<dist>_h2o` labels are the water recipe (2026B: the Sept-23 runs).
+- `<dist>_h2o` labels are the deployed water recipe (2026B: the Sept-23 runs);
+- `<dist>` labels are the superseded thin-PMMA configurations.
 
 **Check that it is right:** the preparer-built 1.3 m water flood agrees with the hand-built one
 from the reduction (`H2Obsbbcut`, Water 4–5):
@@ -264,8 +272,8 @@ in the data. Metric: rms over the slices of the high-angle end (top 15 % of log 
   band), then compare with the 2.5 Å flood the same way.
 - **Longer water floods** (§4) for 2.5 m and 4 m. The 4 m water flood of Sept-23 has 2.4 %
   counting noise per pixel.
-- **Swap the 2026B deployed floods?** Not done; it needs a decision (Fig. 1 shows the effect).
-  The recipe floods for 2026B are in `2026B_mp/sensitivity_recipe/`.
+- **Swap the 2026B deployed floods? Done (2026-10-01).** The H2O recipe floods are now the deployed
+  set in `2026B_mp/`; the thin-PMMA floods are kept but superseded (§3, Fig. 1).
 - **Front-layer vertical gradient** (Water 7): still unexplained, small.
 - **Tube-end rate effect:** a detector / electronics question (pile-up in the charge division),
   not a flood question. Mask it.

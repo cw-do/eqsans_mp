@@ -251,12 +251,29 @@ def find_sensitivity(cycle_dir):
                         e["variant"] = "redgeom"
                         e["geometry"] = g["geometry"]
                         e["built"] = g.get("date")
+                    # Full-recipe H2O flood (banjo + blocked beam subtracted): the deployed set
+                    # since 2026-10-01. See the Sensitivity summary tab.
+                    if g.get("blocked_beam_subtracted") and g.get("background_subtracted"):
+                        if "_1a_" in low:
+                            e["variant"] = "water_recipe_1A"      # 1 Å band, alternative
+                        else:
+                            e["variant"] = "water_recipe"
+                            e["recommended"] = True
+                        e["built"] = g.get("date")
+                        e["geometry"] = g.get("geometry")
                 except (OSError, ValueError):
                     pass
-            if "h2obs" in low:                            # Water 3: H2O flood, banjo subtracted
+            if "h2obs" in low:                            # Water 3: H2O flood, banjo subtracted (no BB)
                 e["variant"] = "water_bs"
             out.append(e)
-    out.sort(key=lambda e: (e["distance"] or 99, e.get("variant") == "water_bs", not e.get("recommended"), e["name"]))
+    # Once a full-recipe H2O flood is deployed, the thin-PMMA floods are superseded.
+    if any(e.get("variant") == "water_recipe" for e in out):
+        for e in out:
+            if "thinpmma" in e["name"].lower() and e.get("variant") == "redgeom":
+                e["variant"] = "pmma_superseded"
+                e["recommended"] = False
+    out.sort(key=lambda e: (e["distance"] or 99, not e.get("recommended"),
+                            e.get("variant") in ("water_bs", "water_recipe_1A", "pmma_superseded"), e["name"]))
     return out
 
 
