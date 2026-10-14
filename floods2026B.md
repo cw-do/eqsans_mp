@@ -87,6 +87,28 @@ What the cuts show:
   feature of the vanadium flood, not shared by H2O or PMMA — it would print a corresponding central
   depression onto every sample reduced with a vanadium flood.
 
+## Does the sensitivity depend on the wavelength band?
+
+At a fixed distance the detector efficiency should be the same whatever band we flood in. These overlay the
+front-tube section cuts for the different bands, H2O (solid) and PMMA (dashed), each normalised to its own
+median so only the shape is compared.
+
+**2.5 m — 2.5 Å vs 6 Å:**
+
+![Sensitivity vs band, 2.5 m](assets/floods2026B/flood_wl_2o5m.png)
+
+**1.3 m — 1 Å vs 2.5 Å vs 6 Å:**
+
+![Sensitivity vs band, 1.3 m](assets/floods2026B/flood_wl_1o3m.png)
+
+The per-tube structure (horizontal cut) and the along-tube shape (vertical cut) **overlap across all
+bands** — the same dead/low tubes, the same gentle rise toward the tube ends — so the sensitivity map is
+essentially wavelength-independent, as it should be, and H2O and PMMA agree within a band. Two small,
+real differences: the **6 Å floods are noisier** (lower counts — water/PMMA transmission and flux are
+lowest there), and the vertical rise toward the top tube end is a couple of percent stronger at 2.5 / 6 Å
+than at 1 Å (1.3 m). This means a flood built in one band can be used to reduce another band to ~1–2 %,
+but matching the band is still the clean choice (and avoids the 6 Å extra noise).
+
 ## Which to use
 
 For the 2026B deployment the **H2O-in-banjo** flood stays the choice: flat, low-noise, no structure

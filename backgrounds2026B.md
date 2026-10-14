@@ -79,9 +79,15 @@ fraction of a percent — see **Water (blocked beam)**.)
 
 ## I(Q) of the empties — no background subtraction
 
-Finally, the scattering contribution of each "empty" as I(Q), reduced normally (new H2O flood of the
-configuration for sensitivity, solid angle, θ-dependent transmission) but with **no background
-subtraction**, so each curve is that measurement's own scattering:
+Finally, the scattering contribution of each "empty" as I(Q), reduced normally (new H2O flood **of the
+same configuration** for sensitivity — e.g. `Sensitivity_patched_H2O_1o3m2o5a_189933.nxs` at 1.3 m/2.5 Å —
+solid angle, θ-dependent transmission) but with **no background subtraction**, so each curve is that
+measurement's own scattering:
+
+> **Units are arbitrary (a.u.), not cm⁻¹.** These were not put on absolute scale (no porsil calibration):
+> each is only proton-charge normalised, with a constant assumed thickness of 0.1 cm and
+> `standardAbsoluteScale = 1`. The I(Q) `.dat` headers say "1/cm", but read the values as relative — only
+> comparisons between curves (which scatters more, where the peaks sit) are meaningful.
 
 ![I(Q) of the empties](assets/backgrounds2026B/iq_empty.png)
 
