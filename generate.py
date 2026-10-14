@@ -251,16 +251,26 @@ def find_sensitivity(cycle_dir):
                         e["variant"] = "redgeom"
                         e["geometry"] = g["geometry"]
                         e["built"] = g.get("date")
-                    # Full-recipe H2O flood (banjo + blocked beam subtracted): the deployed set
-                    # since 2026-10-01. See the Sensitivity summary tab.
+                    # Full-recipe H2O flood (banjo + blocked beam subtracted). The
+                    # Oct-2026 batch carries the band in the name (<dist><band>, e.g.
+                    # 1o3m2o5a); its 2.5 Å floods are the deployed/recommended set, the
+                    # 1 Å / 6 Å floods are alternative bands. The earlier distance-only
+                    # H2O floods (188xxx) are superseded once the new batch is present.
                     if g.get("blocked_beam_subtracted") and g.get("background_subtracted"):
-                        if "_1a_" in low:
-                            e["variant"] = "water_recipe_1A"      # 1 Å band, alternative
-                        else:
-                            e["variant"] = "water_recipe"
-                            e["recommended"] = True
                         e["built"] = g.get("date")
                         e["geometry"] = g.get("geometry")
+                        m = re.search(r"_(1o3m|2o5m|4m)(1a|2o5a|6a)_", low)   # new batch tag
+                        if m:
+                            e["band"] = m.group(2)
+                            if m.group(2) == "2o5a":
+                                e["variant"] = "water_recipe"
+                                e["recommended"] = True
+                            else:
+                                e["variant"] = "water_recipe_alt"            # 1 Å / 6 Å
+                        elif "_1a_" in low:
+                            e["variant"] = "water_recipe_1A"                 # old 1 Å
+                        else:
+                            e["variant"] = "water_recipe_old"               # old 2.5 Å batch
                 except (OSError, ValueError):
                     pass
             if "h2obs" in low:                            # Water 3: H2O flood, banjo subtracted (no BB)
@@ -272,8 +282,16 @@ def find_sensitivity(cycle_dir):
             if "thinpmma" in e["name"].lower() and e.get("variant") == "redgeom":
                 e["variant"] = "pmma_superseded"
                 e["recommended"] = False
+    # The Oct-2026 batch (band in the name) supersedes the earlier distance-only
+    # H2O recipe floods; if there is no new batch, keep the old ones recommended.
+    new_batch = any(e.get("variant") in ("water_recipe", "water_recipe_alt") for e in out)
+    for e in out:
+        if e.get("variant") in ("water_recipe_old", "water_recipe_1A"):
+            e["recommended"] = not new_batch and e["variant"] == "water_recipe_old"
+    alt_variants = ("water_bs", "water_recipe_1A", "water_recipe_alt",
+                    "water_recipe_old", "pmma_superseded")
     out.sort(key=lambda e: (e["distance"] or 99, not e.get("recommended"),
-                            e.get("variant") in ("water_bs", "water_recipe_1A", "pmma_superseded"), e["name"]))
+                            e.get("variant") in alt_variants, e["name"]))
     return out
 
 
@@ -508,6 +526,8 @@ def collect_plots(cycle_dir, cycle_id):
                        and d != "flood_geometry_test"
                        and d != "water2"         # has its own Water 2 tab
                        and d != "water3"         # has its own Water 3 tab
+                       and d != "floods2026B"    # Floods/Backgrounds 2026B tabs (curated assets)
+                       and d != "sensitivity_2026B"   # flood build dir; Floods 2026B tab
                        and d != REDGEOM_SUBDIR   # its plot is on the Water tab
                        and d != "sensitivity_selfabs"   # its plot is on the Water 2 tab
                        and d != "flux"           # pipeline scaffold; curated below
@@ -1237,6 +1257,42 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(bbsrc, f), os.path.join(bbdest, f))
 
+    # Floods 2026B (new flood batch, 2D maps + section cuts): doc/floods2026B.md,
+    # doc/floods2026B_assets/*.png -> assets/floods2026B/.
+    floods2026B_md = None
+    f26p = os.path.join(DOC_DIR, "floods2026B.md")
+    if os.path.isfile(f26p):
+        try:
+            with open(f26p, errors="replace") as fh:
+                floods2026B_md = fh.read()
+        except OSError:
+            floods2026B_md = None
+    f26src = os.path.join(DOC_DIR, "floods2026B_assets")
+    if floods2026B_md and os.path.isdir(f26src):
+        f26dest = os.path.join(ASSETS_DIR, "floods2026B")
+        os.makedirs(f26dest, exist_ok=True)
+        for f in os.listdir(f26src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(f26src, f), os.path.join(f26dest, f))
+
+    # Backgrounds 2026B (blocked beam / empty / window / banjo): doc/backgrounds2026B.md,
+    # doc/backgrounds2026B_assets/*.png -> assets/backgrounds2026B/.
+    backgrounds2026B_md = None
+    b26p = os.path.join(DOC_DIR, "backgrounds2026B.md")
+    if os.path.isfile(b26p):
+        try:
+            with open(b26p, errors="replace") as fh:
+                backgrounds2026B_md = fh.read()
+        except OSError:
+            backgrounds2026B_md = None
+    b26src = os.path.join(DOC_DIR, "backgrounds2026B_assets")
+    if backgrounds2026B_md and os.path.isdir(b26src):
+        b26dest = os.path.join(ASSETS_DIR, "backgrounds2026B")
+        os.makedirs(b26dest, exist_ok=True)
+        for f in os.listdir(b26src):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(b26src, f), os.path.join(b26dest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -1254,6 +1310,8 @@ def main():
         "water6_md": water6_md,
         "water7_md": water7_md,
         "water8_md": water8_md,
+        "floods2026B_md": floods2026B_md,
+        "backgrounds2026B_md": backgrounds2026B_md,
         "senssummary_md": senssummary_md,
         "blockedbeam_md": blockedbeam_md,
         "reductionflow_md": reductionflow_md,

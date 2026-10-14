@@ -50,19 +50,31 @@ The basic recipe plus a tube-end mask does the job.
 
 ## 3. What is deployed now (2026B)
 
-**Swapped to the H2O recipe floods on 2026-10-01.** The files users should now use from `2026B_mp/`:
+**Updated to the Oct-2026 flood batch on 2026-10-14.** A second, fully-crossed flood batch (IPTS-37618,
+runs 189867+) was measured with H2O, PMMA and vanadium at every distance *and* band, each with its own
+blocked beam. The deployed floods are now the H2O ones from that batch; their names carry the distance
+**and** band (`<dist><band>`), so they coexist with the earlier distance-only files. The 2.5 Å flood is
+the default at each distance. The files users should now use from `2026B_mp/`:
 
 | distance | file | built | flood sample |
 |---|---|---|---|
-| 4 m | `Sensitivity_patched_H2O_4m_189014.nxs` | 2026-09-26 | H2O 1 mm in banjo, 2.5 Å band |
-| 2.5 m | `Sensitivity_patched_H2O_2o5m_188998.nxs` | 2026-09-26 | same |
-| 1.3 m | `Sensitivity_patched_H2O_1o3m_188982.nxs` | 2026-09-26 | same |
+| 4 m | `Sensitivity_patched_H2O_4m2o5a_189877.nxs` | 2026-10-14 | H2O 1 mm in banjo, 2.5 Å band |
+| 2.5 m | `Sensitivity_patched_H2O_2o5m2o5a_189891.nxs` | 2026-10-14 | same |
+| 1.3 m | `Sensitivity_patched_H2O_1o3m2o5a_189933.nxs` | 2026-10-14 | same |
 
 These carry the **full recipe** (§4): reduction (AgBe) geometry + solid angle, θ-dependent
-self-absorption, empty banjo subtracted, blocked beam (same band) subtracted, TOF cuts 1650/3150 µs,
-15 px tube-end mask. Each has a `<flood>.geometry.json` sidecar recording every setting. An alternative
-`Sensitivity_patched_H2O_1A_1o3m_188966.nxs` (1.3 m, 1 Å band) is provided for 1 Å-band work; the 2.5 Å
-flood above is the default for both 1.3 m bands.
+self-absorption (each flood's own flux-weighted transmission), empty banjo subtracted, blocked beam
+(same band) subtracted, TOF cuts 1650/3150 µs, 15 px tube-end mask. Each has a `<flood>.geometry.json`
+sidecar recording every setting. **Alternative bands** from the same batch are provided and coexist:
+`Sensitivity_patched_H2O_{1o3m1a_189919, 1o3m6a_189947, 2o5m6a_189905}.nxs` (1 Å and 6 Å bands) — use the
+matching band if you reduce in it; the 2.5 Å floods above are the default otherwise.
+
+The full batch (H2O, PMMA and vanadium, 2D maps and front-tube section cuts) is on the **Floods 2026B**
+tab; the blocked-beam / empty-beam / window / banjo comparison is on the **Backgrounds 2026B** tab.
+
+**Superseded but kept** in `2026B_mp/` (coexist, no longer the default): the earlier distance-only H2O
+floods `Sensitivity_patched_H2O_{4m_189014, 2o5m_188998, 1o3m_188982}.nxs` and
+`Sensitivity_patched_H2O_1A_1o3m_188966.nxs` (first batch, Sept-2026).
 
 **Superseded** (kept in `2026B_mp/` for reference, no longer the default):
 - `Sensitivity_patched_thinPMMA_{4m_186200, 2o5m_186201, 1o3m_186202}.nxs` — the thin-PMMA floods
@@ -268,12 +280,14 @@ in the data. Metric: rms over the slices of the high-angle end (top 15 % of log 
 
 ## 7. Open items
 
-- **1.3 m flood in the 6 Å band:** measure it next cycle (with banjo and blocked beam in the same
-  band), then compare with the 2.5 Å flood the same way.
-- **Longer water floods** (§4) for 2.5 m and 4 m. The 4 m water flood of Sept-23 has 2.4 %
-  counting noise per pixel.
-- **Swap the 2026B deployed floods? Done (2026-10-01).** The H2O recipe floods are now the deployed
-  set in `2026B_mp/`; the thin-PMMA floods are kept but superseded (§3, Fig. 1).
+- **1.3 m / 6 Å (and 2.5 m / 6 Å) floods: measured (Oct-2026 batch).** Now built and deployed as
+  alternative bands (§3, Floods 2026B tab); the 2.5 Å floods remain the default.
+- **Longer water floods** (§4) for 2.5 m and 4 m. The 4 m water flood still has ~2 % counting noise
+  per pixel (the Oct-2026 4 m H2O flood, std 0.24, is comparable).
+- **Swap the 2026B deployed floods? Done — updated 2026-10-14** to the Oct-2026 fully-crossed batch
+  (band in the name, 2.5 Å default per distance). The Sept-2026 H2O floods and the thin-PMMA floods are
+  kept but superseded (§3). PMMA and vanadium floods from the new batch are candidates only (Floods 2026B
+  tab): vanadium shows a +5–11 % beam-centre hump and more noise; PMMA carries its own ~1 Å⁻¹ structure.
 - **Front-layer vertical gradient** (Water 7): still unexplained, small.
 - **Tube-end rate effect:** a detector / electronics question (pile-up in the charge division),
   not a flood question. Mask it.

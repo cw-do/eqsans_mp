@@ -252,6 +252,8 @@
       <button data-view="water6">Water 6</button>
       <button data-view="water7">Water 7</button>
       <button data-view="water8">Water 8</button>
+      <button data-view="floods2026B">Floods 2026B</button>
+      <button data-view="backgrounds2026B">Backgrounds 2026B</button>
       <button data-view="blockedbeam">Blocked beam</button>
       <button data-view="atten">Atten (trans)</button>
     </div>
@@ -397,7 +399,7 @@ function reductionConfig(c){
   if(c.dark_current.length) pairs.push(["DARK_CURRENT", c.dark_current[0].path]);
   // Prefer floods rebuilt with the reduction geometry when a cycle has them.
   // Alternative floods (Water 3 H2O, banjo subtracted) are listed on the page but not put in the config.
-  const sens0 = c.sensitivity.filter(f=>f.variant!=="water_bs" && f.variant!=="water_recipe_1A" && f.variant!=="pmma_superseded");
+  const sens0 = c.sensitivity.filter(f=>f.variant!=="water_bs" && f.variant!=="water_recipe_1A" && f.variant!=="water_recipe_alt" && f.variant!=="water_recipe_old" && f.variant!=="pmma_superseded");
   const sens = sens0.some(f=>f.recommended) ? sens0.filter(f=>f.recommended) : sens0;
   if(sens.some(f=>f.variant==="water_recipe")) out.push("# H2O floods: banjo + blocked beam subtracted, reduction geometry, self-absorption (see Sensitivity summary tab)");
   else if(sens.some(f=>f.variant==="redgeom")) out.push("# floods built with the AgBe reduction geometry (see Water (high-Q) tab)");
@@ -492,16 +494,19 @@ function renderSummary(c){
     }
     c.sensitivity.forEach(f => {
       const onlyNew = !c.sensitivity.some(x=>x.variant==="nominal");
+      const altBand = /1a_/.test(f.name) ? "1 Å" : /6a_/.test(f.name) ? "6 Å" : "alt";
       const tag = distLabel(f.distance) + (
-                   f.variant==="water_recipe" ? " · deployed: H2O flood (banjo + blocked beam subtracted, recipe)"
-                 : f.variant==="water_recipe_1A" ? " 1 Å band · alternative (H2O recipe)"
+                   f.variant==="water_recipe" ? " · deployed: H2O flood, 2.5 Å (banjo + blocked beam subtracted, recipe)"
+                 : f.variant==="water_recipe_alt" ? " "+altBand+" band · alternative (H2O recipe, Oct-2026)"
+                 : f.variant==="water_recipe_old" ? " · superseded: earlier H2O batch (188xxx)"
+                 : f.variant==="water_recipe_1A" ? " 1 Å band · superseded (earlier H2O batch)"
                  : f.variant==="pmma_superseded" ? " · superseded: thin PMMA (has structure ~1 Å⁻¹)"
                  : f.variant==="redgeom" ? (onlyNew ? " · reduction geometry" : " · recommended")
                  : f.variant==="nominal" ? " · original (nominal geom.)"
                  : f.variant==="water_bs" ? (/_1A_/.test(f.name) ? " 1 Å band" : "")+" · alternative: H2O flood, banjo subtracted (Water 3)" : "");
       const row = fileRow(f, tag);
       if(f.variant==="redgeom" || f.variant==="water_recipe") row.classList.add("recommended");
-      if(f.variant==="nominal" || f.variant==="pmma_superseded") row.classList.add("superseded");
+      if(f.variant==="nominal" || f.variant==="pmma_superseded" || f.variant==="water_recipe_old" || f.variant==="water_recipe_1A") row.classList.add("superseded");
       sn.append(row);
     });
     if(P.sensitivity) sn.append(provLine(P.sensitivity));
@@ -1277,6 +1282,42 @@ function renderSensSummary(){
   return wrap;
 }
 
+function renderFloods2026B(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Floods 2026B — H2O, PMMA and vanadium at every distance and band"));
+  head.append(el("span","badge latest","18 floods · 2D maps · section cuts"));
+  wrap.append(head);
+  wrap.append(el("div","sub","The Oct-2026 flood batch (IPTS-37618, fully crossed): a sensitivity built from H2O-in-banjo, bare thin PMMA and bare vanadium at each distance/band. 2D maps and front-tube horizontal/vertical section cuts show how each material behaves toward the detector edges — H2O and PMMA flat and clean, vanadium noisier with a beam-centre hump."));
+  if(D.floods2026B_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.floods2026B_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No Floods 2026B documentation found. Add doc/floods2026B.md and regenerate."));
+  }
+  return wrap;
+}
+
+function renderBackgrounds2026B(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Backgrounds 2026B — blocked beam, empty beam, window, banjo"));
+  head.append(el("span","badge latest","blocked beam · empty · window · banjo"));
+  wrap.append(head);
+  wrap.append(el("div","sub","Blocked-beam detector images on one colour scale, and the colleague's question answered: the blocked-beam background is 7–60× weaker than the empty-beam / window / banjo scattering, at every configuration and every radius. Plus I(Q) of empty-NoWindow, PeltierWindow and banjo with no background subtraction."));
+  if(D.backgrounds2026B_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.backgrounds2026B_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No Backgrounds 2026B documentation found. Add doc/backgrounds2026B.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderWater7(){
   const wrap = el("div");
   const head = el("div","cyclehead");
@@ -1423,6 +1464,8 @@ function render(){
   if(view==="water6"){ main.append(renderWater6()); return; }
   if(view==="water7"){ main.append(renderWater7()); return; }
   if(view==="water8"){ main.append(renderWater8()); return; }
+  if(view==="floods2026B"){ main.append(renderFloods2026B()); return; }
+  if(view==="backgrounds2026B"){ main.append(renderBackgrounds2026B()); return; }
   if(view==="senssummary"){ main.append(renderSensSummary()); return; }
   if(view==="blockedbeam"){ main.append(renderBlockedBeam()); return; }
   if(view==="reductionflow"){ main.append(renderReductionFlow()); return; }
@@ -1479,7 +1522,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Sensitivity summary","senssummary",D.senssummary_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Water 7","water7",D.water7_md],["Water 8","water8",D.water8_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Sensitivity summary","senssummary",D.senssummary_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Water 7","water7",D.water7_md],["Water 8","water8",D.water8_md],["Floods 2026B","floods2026B",D.floods2026B_md],["Backgrounds 2026B","backgrounds2026B",D.backgrounds2026B_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});

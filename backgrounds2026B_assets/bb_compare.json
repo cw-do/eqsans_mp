@@ -1,0 +1,332 @@
+{
+ "4m2o5a": {
+  "_front_tubes": 96,
+  "empty": {
+   "run": 189875,
+   "dur": 5048.4,
+   "diffuse_median_front_cps": 0.13647956025453736,
+   "diffuse_median_back_cps": 0.08477975586203482,
+   "diffuse_median_cps": 0.10478619357714115,
+   "diffuse_mean_cps": 0.10605619881820555,
+   "total_cps": 5481.641320226806,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "banjo": {
+   "run": 189876,
+   "dur": 5088.0,
+   "diffuse_median_front_cps": 0.25668268553461293,
+   "diffuse_median_back_cps": 0.1609671665029464,
+   "diffuse_median_cps": 0.18297977046916128,
+   "diffuse_mean_cps": 0.1967378864465417,
+   "total_cps": 9957.15651389818,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "bb": {
+   "run": 189880,
+   "dur": 5039.9,
+   "diffuse_median_front_cps": 0.01150822416002384,
+   "diffuse_median_back_cps": 0.00753987100139493,
+   "diffuse_median_cps": 0.009325629922777941,
+   "diffuse_mean_cps": 0.009493631133520185,
+   "total_cps": 463.95723169388805,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "peltier": {
+   "run": 189881,
+   "dur": 5039.9,
+   "diffuse_median_front_cps": 0.22699054839023455,
+   "diffuse_median_back_cps": 0.14266276599001632,
+   "diffuse_median_cps": 0.1630998520775986,
+   "diffuse_mean_cps": 0.17511929179863242,
+   "total_cps": 8883.810443856337,
+   "beam_center": [
+    100,
+    132
+   ]
+  }
+ },
+ "2o5m2o5a": {
+  "_front_tubes": 96,
+  "empty": {
+   "run": 189889,
+   "dur": 4376.4,
+   "diffuse_median_front_cps": 0.3400059467658464,
+   "diffuse_median_back_cps": 0.2072482484654722,
+   "diffuse_median_cps": 0.25203397801258637,
+   "diffuse_mean_cps": 0.2609605785216638,
+   "total_cps": 13464.313638455606,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "banjo": {
+   "run": 189890,
+   "dur": 4320.9,
+   "diffuse_median_front_cps": 0.6949956849123812,
+   "diffuse_median_back_cps": 0.4244495791306384,
+   "diffuse_median_cps": 0.4832337629360812,
+   "diffuse_mean_cps": 0.5287841322541441,
+   "total_cps": 26658.979366569773,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "bb": {
+   "run": 189894,
+   "dur": 4322.3,
+   "diffuse_median_front_cps": 0.03655497717912214,
+   "diffuse_median_back_cps": 0.02359878273588898,
+   "diffuse_median_cps": 0.03146504364785197,
+   "diffuse_mean_cps": 0.04054630952603808,
+   "total_cps": 1902.687256255153,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "peltier": {
+   "run": 189895,
+   "dur": 4322.6,
+   "diffuse_median_front_cps": 0.6042696916057714,
+   "diffuse_median_back_cps": 0.3710752623796544,
+   "diffuse_median_cps": 0.4282171512872446,
+   "diffuse_mean_cps": 0.46334663399662057,
+   "total_cps": 23415.36333315636,
+   "beam_center": [
+    100,
+    132
+   ]
+  }
+ },
+ "2o5m6a": {
+  "_front_tubes": 96,
+  "empty": {
+   "run": 189903,
+   "dur": 4854.5,
+   "diffuse_median_front_cps": 0.059531847726040366,
+   "diffuse_median_back_cps": 0.03543071906186485,
+   "diffuse_median_cps": 0.044288398827331064,
+   "diffuse_mean_cps": 0.04588116850935715,
+   "total_cps": 2385.4434043005167,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "banjo": {
+   "run": 189904,
+   "dur": 4324.5,
+   "diffuse_median_front_cps": 0.10683340115503137,
+   "diffuse_median_back_cps": 0.06428503359545178,
+   "diffuse_median_cps": 0.07607833112555264,
+   "diffuse_mean_cps": 0.08178141554674895,
+   "total_cps": 4166.078317576268,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "bb": {
+   "run": 189908,
+   "dur": 28947.1,
+   "diffuse_median_front_cps": 0.0008636452577103955,
+   "diffuse_median_back_cps": 0.000587278775243069,
+   "diffuse_median_cps": 0.0007254620164767322,
+   "diffuse_mean_cps": 0.0009737787714197653,
+   "total_cps": 45.92658205642033,
+   "beam_center": [
+    100,
+    132
+   ]
+  },
+  "peltier": {
+   "run": 189909,
+   "dur": 4332.4,
+   "diffuse_median_front_cps": 0.10063689242480083,
+   "diffuse_median_back_cps": 0.06070528143973077,
+   "diffuse_median_cps": 0.07178457234888315,
+   "diffuse_mean_cps": 0.07685458724567365,
+   "total_cps": 3916.9277292209754,
+   "beam_center": [
+    100,
+    132
+   ]
+  }
+ },
+ "1o3m1a": {
+  "_front_tubes": 96,
+  "empty": {
+   "run": 189917,
+   "dur": 5749.4,
+   "diffuse_median_front_cps": 1.4057221912942894,
+   "diffuse_median_back_cps": 0.7309511889277718,
+   "diffuse_median_cps": 1.0187224541463318,
+   "diffuse_mean_cps": 1.0254724033089933,
+   "total_cps": 53469.13130194141,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "banjo": {
+   "run": 189918,
+   "dur": 5737.1,
+   "diffuse_median_front_cps": 3.6590742063875394,
+   "diffuse_median_back_cps": 1.935906046123292,
+   "diffuse_median_cps": 2.5172966387352074,
+   "diffuse_mean_cps": 2.6519245921507415,
+   "total_cps": 132619.5700736919,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "bb": {
+   "run": 189922,
+   "dur": 5722.7,
+   "diffuse_median_front_cps": 0.27714402730375426,
+   "diffuse_median_back_cps": 0.13542662116040954,
+   "diffuse_median_cps": 0.18557815699658703,
+   "diffuse_mean_cps": 0.2537421515564803,
+   "total_cps": 11850.653793856656,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "peltier": {
+   "run": 189923,
+   "dur": 5721.5,
+   "diffuse_median_front_cps": 2.9087001352331403,
+   "diffuse_median_back_cps": 1.4936757214098315,
+   "diffuse_median_cps": 2.091775220434456,
+   "diffuse_mean_cps": 2.1081014786986922,
+   "total_cps": 106756.96154295842,
+   "beam_center": [
+    100,
+    124
+   ]
+  }
+ },
+ "1o3m2o5a": {
+  "_front_tubes": 96,
+  "empty": {
+   "run": 189931,
+   "dur": 4292.7,
+   "diffuse_median_front_cps": 1.2353660532725494,
+   "diffuse_median_back_cps": 0.6264188793607176,
+   "diffuse_median_cps": 0.8805739546238425,
+   "diffuse_mean_cps": 0.8965795894206026,
+   "total_cps": 46671.27431089421,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "banjo": {
+   "run": 189932,
+   "dur": 4291.5,
+   "diffuse_median_front_cps": 2.7670105208854943,
+   "diffuse_median_back_cps": 1.4123416368762458,
+   "diffuse_median_cps": 1.947358366503017,
+   "diffuse_mean_cps": 1.998081385898962,
+   "total_cps": 101129.36392874694,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "bb": {
+   "run": 189936,
+   "dur": 4323.6,
+   "diffuse_median_front_cps": 0.22296458220115908,
+   "diffuse_median_back_cps": 0.10500614141008945,
+   "diffuse_median_cps": 0.1452507859152779,
+   "diffuse_mean_cps": 0.20567863038868567,
+   "total_cps": 9545.735243110845,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "peltier": {
+   "run": 189937,
+   "dur": 4324.9,
+   "diffuse_median_front_cps": 2.266424652725914,
+   "diffuse_median_back_cps": 1.1415362691805588,
+   "diffuse_median_cps": 1.6387762422153556,
+   "diffuse_mean_cps": 1.6338945472122526,
+   "total_cps": 83638.46019070508,
+   "beam_center": [
+    100,
+    124
+   ]
+  }
+ },
+ "1o3m6a": {
+  "_front_tubes": 96,
+  "empty": {
+   "run": 189945,
+   "dur": 5045.8,
+   "diffuse_median_front_cps": 1.225579840497353,
+   "diffuse_median_back_cps": 0.6226992009771479,
+   "diffuse_median_cps": 0.8736021890220459,
+   "diffuse_mean_cps": 0.889985745904541,
+   "total_cps": 46321.05801854835,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "banjo": {
+   "run": 189946,
+   "dur": 5045.3,
+   "diffuse_median_front_cps": 2.7487107463067333,
+   "diffuse_median_back_cps": 1.4013112904808627,
+   "diffuse_median_cps": 1.9313121944053078,
+   "diffuse_mean_cps": 1.9832006118572727,
+   "total_cps": 100373.8915743596,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "bb": {
+   "run": 189950,
+   "dur": 5237.8,
+   "diffuse_median_front_cps": 0.21497554074871644,
+   "diffuse_median_back_cps": 0.1014738009839634,
+   "diffuse_median_cps": 0.13994411311617153,
+   "diffuse_mean_cps": 0.19840912542398023,
+   "total_cps": 9207.990060990815,
+   "beam_center": [
+    100,
+    124
+   ]
+  },
+  "peltier": {
+   "run": 189951,
+   "dur": 5049.3,
+   "diffuse_median_front_cps": 2.2686351126961366,
+   "diffuse_median_back_cps": 1.142239459840678,
+   "diffuse_median_cps": 1.6402301181448626,
+   "diffuse_mean_cps": 1.6337248797506605,
+   "total_cps": 83638.91224606175,
+   "beam_center": [
+    100,
+    124
+   ]
+  }
+ }
+}
