@@ -3,7 +3,7 @@
 **Date:** 2026-10-20 · **data:** raw event files from 25 calibration proposals, 2014-08-16 → 2026-08-04 ·
 **scripts:** `2026B_mp/reduction/directbeam_years/` — `collect_directbeam.py` (run selection + raw
 detector image per run), `make_images.py` (figures), `tube_efficiency_test.py` (detector tests),
-`shortest_slice_overlay.py` (shortest-λ overlay),
+`shortest_slice_overlay.py` + `shortest_slice_panels.py` (shortest-λ plots),
 `make_page.py` (this page) · no Mantid, no drtsans, no
 corrections: just the detector events of each run, counted per pixel.
 
@@ -135,6 +135,21 @@ the 10 Å plot each flood's **longest** 0.3 Å slice (≈ 5.4–5.8 Å) is used 
 correction is slightly smaller there than it would be at 10 Å.
 
 ![Direct beam ÷ flood, shortest slice of the 10 Å band, all cycles](assets/directbeam/shortest_10A.png)
+
+**Four visits per panel, raw and ÷ flood together** (script `shortest_slice_panels.py`). Dotted lines with open
+markers are the **raw** counts of the same shortest slice; solid lines with filled markers are **÷ flood**, same
+colour per visit. The two peaks of the 2D pictures are in the raw curves — e.g. 186092 (10 Å, 2026-08): tube 90
+0.70, tube 91 **0.56**, tube 92 1.00 — and they sit exactly on a back-layer tube (grey); dividing by the flood
+turns every one of them into a single peak.
+
+![Shortest slice of the 2.5 Å band, 4 visits per panel, raw vs ÷ flood](assets/directbeam/shortest_panels_2p5A.png)
+
+![Shortest slice of the 10 Å band, 4 visits per panel, raw vs ÷ flood](assets/directbeam/shortest_panels_10A.png)
+
+In the raw curves the dip on tube 91 is **deeper at 10 Å** (2026-08: 0.56 of tube 92) than at 2.5 Å (0.72): the
+front layer absorbs more at longer wavelength, so it shadows the back tube more. The same raw zig-zag is
+present before 2023 too (e.g. the 2014–2018 10 Å panel), but there the beam was centred on a front tube, so it
+shows as one tall column with low neighbours instead of two peaks.
 
 What the overlay shows:
 
