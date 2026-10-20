@@ -3,6 +3,7 @@
 **Date:** 2026-10-20 · **data:** raw event files from 25 calibration proposals, 2014-08-16 → 2026-08-04 ·
 **scripts:** `2026B_mp/reduction/directbeam_years/` — `collect_directbeam.py` (run selection + raw
 detector image per run), `make_images.py` (figures), `tube_efficiency_test.py` (detector tests),
+`shortest_slice_overlay.py` (shortest-λ overlay),
 `make_page.py` (this page) · no Mantid, no drtsans, no
 corrections: just the detector events of each run, counted per pixel.
 
@@ -117,6 +118,39 @@ up as two columns once the beam centre moved onto back-layer tube 91 (from 2023-
 2.5 Å and 10 Å in the raw counts. Not excluded: structure finer than one tube, or a split seen in another
 display (e.g. a reduced 2D I(Qx,Qy) or a particular TOF range) — if that is where it was noticed, that is
 the next thing to check.
+
+## Shortest-wavelength slice, every cycle — direct beam ÷ flood
+
+The same division as Test B, but for **every visit from 2014 to 2026**, using only the **shortest
+wavelength slice** of each band, and overlaid (script `shortest_slice_overlay.py`, numbers in
+`shortest_slice_overlay.json`). Each direct beam is paired with the nearest 4 m flood run (thin PMMA, 2.5 Å
+band; same week except where noted in the legend). The slice is found from each run's own time of flight:
+the first 0.3 Å (2.5 Å band) or 0.5 Å (10 Å band) above the band's rising edge — the band edge itself drifts
+from 2.43 Å (2014) to 2.57 Å (2026). Dashed = *T-empty beam* runs. Grey bands mark the back-layer tubes.
+
+![Direct beam ÷ flood, shortest slice of the 2.5 Å band, all cycles](assets/directbeam/shortest_2p5A.png)
+
+For the 2.5 Å plot the flood is cut at the **same time of flight** (same λ). **No 10 Å flood exists**, so for
+the 10 Å plot each flood's **longest** 0.3 Å slice (≈ 5.4–5.8 Å) is used instead — the back/front tube
+correction is slightly smaller there than it would be at 10 Å.
+
+![Direct beam ÷ flood, shortest slice of the 10 Å band, all cycles](assets/directbeam/shortest_10A.png)
+
+What the overlay shows:
+
+- **Every cycle is one peak**, at both wavelengths — no split, no dip at the beam centre, once the tube
+  efficiency is divided out at the shortest wavelength too.
+- **Position:** peak on tube 89–90 from 2014 to 2022 (centroid 89.3–89.8; 2018-05/09 and 2019-06 briefly at
+  90.3–91.0), on tube 91 from 2023-06 (centroid 90.7–91.3).
+- **Width:** the horizontal FWHM (linear interpolation, in tubes of 5.49 mm) was **2.7–3.6 tubes** up to
+  2022-12 at 2.5 Å, and **4.2–4.9 tubes from 2023-06**, still growing slowly (4.3 in 2024-07 → 4.9 in
+  2026-08). The 10 Å beam follows the same history (3.1–3.8 → 4.0–4.6). So the beam got ~1.3 tubes (~7 mm)
+  wider and moved ~1.5 tubes right between 2022-12 and 2023-06 — a change in the beam, but a broadening, not a
+  split, and the same in both bands.
+- Before ~2023 the inter-pulse minimum holds ~20 % of the band peak (slow neutrons of the previous pulse), so
+  the shortest 2.5 Å slice of those years carries some ~6 Å neutrons; the direct beam and the flood are cut
+  with the same window, which keeps the ratio consistent, but the older curves are a little less clean (the
+  shoulder next to the peak).
 
 **Runs with no direct beam** (8): 108729, 108735, 120664, 120668, 120756, 120760, 135061, 135065. Their peak is ≤ 27 counts/pixel, spread over the whole window
 (beam off or shutter closed); they are listed in the tables but left out of the galleries. Runs 124754
