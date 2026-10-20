@@ -1293,6 +1293,25 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(b26src, f), os.path.join(b26dest, f))
 
+    # Direct beam over the years (4 m flux runs at 2.5 A / 10 A, every calibration IPTS):
+    # doc/directbeam.md, doc/directbeam_assets/*.png -> assets/directbeam/.
+    # Source: 2026B_mp/reduction/directbeam_years/ (collect_directbeam.py, make_images.py, make_page.py).
+    directbeam_md = None
+    dbp = os.path.join(DOC_DIR, "directbeam.md")
+    if os.path.isfile(dbp):
+        try:
+            with open(dbp, errors="replace") as fh:
+                directbeam_md = fh.read()
+        except OSError:
+            directbeam_md = None
+    dbsrc = os.path.join(DOC_DIR, "directbeam_assets")
+    if directbeam_md and os.path.isdir(dbsrc):
+        dbdest = os.path.join(ASSETS_DIR, "directbeam")
+        os.makedirs(dbdest, exist_ok=True)
+        for f in os.listdir(dbsrc):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(dbsrc, f), os.path.join(dbdest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -1312,6 +1331,7 @@ def main():
         "water8_md": water8_md,
         "floods2026B_md": floods2026B_md,
         "backgrounds2026B_md": backgrounds2026B_md,
+        "directbeam_md": directbeam_md,
         "senssummary_md": senssummary_md,
         "blockedbeam_md": blockedbeam_md,
         "reductionflow_md": reductionflow_md,
