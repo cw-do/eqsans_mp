@@ -2,7 +2,8 @@
 
 **Date:** 2026-10-20 · **data:** raw event files from 25 calibration proposals, 2014-08-16 → 2026-08-04 ·
 **scripts:** `2026B_mp/reduction/directbeam_years/` — `collect_directbeam.py` (run selection + raw
-detector image per run), `make_images.py` (figures), `make_page.py` (this page) · no Mantid, no drtsans, no
+detector image per run), `make_images.py` (figures), `tube_efficiency_test.py` (detector tests),
+`make_page.py` (this page) · no Mantid, no drtsans, no
 corrections: just the detector events of each run, counted per pixel.
 
 The empty-beam "flux" run is measured in every calibration experiment, usually at **4 m with the 25 mm Cd
@@ -77,9 +78,45 @@ and at both wavelengths:
 
 ![Physical vs detector-ID tube order](assets/directbeam/physical_vs_idorder.png)
 
-**Open question.** Which display shows the split you noticed — Mantid instrument view, a reduced 2D I(Qx,Qy),
-a particular wavelength/TOF range, or a different detector window? Knowing that will tell whether there is
-more here than the beam centre moving onto a back-layer tube.
+## Is it the detector? Two tests
+
+The two-column look could be the beam or the detector tubes. Two independent tests separate them (script
+`tube_efficiency_test.py`, numbers in `tube_efficiency_test.json`).
+
+**Test A — divide by the flood of the same cycle.** The flood records each tube's efficiency. For six
+epochs with a 4 m flood measured the same week, the direct beam is divided by that cycle's deployed
+sensitivity file. (Its beam-stop area is patched by interpolating *along* each tube, so each tube's level at
+the beam centre is still its own measured value.) Green = raw front / back tube, blue = after dividing:
+
+![Test A: raw vs divided by the same-cycle flood](assets/directbeam/eff_testA.png)
+
+Every epoch, both wavelengths, becomes **one peak** once the tube efficiency is divided out — at tube 90
+(2017, 2020) or tube 91–92 (2023 →). The dimmer middle column is the back-layer tube's lower efficiency
+(≈ 0.6 of its front neighbours in a diffuse flood: the front tubes' ³He absorbs part of what reaches the back
+tubes), not a gap in the beam.
+
+**Test B — wavelength inside one run.** Shadowing by the front layer depends on wavelength (³He absorbs
+more at longer λ), so a detector effect must follow the flood's wavelength dependence, while a split in the
+beam optics has no reason to. Using raw events (frame-unwrapped TOF → λ) from the Aug-2026 direct beams
+186088 (2.5 Å band) and 186092 (10 Å band) and the PMMA flood 186200 measured the same week:
+
+![Test B: tube 91 vs its neighbours vs wavelength, and direct beam ÷ flood per λ](assets/directbeam/eff_testB.png)
+
+- *Left:* tube 91 relative to tubes 90/92. In the direct beam it falls from 0.77 to 0.69 across the 2.5 Å
+  band, **in step with the flood** (0.65 → 0.56): the direct-beam / flood ratio stays at 1.15–1.22 at every λ.
+  That constant factor is the beam's own shape (a beam centred near tube 91 is brighter on 91 than on 90/92);
+  the λ-dependence is entirely the detector's. The 10 Å direct beam (0.64–0.66) continues the fall; a ³He
+  shadow curve fitted to the flood at 2.7–5.7 Å and carried out to 10–13 Å, times the same 1.18, predicts
+  ≈ 0.67 — close, given the 2× extrapolation in λ.
+- *Right:* each 2.5 Å-band slice of the direct beam divided by the flood slice at the same λ: **the same
+  single peak at tube 91 in all 13 slices** (2.7 → 5.7 Å), tube 91 / mean(90, 92) = 1.16–1.22, flat in λ.
+
+**Conclusion.** At the resolution of the detector (one tube = 5.5 mm, one pixel = 4.1 mm) there is **no split
+in the direct beam**: the two bright columns are the front/back tube-layer efficiency pattern, which shows
+up as two columns once the beam centre moved onto back-layer tube 91 (from 2023-06). It looks the same at
+2.5 Å and 10 Å in the raw counts. Not excluded: structure finer than one tube, or a split seen in another
+display (e.g. a reduced 2D I(Qx,Qy) or a particular TOF range) — if that is where it was noticed, that is
+the next thing to check.
 
 **Runs with no direct beam** (8): 108729, 108735, 120664, 120668, 120756, 120760, 135061, 135065. Their peak is ≤ 27 counts/pixel, spread over the whole window
 (beam off or shutter closed); they are listed in the tables but left out of the galleries. Runs 124754
