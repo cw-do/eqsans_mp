@@ -1312,6 +1312,24 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(dbsrc, f), os.path.join(dbdest, f))
 
+    # drtsans sensitivity method + comparison: doc/drtsanssens.md,
+    # doc/drtsanssens_assets/*.png -> assets/drtsanssens/.
+    drtsanssens_md = None
+    dsp = os.path.join(DOC_DIR, "drtsanssens.md")
+    if os.path.isfile(dsp):
+        try:
+            with open(dsp, errors="replace") as fh:
+                drtsanssens_md = fh.read()
+        except OSError:
+            drtsanssens_md = None
+    dssrc = os.path.join(DOC_DIR, "drtsanssens_assets")
+    if drtsanssens_md and os.path.isdir(dssrc):
+        dsdest = os.path.join(ASSETS_DIR, "drtsanssens")
+        os.makedirs(dsdest, exist_ok=True)
+        for f in os.listdir(dssrc):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(dssrc, f), os.path.join(dsdest, f))
+
     payload = {
         "generated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "display_root": DISPLAY_ROOT,
@@ -1331,6 +1349,7 @@ def main():
         "water8_md": water8_md,
         "floods2026B_md": floods2026B_md,
         "backgrounds2026B_md": backgrounds2026B_md,
+        "drtsanssens_md": drtsanssens_md,
         "directbeam_md": directbeam_md,
         "senssummary_md": senssummary_md,
         "blockedbeam_md": blockedbeam_md,
