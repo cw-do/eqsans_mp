@@ -1312,6 +1312,24 @@ def main():
             if f.lower().endswith(".png"):
                 shutil.copy2(os.path.join(dbsrc, f), os.path.join(dbdest, f))
 
+    # Calibration guide (how to calibrate a cycle, step by step): doc/calibguide.md,
+    # doc/calibguide_assets/*.png -> assets/calibguide/.
+    calibguide_md = None
+    cgp = os.path.join(DOC_DIR, "calibguide.md")
+    if os.path.isfile(cgp):
+        try:
+            with open(cgp, errors="replace") as fh:
+                calibguide_md = fh.read()
+        except OSError:
+            calibguide_md = None
+    cgsrc = os.path.join(DOC_DIR, "calibguide_assets")
+    if calibguide_md and os.path.isdir(cgsrc):
+        cgdest = os.path.join(ASSETS_DIR, "calibguide")
+        os.makedirs(cgdest, exist_ok=True)
+        for f in os.listdir(cgsrc):
+            if f.lower().endswith(".png"):
+                shutil.copy2(os.path.join(cgsrc, f), os.path.join(cgdest, f))
+
     # drtsans sensitivity method + comparison: doc/drtsanssens.md,
     # doc/drtsanssens_assets/*.png -> assets/drtsanssens/.
     drtsanssens_md = None
@@ -1350,6 +1368,7 @@ def main():
         "floods2026B_md": floods2026B_md,
         "backgrounds2026B_md": backgrounds2026B_md,
         "drtsanssens_md": drtsanssens_md,
+        "calibguide_md": calibguide_md,
         "directbeam_md": directbeam_md,
         "senssummary_md": senssummary_md,
         "blockedbeam_md": blockedbeam_md,

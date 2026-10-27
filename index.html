@@ -242,6 +242,7 @@
       <button data-view="monowl3">monoWL3</button>
       <button data-view="monowl4">monoWL4</button>
       <button data-view="monowl5">monoWL5</button>
+      <button data-view="calibguide">Calibration guide</button>
       <button data-view="reductionflow">Reduction flow</button>
       <button data-view="senssummary">Sensitivity summary</button>
       <button data-view="water">Water (high-Q)</button>
@@ -1320,6 +1321,24 @@ function renderDirectBeam(){
   return wrap;
 }
 
+function renderCalibGuide(){
+  const wrap = el("div");
+  const head = el("div","cyclehead");
+  head.append(el("h2","","Calibration guide — how to calibrate a cycle, step by step"));
+  head.append(el("span","badge latest","runbook · scripts · what to edit"));
+  wrap.append(head);
+  wrap.append(el("div","sub","The full machine-physics calibration workflow for a new cycle: dark current, sensitivity (flood), flux, AgBe geometry/timing, mask, standard-sample reduction with the B1 absolute scale, and publishing — which script to use, how to run it, and exactly what to change in each."));
+  if(D.calibguide_md){
+    const r = el("div","readme monowl");
+    r.innerHTML = mdToHtml(D.calibguide_md);
+    r.querySelectorAll("img").forEach(im=>{ im.onclick=()=>openLightbox(im.src); });
+    wrap.append(r);
+  } else {
+    wrap.append(el("div","empty","No calibration guide found. Add doc/calibguide.md and regenerate."));
+  }
+  return wrap;
+}
+
 function renderDrtsansSens(){
   const wrap = el("div");
   const head = el("div","cyclehead");
@@ -1505,6 +1524,7 @@ function render(){
   if(view==="floods2026B"){ main.append(renderFloods2026B()); return; }
   if(view==="backgrounds2026B"){ main.append(renderBackgrounds2026B()); return; }
   if(view==="drtsanssens"){ main.append(renderDrtsansSens()); return; }
+  if(view==="calibguide"){ main.append(renderCalibGuide()); return; }
   if(view==="directbeam"){ main.append(renderDirectBeam()); return; }
   if(view==="senssummary"){ main.append(renderSensSummary()); return; }
   if(view==="blockedbeam"){ main.append(renderBlockedBeam()); return; }
@@ -1562,7 +1582,7 @@ function buildSearchIndex(){
   const ix=[];
   const md=[["Choppers","choppers",D.chopper_md],["monoWL","monowl",D.monowl_md],
             ["monoWL2","monowl2",D.monowl2_md],["monoWL4","monowl4",D.monowl4_md],
-            ["monoWL5","monowl5",D.monowl5_md],["Sensitivity summary","senssummary",D.senssummary_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Water 7","water7",D.water7_md],["Water 8","water8",D.water8_md],["Floods 2026B","floods2026B",D.floods2026B_md],["Backgrounds 2026B","backgrounds2026B",D.backgrounds2026B_md],["drtsans sensitivity","drtsanssens",D.drtsanssens_md],["Direct beam over the years","directbeam",D.directbeam_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
+            ["monoWL5","monowl5",D.monowl5_md],["Sensitivity summary","senssummary",D.senssummary_md],["Water (high-Q)","water",D.water_md],["Water 2","water2",D.water2_md],["Water 3","water3",D.water3_md],["Water 4","water4",D.water4_md],["Water 5","water5",D.water5_md],["Water 6","water6",D.water6_md],["Water 7","water7",D.water7_md],["Water 8","water8",D.water8_md],["Floods 2026B","floods2026B",D.floods2026B_md],["Backgrounds 2026B","backgrounds2026B",D.backgrounds2026B_md],["drtsans sensitivity","drtsanssens",D.drtsanssens_md],["Calibration guide","calibguide",D.calibguide_md],["Direct beam over the years","directbeam",D.directbeam_md],["Blocked beam","blockedbeam",D.blockedbeam_md],["Reduction flow","reductionflow",D.reductionflow_md],["Attenuation (intro)","atten",D.attenuation_md]];
   md.forEach(([lbl,v,t])=>{ if(t) ix.push({lbl,view:v,text:t}); });
   D.cycles.forEach(c=>{
     if(c.readme) ix.push({lbl:"Cycle "+c.id+" · README",view:"readme",cycle:c.id,text:c.readme});
